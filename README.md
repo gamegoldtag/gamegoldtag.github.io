@@ -1,0 +1,2 @@
+# gamegoldtag.github.io
+pages
