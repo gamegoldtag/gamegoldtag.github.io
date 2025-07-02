@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS 관리자 페이지</title>
+    <link rel="stylesheet" href="gemini.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <header class="top-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="material-icons">school</span>
+                    <h1>LMS Admin</h1>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="admin-info">
+                    <span class="material-icons">account_circle</span>
+                    <span>관리자님</span>
+                </div>
+                <button class="logout-btn">
+                    <span class="material-icons">logout</span>
+                    로그아웃
+                </button>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <aside class="sidebar">
+                <nav class="main-nav">
+                    <ul>
+                        <li class="nav-item active">
+                            <a href="#" class="nav-link">
+                                <span class="material-icons">dashboard</span>
+                                대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item has-submenu">
+                            <a href="#" class="nav-link">
+                                <span class="material-icons">book</span>
+                                강좌 관리
+                                <span class="material-icons arrow">chevron_right</span>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="#">강좌 목록</a></li>
+                                <li><a href="#">새 강좌 생성</a></li>
+                                <li><a href="#">콘텐츠 관리</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-submenu">
+                            <a href="#" class="nav-link">
+                                <span class="material-icons">group</span>
+                                사용자 관리
+                                <span class="material-icons arrow">chevron_right</span>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="#">사용자 목록</a></li>
+                                <li><a href="#">강사 관리</a></li>
+                                <li><a href="#">권한 설정</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-submenu">
+                            <a href="#" class="nav-link">
+                                <span class="material-icons">assessment</span>
+                                평가 및 성적
+                                <span class="material-icons arrow">chevron_right</span>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="#">퀴즈/시험 관리</a></li>
+                                <li><a href="#">과제 채점</a></li>
+                                <li><a href="#">성적 조회</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <span class="material-icons">trending_up</span>
+                                통계 및 보고서
+                            </a>
+                        </li>
+                        <li class="nav-item has-submenu">
+                            <a href="#" class="nav-link">
+                                <span class="material-icons">settings</span>
+                                시스템 설정
+                                <span class="material-icons arrow">chevron_right</span>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="#">기본 설정</a></li>
+                                <li><a href="#">알림 설정</a></li>
+                                <li><a href="#">로그 관리</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <section class="content-area">
+                <h2 class="page-title">대시보드</h2>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card total-courses">
+                        <span class="material-icons icon">book</span>
+                        <h3>총 강좌 수</h3>
+                        <p>125개</p>
+                    </div>
+                    <div class="dashboard-card total-users">
+                        <span class="material-icons icon">group</span>
+                        <h3>총 학습자 수</h3>
+                        <p>3,450명</p>
+                    </div>
+                    <div class="dashboard-card new-registrations">
+                        <span class="material-icons icon">person_add</span>
+                        <h3>신규 가입자 (오늘)</h3>
+                        <p>15명</p>
+                    </div>
+                    <div class="dashboard-card pending-tasks">
+                        <span class="material-icons icon">assignment</span>
+                        <h3>미처리 과제</h3>
+                        <p>23건</p>
+                    </div>
+                </div>
+
+                <div class="recent-activities">
+                    <h3>최근 활동</h3>
+                    <ul>
+                        <li><span class="activity-time">[2025-07-01 10:30]</span> 새로운 강좌 '인공지능 개론'이 생성되었습니다.</li>
+                        <li><span class="activity-time">[2025-07-01 09:15]</span> 사용자 '김철수'님이 비밀번호를 변경했습니다.</li>
+                        <li><span class="activity-time">[2025-06-30 18:00]</span> '데이터 과학 입문' 강좌의 퀴즈가 채점 완료되었습니다.</li>
+                        <li><span class="activity-time">[2025-06-30 14:45]</span> 공지사항 '시스템 점검 안내'가 게시되었습니다.</li>
+                    </ul>
+                </div>
+
+                </section>
+        </main>
+    </div>
+
+    <script>
+        document.querySelectorAll('.has-submenu > .nav-link').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                this.querySelector('.arrow').style.transform = submenu.style.display === 'block' ? 'rotate(90deg)' : 'rotate(0deg)';
+            });
+        });
+
+        // Optional: Simulate page change (for demonstration)
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(navItem => navItem.classList.remove('active'));
+                this.closest('.nav-item').classList.add('active');
+                // In a real application, this would load content dynamically or navigate.
+                const pageTitle = this.querySelector('span:nth-of-type(2)') ? this.querySelector('span:nth-of-type(2)').textContent : this.textContent;
+                document.querySelector('.page-title').textContent = pageTitle;
+
+                // Simple content change for demo
+                const contentArea = document.querySelector('.content-area');
+                if (pageTitle.includes('대시보드')) {
+                    contentArea.innerHTML = `
+                        <h2 class="page-title">대시보드</h2>
+                        <div class="dashboard-grid">
+                            <div class="dashboard-card total-courses">
+                                <span class="material-icons icon">book</span>
+                                <h3>총 강좌 수</h3>
+                                <p>125개</p>
+                            </div>
+                            <div class="dashboard-card total-users">
+                                <span class="material-icons icon">group</span>
+                                <h3>총 학습자 수</h3>
+                                <p>3,450명</p>
+                            </div>
+                            <div class="dashboard-card new-registrations">
+                                <span class="material-icons icon">person_add</span>
+                                <h3>신규 가입자 (오늘)</h3>
+                                <p>15명</p>
+                            </div>
+                            <div class="dashboard-card pending-tasks">
+                                <span class="material-icons icon">assignment</span>
+                                <h3>미처리 과제</h3>
+                                <p>23건</p>
+                            </div>
+                        </div>
+                        <div class="recent-activities">
+                            <h3>최근 활동</h3>
+                            <ul>
+                                <li><span class="activity-time">[2025-07-01 10:30]</span> 새로운 강좌 '인공지능 개론'이 생성되었습니다.</li>
+                                <li><span class="activity-time">[2025-07-01 09:15]</span> 사용자 '김철수'님이 비밀번호를 변경했습니다.</li>
+                                <li><span class="activity-time">[2025-06-30 18:00]</span> '데이터 과학 입문' 강좌의 퀴즈가 채점 완료되었습니다.</li>
+                                <li><span class="activity-time">[2025-06-30 14:45]</span> 공지사항 '시스템 점검 안내'가 게시되었습니다.</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (pageTitle.includes('강좌 목록')) {
+                    contentArea.innerHTML = `
+                        <h2 class="page-title">강좌 목록</h2>
+                        <div class="filter-area">
+                            <input type="text" placeholder="강좌명 검색...">
+                            <select>
+                                <option>전체 카테고리</option>
+                                <option>IT/프로그래밍</option>
+                                <option>디자인</option>
+                            </select>
+                            <button class="btn primary">검색</button>
+                            <button class="btn success">새 강좌 추가</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>강좌명</th>
+                                    <th>강사</th>
+                                    <th>수강생 수</th>
+                                    <th>상태</th>
+                                    <th>생성일</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>데이터 과학 입문</td>
+                                    <td>이영희</td>
+                                    <td>150</td>
+                                    <td><span class="status-active">활성</span></td>
+                                    <td>2024-01-10</td>
+                                    <td>
+                                        <button class="btn small">수정</button>
+                                        <button class="btn small danger">삭제</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>프론트엔드 개발 심화</td>
+                                    <td>박준수</td>
+                                    <td>90</td>
+                                    <td><span class="status-inactive">비활성</span></td>
+                                    <td>2024-03-20</td>
+                                    <td>
+                                        <button class="btn small">수정</button>
+                                        <button class="btn small danger">삭제</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>인공지능 개론</td>
+                                    <td>김민수</td>
+                                    <td>210</td>
+                                    <td><span class="status-active">활성</span></td>
+                                    <td>2024-05-01</td>
+                                    <td>
+                                        <button class="btn small">수정</button>
+                                        <button class="btn small danger">삭제</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                }
+                // Add more conditions for other pages as needed
+            });
+        });
+
+    </script>
+</body>
+</html>

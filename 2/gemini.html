@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --bg-color-light: #f4f6f9;
+            --surface-color-light: #ffffff;
+            --text-color-light: #333333;
+            --text-secondary-light: #666666;
+            --border-color-light: #e0e0e0;
+            --primary-color-light: #4a90e2; /* Blue */
+            --primary-hover-light: #3a7bd5;
+            --sidebar-bg-light: #2c3e50; /* Dark Blue Gray */
+            --sidebar-text-light: #ecf0f1;
+            --sidebar-hover-light: #34495e;
+            --sidebar-active-light: #4a90e2;
+            --card-shadow-light: rgba(0, 0, 0, 0.08);
+
+            /* Dark Mode Colors */
+            --bg-color-dark: #1a1a2e; /* Dark Blue */
+            --surface-color-dark: #22223b; /* Slightly lighter dark blue */
+            --text-color-dark: #e0e0e0;
+            --text-secondary-dark: #b0b0b0;
+            --border-color-dark: #3a3a5e;
+            --primary-color-dark: #8c8cd4; /* Lighter Purple Blue */
+            --primary-hover-dark: #7a7ac0;
+            --sidebar-bg-dark: #16213e; /* Even darker blue */
+            --sidebar-text-dark: #b0b0b0;
+            --sidebar-hover-dark: #1a1a2e;
+            --sidebar-active-dark: #8c8cd4;
+            --card-shadow-dark: rgba(0, 0, 0, 0.4);
+
+            /* Common Variables */
+            --font-family: 'Noto Sans KR', sans-serif;
+            --border-radius: 8px;
+            --transition-speed: 0.3s ease;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            display: flex;
+            min-height: 100vh;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Dark Mode Styling */
+        body.dark-mode {
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg-light);
+            color: var(--sidebar-text-light);
+            padding: 20px 0;
+            box-shadow: 2px 0 10px var(--card-shadow-light);
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+            flex-shrink: 0;
+        }
+
+        .dark-mode .sidebar {
+            background-color: var(--sidebar-bg-dark);
+            color: var(--sidebar-text-dark);
+            box-shadow: 2px 0 10px var(--card-shadow-dark);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            color: var(--primary-color-light);
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            transition: color var(--transition-speed);
+        }
+
+        .dark-mode .sidebar h2 {
+            color: var(--primary-color-dark);
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            position: relative;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 15px 20px;
+            color: var(--sidebar-text-light);
+            text-decoration: none;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .dark-mode .sidebar ul li a {
+            color: var(--sidebar-text-dark);
+        }
+
+        .sidebar ul li a:hover {
+            background-color: var(--sidebar-hover-light);
+            color: var(--sidebar-text-light);
+        }
+
+        .dark-mode .sidebar ul li a:hover {
+            background-color: var(--sidebar-hover-dark);
+            color: var(--sidebar-text-dark);
+        }
+
+        .sidebar ul li.active > a {
+            background-color: var(--sidebar-active-light);
+            color: var(--surface-color-light);
+            border-left: 5px solid var(--primary-color-light);
+        }
+
+        .dark-mode .sidebar ul li.active > a {
+            background-color: var(--sidebar-active-dark);
+            color: var(--surface-color-dark);
+            border-left: 5px solid var(--primary-color-dark);
+        }
+
+        .sidebar ul li.active > a:hover {
+            background-color: var(--sidebar-active-light);
+            color: var(--surface-color-light);
+        }
+
+        .dark-mode .sidebar ul li.active > a:hover {
+            background-color: var(--sidebar-active-dark);
+            color: var(--surface-color-dark);
+        }
+
+        .sidebar ul li .sub-menu {
+            list-style: none;
+            padding-left: 30px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-speed) ease-out;
+            background-color: rgba(0, 0, 0, 0.2); /* For light mode sub-menu background */
+        }
+
+        .dark-mode .sidebar ul li .sub-menu {
+            background-color: rgba(0, 0, 0, 0.4); /* For dark mode sub-menu background */
+        }
+
+        .sidebar ul li.active .sub-menu {
+            max-height: 500px; /* Adjust as needed for content */
+            transition: max-height var(--transition-speed) ease-in;
+        }
+
+        .sidebar ul li .sub-menu li a {
+            padding: 10px 20px 10px 45px;
+            font-size: 0.9em;
+            color: var(--sidebar-text-light);
+        }
+
+        .dark-mode .sidebar ul li .sub-menu li a {
+            color: var(--sidebar-text-dark);
+        }
+
+        .sidebar ul li .sub-menu li a:hover {
+            background-color: var(--sidebar-hover-light);
+            color: var(--sidebar-text-light);
+        }
+
+        .dark-mode .sidebar ul li .sub-menu li a:hover {
+            background-color: var(--sidebar-hover-dark);
+            color: var(--sidebar-text-dark);
+        }
+
+        .sidebar ul li i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: var(--surface-color-light);
+            padding: 20px 30px;
+            box-shadow: 0 2px 5px var(--card-shadow-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .dark-mode .header {
+            background-color: var(--surface-color-dark);
+            box-shadow: 0 2px 5px var(--card-shadow-dark);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            color: var(--text-color-light);
+            transition: color var(--transition-speed);
+        }
+
+        .dark-mode .header h1 {
+            color: var(--text-color-dark);
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .user-info span {
+            font-weight: 500;
+            color: var(--text-color-light);
+            transition: color var(--transition-speed);
+        }
+
+        .dark-mode .header .user-info span {
+            color: var(--text-color-dark);
+        }
+
+        .header .user-info button {
+            background-color: var(--primary-color-light);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+            font-weight: 500;
+        }
+
+        .dark-mode .header .user-info button {
+            background-color: var(--primary-color-dark);
+        }
+
+        .header .user-info button:hover {
+            background-color: var(--primary-hover-light);
+        }
+
+        .dark-mode .header .user-info button:hover {
+            background-color: var(--primary-hover-dark);
+        }
+
+        /* Main Content Area */
+        .content-area {
+            padding: 30px;
+            flex-grow: 1;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .dashboard-card {
+            background-color: var(--surface-color-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 4px 12px var(--card-shadow-light);
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed), transform 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            border: 1px solid var(--border-color-light);
+        }
+
+        .dark-mode .dashboard-card {
+            background-color: var(--surface-color-dark);
+            box-shadow: 0 4px 12px var(--card-shadow-dark);
+            border: 1px solid var(--border-color-dark);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dashboard-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary-color-light);
+            font-size: 1.3em;
+            transition: color var(--transition-speed);
+        }
+
+        .dark-mode .dashboard-card h3 {
+            color: var(--primary-color-dark);
+        }
+
+        .dashboard-card p {
+            margin: 0;
+            font-size: 1.1em;
+            color: var(--text-color-light);
+            transition: color var(--transition-speed);
+        }
+
+        .dark-mode .dashboard-card p {
+            color: var(--text-color-dark);
+        }
+
+        .dashboard-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color-light);
+            margin-top: 10px;
+            transition: color var(--transition-speed);
+        }
+
+        .dark-mode .dashboard-card .value {
+            color: var(--primary-color-dark);
+        }
+
+        /* Light/Dark Mode Toggle */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color-light);
+        }
+
+        .dark-mode input:checked + .slider {
+            background-color: var(--primary-color-dark);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: var(--surface-color-light);
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-secondary-light);
+            border-top: 1px solid var(--border-color-light);
+            transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .dark-mode .footer {
+            background-color: var(--surface-color-dark);
+            color: var(--text-secondary-dark);
+            border-top: 1px solid var(--border-color-dark);
+        }
+
+        /* Font Awesome Icons (Add this to your HTML <head> or use a local version) */
+        /* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> */
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>LMS Admin</h2>
+        <div class="theme-switch-wrapper" style="text-align: center; margin-bottom: 20px;">
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+            <span id="theme-text">Light Mode</span>
+        </div>
+        <ul>
+            <li class="active">
+                <a href="#"><i class="fas fa-fw fa-tachometer-alt"></i> 대시보드</a>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-fw fa-users"></i> 사용자 관리 <i class="fas fa-caret-down" style="margin-left: auto;"></i></a>
+                <ul class="sub-menu">
+                    <li><a href="#">학습자 관리</a></li>
+                    <li><a href="#">강사 관리</a></li>
+                    <li><a href="#">관리자 관리</a></li>
+                    <li><a href="#">역할 및 권한 관리</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-fw fa-chalkboard-teacher"></i> 강의 관리 <i class="fas fa-caret-down" style="margin-left: auto;"></i></a>
+                <ul class="sub-menu">
+                    <li><a href="#">강의 목록</a></li>
+                    <li><a href="#">강의 개설</a></li>
+                    <li><a href="#">강의 콘텐츠 관리</a></li>
+                    <li><a href="#">학습 활동 설정</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-fw fa-folder"></i> 콘텐츠 관리 <i class="fas fa-caret-down" style="margin-left: auto;"></i></a>
+                <ul class="sub-menu">
+                    <li><a href="#">자료실</a></li>
+                    <li><a href="#">공지사항 관리</a></li>
+                    <li><a href="#">FAQ 관리</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-fw fa-graduation-cap"></i> 학습 관리 <i class="fas fa-caret-down" style="margin-left: auto;"></i></a>
+                <ul class="sub-menu">
+                    <li><a href="#">학습 진도 현황</a></li>
+                    <li><a href="#">성적 관리</a></li>
+                    <li><a href="#">수료 관리</a></li>
+                    <li><a href="#">시험 관리</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-fw fa-cog"></i> 시스템 설정 <i class="fas fa-caret-down" style="margin-left: auto;"></i></a>
+                <ul class="sub-menu">
+                    <li><a href="#">일반 설정</a></li>
+                    <li><a href="#">알림 설정</a></li>
+                    <li><a href="#">결제/수강료 설정</a></li>
+                    <li><a href="#">로그 관리</a></li>
+                    <li><a href="#">데이터 백업/복원</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-fw fa-chart-bar"></i> 통계 및 보고서 <i class="fas fa-caret-down" style="margin-left: auto;"></i></a>
+                <ul class="sub-menu">
+                    <li><a href="#">학습 현황 보고서</a></li>
+                    <li><a href="#">강의 평가 보고서</a></li>
+                    <li><a href="#">사용자 활동 보고서</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>대시보드</h1>
+            <div class="user-info">
+                <span>관리자님, 안녕하세요!</span>
+                <button onclick="alert('로그아웃 되었습니다.')">로그아웃</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>총 학습자 수</h3>
+                    <p class="value">1,234</p>
+                    <p>현재 시스템에 등록된 전체 학습자 수</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>총 강의 수</h3>
+                    <p class="value">56</p>
+                    <p>현재 개설된 전체 강의 수</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>오늘의 로그인</h3>
+                    <p class="value">789</p>
+                    <p>오늘 시스템에 로그인한 학습자 수</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>완료된 강의</h3>
+                    <p class="value">32</p>
+                    <p>현재까지 완료된 강의 수</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>신규 가입자 (월)</h3>
+                    <p class="value">85</p>
+                    <p>이번 달 새로 가입한 학습자 수</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>활성 강의</h3>
+                    <p class="value">24</p>
+                    <p>현재 진행 중인 활성 강의 수</p>
+                </div>
+            </div>
+            </div>
+
+        <div class="footer">
+            &copy; 2025 LMS Admin System. All rights reserved.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar Sub-menu Toggle
+            const menuItems = document.querySelectorAll('.sidebar ul li');
+
+            menuItems.forEach(item => {
+                const link = item.querySelector('a');
+                const subMenu = item.querySelector('.sub-menu');
+                if (subMenu) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent default link behavior
+                        // Collapse other open sub-menus
+                        menuItems.forEach(otherItem => {
+                            if (otherItem !== item && otherItem.classList.contains('active')) {
+                                otherItem.classList.remove('active');
+                                otherItem.querySelector('.sub-menu').style.maxHeight = '0';
+                            }
+                        });
+                        // Toggle current sub-menu
+                        item.classList.toggle('active');
+                        if (item.classList.contains('active')) {
+                            subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+                        } else {
+                            subMenu.style.maxHeight = '0';
+                        }
+                    });
+                } else {
+                    link.addEventListener('click', function() {
+                        // Remove active from all and add to current
+                        menuItems.forEach(otherItem => {
+                            if (otherItem.classList.contains('active')) {
+                                otherItem.classList.remove('active');
+                                const otherSubMenu = otherItem.querySelector('.sub-menu');
+                                if (otherSubMenu) {
+                                    otherSubMenu.style.maxHeight = '0';
+                                }
+                            }
+                        });
+                        item.classList.add('active');
+                    });
+                }
+            });
+
+            // Theme Toggle
+            const checkbox = document.getElementById('checkbox');
+            const themeText = document.getElementById('theme-text');
+
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                checkbox.checked = true;
+                themeText.textContent = 'Dark Mode';
+            } else {
+                themeText.textContent = 'Light Mode';
+            }
+
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    themeText.textContent = 'Dark Mode';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    themeText.textContent = 'Light Mode';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</body>
+</html>

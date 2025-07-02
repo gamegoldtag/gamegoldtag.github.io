@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS 관리자 시스템 - 대시보드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --background-color-light: #f4f7f6;
+            --surface-color-light: #ffffff;
+            --text-color-light: #333333;
+            --secondary-text-color-light: #666666;
+            --primary-color-light: #007bff;
+            --primary-light-color-light: #e6f2ff;
+            --border-color-light: #e0e0e0;
+            --shadow-color-light: rgba(0, 0, 0, 0.05);
+
+            /* Dark Mode Colors */
+            --background-color-dark: #1a1a2e;
+            --surface-color-dark: #2c2c4d;
+            --text-color-dark: #e0e0e0;
+            --secondary-text-color-dark: #b0b0b0;
+            --primary-color-dark: #8c7ae6;
+            --primary-light-color-dark: #3f3f6e;
+            --border-color-dark: #444466;
+            --shadow-color-dark: rgba(0, 0, 0, 0.3);
+
+            /* Current Theme Variables */
+            --background-color: var(--background-color-light);
+            --surface-color: var(--surface-color-light);
+            --text-color: var(--text-color-light);
+            --secondary-text-color: var(--secondary-text-color-light);
+            --primary-color: var(--primary-color-light);
+            --primary-light-color: var(--primary-light-color-light);
+            --border-color: var(--border-color-light);
+            --shadow-color: var(--shadow-color-light);
+
+            --transition-speed: 0.3s ease;
+        }
+
+        body.dark-mode {
+            --background-color: var(--background-color-dark);
+            --surface-color: var(--surface-color-dark);
+            --text-color: var(--text-color-dark);
+            --secondary-text-color: var(--secondary-text-color-dark);
+            --primary-color: var(--primary-color-dark);
+            --primary-light-color: var(--primary-light-color-dark);
+            --border-color: var(--border-color-dark);
+            --shadow-color: var(--shadow-color-dark);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--surface-color);
+            padding: 20px;
+            box-shadow: 2px 0 10px var(--shadow-color);
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 15px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar ul li a.active,
+        .sidebar ul li a:hover {
+            background-color: var(--primary-color);
+            color: var(--surface-color);
+        }
+
+        .sidebar ul li a i {
+            margin-right: 10px;
+        }
+
+        .sidebar .submenu {
+            list-style: none;
+            padding-left: 25px;
+            margin-top: 5px;
+        }
+
+        .sidebar .submenu li a {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background-color: transparent;
+            color: var(--secondary-text-color);
+        }
+
+        .sidebar .submenu li a:hover {
+            background-color: var(--primary-light-color);
+            color: var(--primary-color);
+        }
+        
+        .sidebar .submenu li a.active {
+            background-color: var(--primary-light-color);
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background-color: var(--surface-color);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+            font-weight: 400;
+        }
+
+        .theme-switcher {
+            background-color: var(--primary-light-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        .theme-switcher i {
+            margin-right: 5px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            flex-grow: 1;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .card p {
+            color: var(--secondary-text-color);
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .card .metric {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-top: 10px;
+        }
+
+        .card .detail-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Basic icons for demonstration */
+        .fa-tachometer-alt:before { content: "\f3fd"; }
+        .fa-users:before { content: "\f0c0"; }
+        .fa-book:before { content: "\f02d"; }
+        .fa-clipboard-list:before { content: "\f46d"; }
+        .fa-money-check-alt:before { content: "\f53d"; }
+        .fa-comments:before { content: "\f086"; }
+        .fa-cogs:before { content: "\f013"; }
+        .fa-chart-bar:before { content: "\f080"; }
+        .fa-sun:before { content: "\f185"; }
+        .fa-moon:before { content: "\f186"; }
+
+        /* Font Awesome CDN for icons (replace with local if preferred) */
+        @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>LMS Admin</h2>
+        <nav>
+            <ul>
+                <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i> 대시보드</a></li>
+                <li>
+                    <a href="#"><i class="fas fa-users"></i> 사용자 관리</a>
+                    <ul class="submenu">
+                        <li><a href="#">학습자 관리</a></li>
+                        <li><a href="#">강사 관리</a></li>
+                        <li><a href="#">관리자 관리</a></li>
+                        <li><a href="#">역할 및 권한 설정</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#"><i class="fas fa-book"></i> 과정 관리</a>
+                    <ul class="submenu">
+                        <li><a href="#">과정 목록</a></li>
+                        <li><a href="#">과정 생성/편집</a></li>
+                        <li><a href="#">콘텐츠 관리</a></li>
+                        <li><a href="#">카테고리 관리</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#"><i class="fas fa-clipboard-list"></i> 수강 관리</a>
+                    <ul class="submenu">
+                        <li><a href="#">수강 신청 관리</a></li>
+                        <li><a href="#">학습 진도 관리</a></li>
+                        <li><a href="#">성적 관리</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#"><i class="fas fa-money-check-alt"></i> 결제/수익 관리</a>
+                    <ul class="submenu">
+                        <li><a href="#">결제 내역</a></li>
+                        <li><a href="#">쿠폰/프로모션</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#"><i class="fas fa-comments"></i> 게시판/커뮤니티</a>
+                    <ul class="submenu">
+                        <li><a href="#">공지사항</a></li>
+                        <li><a href="#">FAQ 관리</a></li>
+                        <li><a href="#">문의 관리</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#"><i class="fas fa-cogs"></i> 시스템 설정</a>
+                    <ul class="submenu">
+                        <li><a href="#">일반 설정</a></li>
+                        <li><a href="#">알림 설정</a></li>
+                        <li><a href="#">통합 설정</a></li>
+                        <li><a href="#">백업 및 복원</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#"><i class="fas fa-chart-bar"></i> 보고서/통계</a>
+                    <ul class="submenu">
+                        <li><a href="#">학습자 통계</a></li>
+                        <li><a href="#">과정 통계</a></li>
+                        <li><a href="#">강사 통계</a></li>
+                        <li><a href="#">시스템 로그</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1>대시보드</h1>
+            <div class="user-info">
+                <span>관리자님, 환영합니다!</span>
+                <button id="themeToggle" class="theme-switcher">
+                    <i class="fas fa-moon" id="themeIcon"></i> 다크 모드
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard-grid">
+            <div class="card">
+                <h3>총 학습자 수</h3>
+                <p class="metric">1,250명</p>
+                <p>현재 시스템에 등록된 전체 학습자 수입니다.</p>
+                <a href="#" class="detail-link">자세히 보기 &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>활성 과정 수</h3>
+                <p class="metric">85개</p>
+                <p>현재 학습 가능한 상태의 과정 수입니다.</p>
+                <a href="#" class="detail-link">자세히 보기 &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>오늘의 신규 가입</h3>
+                <p class="metric">12명</p>
+                <p>오늘 새로 가입한 학습자 수입니다.</p>
+                <a href="#" class="detail-link">자세히 보기 &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>완료된 과정</h3>
+                <p class="metric">320건</p>
+                <p>현재까지 완료된 과정의 총 건수입니다.</p>
+                <a href="#" class="detail-link">자세히 보기 &rarr;</a>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+
+        // Load theme from localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+            themeToggle.innerHTML = '<i class="fas fa-sun" id="themeIcon"></i> 라이트 모드';
+        } else {
+            body.classList.remove('dark-mode');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+            themeToggle.innerHTML = '<i class="fas fa-moon" id="themeIcon"></i> 다크 모드';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                themeToggle.innerHTML = '<i class="fas fa-sun" id="themeIcon"></i> 라이트 모드';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                themeToggle.innerHTML = '<i class="fas fa-moon" id="themeIcon"></i> 다크 모드';
+            }
+        });
+
+        // Sidebar active menu logic (optional, for visual feedback)
+        const sidebarLinks = document.querySelectorAll('.sidebar ul li a');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Remove active from all parent links
+                sidebarLinks.forEach(l => l.classList.remove('active'));
+                // Remove active from all submenu links
+                document.querySelectorAll('.submenu li a').forEach(l => l.classList.remove('active'));
+
+                // Add active to the clicked link
+                this.classList.add('active');
+
+                // If it's a submenu link, also activate its parent
+                if (this.closest('.submenu')) {
+                    this.closest('.submenu').previousElementSibling.classList.add('active');
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
