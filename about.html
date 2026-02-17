@@ -8,8 +8,14 @@
     <link rel="canonical" href="https://devinsight.dev/about.html">
     <title>소개 | DevInsight</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/index.css">
     <style>
         :root {
+            --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+            --font-serif: "Gowun Batang", "Noto Serif KR", serif;
+            --font-mono: "JetBrains Mono", "Fira Code", monospace;
             --ink: #1a1a2e;
             --paper: #f8f6f1;
             --border: #d4d0c8;
@@ -18,7 +24,7 @@
         }
         body {
             margin: 0;
-            font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+            font-family: var(--font-sans);
             color: var(--ink);
             background: linear-gradient(180deg, #f6f2e8 0%, #f8f6f1 100%);
             line-height: 1.7;
@@ -28,8 +34,8 @@
             margin: 0 auto;
             padding: 48px 20px 80px;
         }
-        h1 { font-size: 2rem; margin: 0 0 8px; }
-        h2 { margin-top: 28px; font-size: 1.2rem; }
+        h1 { font-family: var(--font-serif); font-size: 2rem; margin: 0 0 8px; }
+        h2 { font-family: var(--font-serif); margin-top: 28px; font-size: 1.2rem; }
         .updated { color: var(--muted); margin-bottom: 24px; }
         .card {
             background: #fff;
@@ -54,7 +60,7 @@
 
             <h2>DevInsight를 만든 이유</h2>
             <p>
-                19년간 소프트웨어 개발 현장에서 일하면서 쌓아온 경험과 인사이트를 체계적으로 정리하고 공유하기 위해
+                <span data-exp-years></span>년간 소프트웨어 개발 현장에서 일하면서 쌓아온 경험과 인사이트를 체계적으로 정리하고 공유하기 위해
                 이 블로그를 시작했습니다. 기술은 빠르게 변하지만, 좋은 엔지니어링의 원칙은 놀라울 정도로 일관됩니다.
                 그 맥락 속에서의 기술 선택과 문제 해결 과정을 기록합니다.
             </p>
@@ -87,6 +93,12 @@
     <script>
         const today = new Date();
         const todayText = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+        const experienceYears = today.getFullYear() - 1998;
+
+        document.querySelectorAll('[data-exp-years]').forEach((el) => {
+            el.textContent = String(experienceYears);
+        });
+
         document.querySelectorAll('[data-current-date]').forEach((el) => {
             el.textContent = todayText;
         });
