@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DevInsight - 28년 경력 시니어 개발자의 기술 블로그. Electron, Rust, TypeScript, React 등 실무 경험과 인사이트를 공유합니다.">
+    <meta name="description" content="DevInsight - {{expYears}}년 경력 시니어 개발자의 기술 블로그. Electron, Rust, TypeScript, React 등 실무 경험과 인사이트를 공유합니다.">
     <meta name="keywords" content="개발 블로그, Electron, Rust, TypeScript, React, 웹 개발, 시니어 개발자">
     <meta name="author" content="DevInsight">
     <meta name="robots" content="index, follow">
@@ -11,11 +11,15 @@
     
     <!-- Open Graph -->
     <meta property="og:title" content="DevInsight - 시니어 개발자의 기술 블로그">
-    <meta property="og:description" content="28년 경력 시니어 개발자의 실무 기술 인사이트">
+    <meta property="og:description" content="{{expYears}}년 경력 시니어 개발자의 실무 기술 인사이트">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://devinsight.dev/">
     
     <title>DevInsight - 시니어 개발자의 기술 블로그</title>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+      crossorigin="anonymous"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -877,9 +881,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
-      crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -889,14 +890,14 @@
     <!-- Header -->
     <header class="site-header">
         <div class="header-inner">
-            <a href="#" class="site-logo" onclick="showPage('home')">Dev<span>Insight</span></a>
+            <a href="javascript:void(0)" class="site-logo" onclick="event.preventDefault(); showPage('home')">Dev<span>Insight</span></a>
             <nav>
                 <ul class="nav-links" id="navLinks">
-                    <li><a href="#" class="active" data-page="home" onclick="showPage('home')">홈</a></li>
-                    <li><a href="#" data-page="about" onclick="showPage('about')">소개</a></li>
-                    <li><a href="#" data-page="contact" onclick="showPage('contact')">연락처</a></li>
-                    <li><a href="#" data-page="privacy" onclick="showPage('privacy')">개인정보처리방침</a></li>
-                    <li><a href="#" data-page="terms" onclick="showPage('terms')">이용약관</a></li>
+                    <li><a href="javascript:void(0)" class="active" data-page="home" onclick="event.preventDefault(); showPage('home')">홈</a></li>
+                    <li><a href="javascript:void(0)" data-page="about" onclick="event.preventDefault(); showPage('about')">소개</a></li>
+                    <li><a href="javascript:void(0)" data-page="contact" onclick="event.preventDefault(); showPage('contact')">연락처</a></li>
+                    <li><a href="javascript:void(0)" data-page="privacy" onclick="event.preventDefault(); showPage('privacy')">개인정보처리방침</a></li>
+                    <li><a href="javascript:void(0)" data-page="terms" onclick="event.preventDefault(); showPage('terms')">이용약관</a></li>
                 </ul>
             </nav>
             <button class="mobile-toggle" onclick="toggleMobileNav()" aria-label="메뉴 열기">
@@ -910,7 +911,7 @@
         <!-- Hero -->
         <section class="hero page-transition">
             <div class="hero-tag">Senior Developer Blog</div>
-            <h1>코드 너머의 인사이트,<br>28년의 실무 경험을 담다</h1>
+            <h1>코드 너머의 인사이트,<br><span data-exp-years></span>년의 실무 경험을 담다</h1>
             <p class="hero-desc">
                 Electron, Rust, TypeScript, React부터 레거시 C++까지 — 실무에서 만난 문제와 해결, 
                 아키텍처 결정의 이유, 그리고 기술 선택의 맥락을 공유합니다.
@@ -938,7 +939,7 @@
                 </div>
                 <div class="featured-content">
                     <div class="post-category">Electron × Rust</div>
-                    <h2><a href="#" onclick="showPage('article-1')">Electron 앱에서 Rust로 네이티브 성능 확보하기: N-API 바인딩 실전 가이드</a></h2>
+                    <h2><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-1')">Electron 앱에서 Rust로 네이티브 성능 확보하기: N-API 바인딩 실전 가이드</a></h2>
                     <p class="post-excerpt">
                         JavaScript의 한계를 넘어야 하는 순간이 온다. DRM 디코딩, 오디오 프로세싱 같은 CPU-intensive 작업에서 
                         Rust N-API 바인딩이 어떻게 10배의 성능 향상을 가져왔는지 실제 사례와 함께 설명합니다.
@@ -948,7 +949,7 @@
                         <span class="dot"></span>
                         <span>12분 읽기</span>
                     </div>
-                    <a href="#" class="read-link" onclick="showPage('article-1')">자세히 읽기 →</a>
+                    <a href="javascript:void(0)" class="read-link" onclick="event.preventDefault(); showPage('article-1')">자세히 읽기 →</a>
                 </div>
             </article>
         </section>
@@ -964,7 +965,7 @@
                     </div>
                     <div class="post-card-body">
                         <div class="post-category">TypeScript</div>
-                        <h3><a href="#" onclick="showPage('article-2')">TypeScript 5.x의 실전 타입 패턴: 28년 개발자가 정리한 Best Practices</a></h3>
+                        <h3><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-2')">TypeScript 5.x의 실전 타입 패턴: <span data-exp-years></span>년 개발자가 정리한 Best Practices</a></h3>
                         <p class="post-excerpt">Template Literal Types, Conditional Types, Satisfies 연산자를 활용한 타입 안전한 코드 작성 패턴과 실제 프로젝트 적용 사례를 공유합니다.</p>
                         <div class="post-meta">
                             <span>2028년 2월 5일</span>
@@ -981,7 +982,7 @@
                     </div>
                     <div class="post-card-body">
                         <div class="post-category">Architecture</div>
-                        <h3><a href="#" onclick="showPage('article-3')">Electron 앱의 메모리 누수 디버깅: Chrome DevTools로 추적하는 실전 방법론</a></h3>
+                        <h3><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-3')">Electron 앱의 메모리 누수 디버깅: Chrome DevTools로 추적하는 실전 방법론</a></h3>
                         <p class="post-excerpt">Renderer 프로세스의 힙 스냅샷 분석부터 Main 프로세스의 메모리 모니터링까지, 실제 프로덕션에서 겪은 메모리 이슈 해결기.</p>
                         <div class="post-meta">
                             <span>2028년 1월 28일</span>
@@ -998,7 +999,7 @@
                     </div>
                     <div class="post-card-body">
                         <div class="post-category">Rust</div>
-                        <h3><a href="#" onclick="showPage('article-4')">C++ 개발자가 Rust로 전환하며 배운 것들: 소유권 시스템의 실체</a></h3>
+                        <h3><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-4')">C++ 개발자가 Rust로 전환하며 배운 것들: 소유권 시스템의 실체</a></h3>
                         <p class="post-excerpt">23년간 C++을 써온 개발자의 시각에서 Rust의 소유권과 빌림 검사기가 실제로 어떤 버그를 잡아주는지 비교 분석합니다.</p>
                         <div class="post-meta">
                             <span>2028년 1월 20일</span>
@@ -1015,7 +1016,7 @@
                     </div>
                     <div class="post-card-body">
                         <div class="post-category">React</div>
-                        <h3><a href="#" onclick="showPage('article-5')">React 19 Server Components 도입기: 레거시 SPA를 점진적으로 마이그레이션하기</a></h3>
+                        <h3><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-5')">React 19 Server Components 도입기: 레거시 SPA를 점진적으로 마이그레이션하기</a></h3>
                         <p class="post-excerpt">기존 CSR 기반 React 앱을 Server Components로 전환할 때 고려해야 할 아키텍처 결정과 실제 성능 개선 수치를 공유합니다.</p>
                         <div class="post-meta">
                             <span>2028년 1월 14일</span>
@@ -1032,7 +1033,7 @@
                     </div>
                     <div class="post-card-body">
                         <div class="post-category">DevOps</div>
-                        <h3><a href="#" onclick="showPage('article-6')">WSL2 vs 네이티브 Linux: 개발 환경 성능 벤치마크와 실무 선택 가이드</a></h3>
+                        <h3><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-6')">WSL2 vs 네이티브 Linux: 개발 환경 성능 벤치마크와 실무 선택 가이드</a></h3>
                         <p class="post-excerpt">파일 I/O, 빌드 속도, Docker 성능을 실측 비교하고, 각 환경이 적합한 개발 시나리오를 정리합니다.</p>
                         <div class="post-meta">
                             <span>2028년 1월 8일</span>
@@ -1049,7 +1050,7 @@
                     </div>
                     <div class="post-card-body">
                         <div class="post-category">AI × Development</div>
-                        <h3><a href="#" onclick="showPage('article-7')">AI 기반 개발 프로세스 구축: 멀티 모델 크로스체킹으로 설계 품질 높이기</a></h3>
+                        <h3><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('article-7')">AI 기반 개발 프로세스 구축: 멀티 모델 크로스체킹으로 설계 품질 높이기</a></h3>
                         <p class="post-excerpt">GPT, Claude, Gemini를 활용한 독립 설계 검증과 체계적 문서화 프로세스로 아키텍처 무결성을 유지하는 실전 방법론.</p>
                         <div class="post-meta">
                             <span>2028년 1월 2일</span>
@@ -1082,7 +1083,7 @@
 
             <h2>DevInsight를 만든 이유</h2>
             <p>
-                28년간 소프트웨어 개발 현장에서 일하면서 쌓아온 경험과 인사이트를 체계적으로 정리하고 공유하기 위해 
+                <span data-exp-years></span>년간 소프트웨어 개발 현장에서 일하면서 쌓아온 경험과 인사이트를 체계적으로 정리하고 공유하기 위해 
                 이 블로그를 시작했습니다. 기술은 빠르게 변하지만, 좋은 엔지니어링의 원칙은 놀라울 정도로 일관됩니다. 
                 그 맥락 속에서의 기술 선택과 문제 해결 과정을 기록합니다.
             </p>
@@ -1198,7 +1199,7 @@
             <h2>6. 이용자의 권리</h2>
             <p>
                 이용자는 언제든지 자신의 개인정보에 대해 열람, 수정, 삭제를 요청할 수 있습니다. 
-                관련 문의는 <a href="#" onclick="showPage('contact')">연락처 페이지</a>를 통해 보내주시기 바랍니다.
+                관련 문의는 <a href="javascript:void(0)" onclick="event.preventDefault(); showPage('contact')">연락처 페이지</a>를 통해 보내주시기 바랍니다.
             </p>
 
             <h2>7. 개인정보처리방침의 변경</h2>
@@ -1404,7 +1405,7 @@ napi-build = "2"</code></pre>
         <div class="page-transition">
             <div class="article-header">
                 <div class="post-category">TypeScript</div>
-                <h1>TypeScript 5.x의 실전 타입 패턴: 28년 개발자가 정리한 Best Practices</h1>
+                <h1>TypeScript 5.x의 실전 타입 패턴: <span data-exp-years></span>년 개발자가 정리한 Best Practices</h1>
                 <div class="post-meta">
                     <span>2028년 2월 5일</span><span class="dot"></span><span>10분 읽기</span><span class="dot"></span><span>DevInsight</span>
                 </div>
@@ -1479,18 +1480,18 @@ fetchApi(<span style="color:#c3e88d">'v3/albums'</span>);</code></pre>
     </div>
 
     <!-- Stub pages for remaining articles -->
-    <div class="page" id="page-article-3"><div class="page-transition"><div class="page-content"><h1>Electron 앱의 메모리 누수 디버깅</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="#" onclick="showPage('home')">홈으로 돌아가기</a></p></div></div></div>
-    <div class="page" id="page-article-4"><div class="page-transition"><div class="page-content"><h1>C++ 개발자가 Rust로 전환하며 배운 것들</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="#" onclick="showPage('home')">홈으로 돌아가기</a></p></div></div></div>
-    <div class="page" id="page-article-5"><div class="page-transition"><div class="page-content"><h1>React 19 Server Components 도입기</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="#" onclick="showPage('home')">홈으로 돌아가기</a></p></div></div></div>
-    <div class="page" id="page-article-6"><div class="page-transition"><div class="page-content"><h1>WSL2 vs 네이티브 Linux</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="#" onclick="showPage('home')">홈으로 돌아가기</a></p></div></div></div>
-    <div class="page" id="page-article-7"><div class="page-transition"><div class="page-content"><h1>AI 기반 개발 프로세스 구축</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="#" onclick="showPage('home')">홈으로 돌아가기</a></p></div></div></div>
+    <div class="page" id="page-article-3"><div class="page-transition"><div class="page-content"><h1>Electron 앱의 메모리 누수 디버깅</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="javascript:void(0)" onclick="event.preventDefault(); showPage('home')">홈으로 돌아가기</a></p></div></div></div>
+    <div class="page" id="page-article-4"><div class="page-transition"><div class="page-content"><h1>C++ 개발자가 Rust로 전환하며 배운 것들</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="javascript:void(0)" onclick="event.preventDefault(); showPage('home')">홈으로 돌아가기</a></p></div></div></div>
+    <div class="page" id="page-article-5"><div class="page-transition"><div class="page-content"><h1>React 19 Server Components 도입기</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="javascript:void(0)" onclick="event.preventDefault(); showPage('home')">홈으로 돌아가기</a></p></div></div></div>
+    <div class="page" id="page-article-6"><div class="page-transition"><div class="page-content"><h1>WSL2 vs 네이티브 Linux</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="javascript:void(0)" onclick="event.preventDefault(); showPage('home')">홈으로 돌아가기</a></p></div></div></div>
+    <div class="page" id="page-article-7"><div class="page-transition"><div class="page-content"><h1>AI 기반 개발 프로세스 구축</h1><p class="page-updated">준비 중인 글입니다.</p><p>이 글은 곧 게시될 예정입니다. <a href="javascript:void(0)" onclick="event.preventDefault(); showPage('home')">홈으로 돌아가기</a></p></div></div></div>
 
     <!-- Footer (always visible) -->
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-about">
-                <a href="#" class="site-logo" onclick="showPage('home')">Dev<span>Insight</span></a>
-                <p>28년 경력 시니어 개발자의 기술 블로그.<br>Electron, Rust, TypeScript, React 등 실무 경험과 인사이트를 공유합니다.</p>
+                <a href="javascript:void(0)" class="site-logo" onclick="event.preventDefault(); showPage('home')">Dev<span>Insight</span></a>
+                <p><span data-exp-years></span>년 경력 시니어 개발자의 기술 블로그.<br>Electron, Rust, TypeScript, React 등 실무 경험과 인사이트를 공유합니다.</p>
             </div>
             <div class="footer-col">
                 <h4>카테고리</h4>
@@ -1505,8 +1506,8 @@ fetchApi(<span style="color:#c3e88d">'v3/albums'</span>);</code></pre>
             <div class="footer-col">
                 <h4>사이트</h4>
                 <ul>
-                    <li><a href="#" onclick="showPage('about')">소개</a></li>
-                    <li><a href="#" onclick="showPage('contact')">연락처</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('about')">소개</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('contact')">연락처</a></li>
                     <li><a href="#">RSS 피드</a></li>
                     <li><a href="#">사이트맵</a></li>
                 </ul>
@@ -1514,13 +1515,13 @@ fetchApi(<span style="color:#c3e88d">'v3/albums'</span>);</code></pre>
             <div class="footer-col">
                 <h4>법적 고지</h4>
                 <ul>
-                    <li><a href="#" onclick="showPage('privacy')">개인정보처리방침</a></li>
-                    <li><a href="#" onclick="showPage('terms')">이용약관</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('privacy')">개인정보처리방침</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); showPage('terms')">이용약관</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <span>&copy; 2026 DevInsight. All rights reserved.</span>
+            <span id="footerCopyright">&copy; DevInsight. All rights reserved.</span>
             <span>Built with care by a developer, for developers.</span>
         </div>
     </footer>
@@ -1566,6 +1567,25 @@ fetchApi(<span style="color:#c3e88d">'v3/albums'</span>);</code></pre>
         window.addEventListener('DOMContentLoaded', () => {
             const hash = location.hash.slice(1);
             if (hash) showPage(hash);
+
+            const year = new Date().getFullYear();
+            const experienceYears = year - (1978 + 20);
+
+            document.querySelectorAll('[data-exp-years]').forEach(el => {
+                el.textContent = String(experienceYears);
+            });
+
+            document.querySelectorAll('meta[content*="{{expYears}}"]').forEach(meta => {
+                meta.setAttribute(
+                    'content',
+                    meta.getAttribute('content').replaceAll('{{expYears}}', String(experienceYears))
+                );
+            });
+
+            const copyright = document.getElementById('footerCopyright');
+            if (copyright) {
+                copyright.innerHTML = '&copy; ' + year + ' DevInsight. All rights reserved.';
+            }
         });
 
         // ===== Mobile Navigation =====
