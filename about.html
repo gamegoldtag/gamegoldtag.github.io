@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DevInsight 소개 페이지">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://devinsight.dev/about.html">
+    <title>소개 | DevInsight</title>
+    <style>
+        :root {
+            --ink: #1a1a2e;
+            --paper: #f8f6f1;
+            --border: #d4d0c8;
+            --muted: #6b6b7b;
+            --accent: #c0392b;
+        }
+        body {
+            margin: 0;
+            font-family: "Noto Sans KR", sans-serif;
+            color: var(--ink);
+            background: linear-gradient(180deg, #f6f2e8 0%, #f8f6f1 100%);
+            line-height: 1.7;
+        }
+        main {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 20px 80px;
+        }
+        h1 { font-size: 2rem; margin: 0 0 8px; }
+        h2 { margin-top: 28px; font-size: 1.2rem; }
+        .updated { color: var(--muted); margin-bottom: 24px; }
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="card">
+            <h1>소개</h1>
+            <p class="updated">최종 업데이트: <span data-current-date></span></p>
+
+            <h2>DevInsight를 만든 이유</h2>
+            <p>
+                19년간 소프트웨어 개발 현장에서 일하면서 쌓아온 경험과 인사이트를 체계적으로 정리하고 공유하기 위해
+                이 블로그를 시작했습니다. 기술은 빠르게 변하지만, 좋은 엔지니어링의 원칙은 놀라울 정도로 일관됩니다.
+                그 맥락 속에서의 기술 선택과 문제 해결 과정을 기록합니다.
+            </p>
+
+            <h2>다루는 주제</h2>
+            <p>
+                Windows 데스크톱 애플리케이션부터 현대적인 웹 프론트엔드까지, 실무에서 직접 경험한 기술 주제를 다룹니다.
+                주로 Electron 기반 크로스플랫폼 앱 개발, Rust와 C++의 시스템 프로그래밍, TypeScript와 React 생태계,
+                그리고 개발 프로세스와 아키텍처 설계에 대해 씁니다.
+            </p>
+
+            <h2>운영자 소개</h2>
+            <p>
+                시니어 소프트웨어 엔지니어로 현재 음악 스트리밍 플랫폼의 데스크톱 앱을 개발하고 있습니다.
+                Visual C++로 시작해 웹 기술의 진화를 모두 경험했고, 최근에는 Rust와 AI 기반 개발 프로세스에
+                깊은 관심을 가지고 있습니다. 이론보다는 실무에서 바로 적용 가능한 지식을 지향합니다.
+            </p>
+
+            <h2>콘텐츠 원칙</h2>
+            <p>
+                모든 글은 직접 작성하며, 실제 프로젝트에서의 경험을 기반으로 합니다. 단순한 튜토리얼이 아닌
+                "왜 이 기술을 선택했는지", "어떤 트레이드오프가 있었는지"를 설명하는 것이 이 블로그의 차별점입니다.
+                코드 예제는 모두 실제 동작하는 코드이며, 필요한 경우 GitHub 저장소를 함께 제공합니다.
+            </p>
+
+            <a class="back-link" href="index.html">홈으로 돌아가기</a>
+        </div>
+    </main>
+
+    <script>
+        const today = new Date();
+        const todayText = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+        document.querySelectorAll('[data-current-date]').forEach((el) => {
+            el.textContent = todayText;
+        });
+    </script>
+</body>
+</html>
