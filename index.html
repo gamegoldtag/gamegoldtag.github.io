@@ -21,12 +21,17 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
       crossorigin="anonymous"></script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/index.css">
     
     <style>
         :root {
+            --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+            --font-serif: "Gowun Batang", "Noto Serif KR", serif;
+            --font-mono: "JetBrains Mono", "Fira Code", monospace;
+            --font-point: "Jalpullineunharu", "Gowun Batang", serif;
             --ink: #1a1a2e;
             --paper: #f8f6f1;
             --paper-warm: #f0ede4;
@@ -45,17 +50,30 @@
             --header-height: 64px;
         }
 
+        @font-face {
+            font-family: "Jalpullineunharu";
+            src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/JalpullineunharuM.woff") format("woff");
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            font-family: var(--font-sans);
             background: var(--paper);
             color: var(--ink);
             line-height: 1.8;
             font-size: 16px;
             -webkit-font-smoothing: antialiased;
+        }
+
+        .font-point {
+            font-family: var(--font-point);
+            letter-spacing: 0.01em;
         }
 
         /* ===== HEADER ===== */
@@ -80,7 +98,7 @@
         }
 
         .site-logo {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-weight: 900;
             font-size: 1.5rem;
             color: var(--ink);
@@ -171,7 +189,7 @@
         }
 
         .hero h1 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: clamp(2.2rem, 5vw, 3.5rem);
             font-weight: 900;
             line-height: 1.2;
@@ -239,7 +257,7 @@
         }
 
         .code-preview {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.82rem;
             color: var(--code-text);
             line-height: 1.7;
@@ -333,6 +351,11 @@
             padding: 0 24px 80px;
         }
 
+        /* Keep breathing room when a posts section comes right after hero */
+        .hero + .posts-section {
+            padding-top: 20px;
+        }
+
         .post-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -340,20 +363,24 @@
         }
 
         .series-subtitle {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: 1.35rem;
-            margin: 8px 0 18px;
+            margin: 18px 0 12px;
         }
 
-        .series-subtitle + .post-grid {
-            margin-bottom: 44px;
+        .series-subtitle:not(:first-of-type) {
+            margin-top: 40px;
         }
 
         .series-lead {
-            margin: -4px 0 20px;
+            margin: 0 0 24px;
             color: var(--muted);
             font-size: 0.95rem;
             line-height: 1.7;
+        }
+
+        .series-lead + .post-grid {
+            margin-bottom: 48px;
         }
 
         .post-card {
@@ -401,7 +428,7 @@
         }
 
         .visual-icon {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
             color: rgba(255,255,255,0.15);
             font-size: 4rem;
             font-weight: 700;
@@ -466,7 +493,7 @@
         }
 
         .newsletter-inner h2 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             color: white;
             font-size: 1.8rem;
             margin-bottom: 12px;
@@ -607,7 +634,7 @@
         }
 
         .page-content h1 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: 2.2rem;
             margin-bottom: 8px;
         }
@@ -715,7 +742,7 @@
         }
 
         .article-header h1 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: 2rem;
             line-height: 1.3;
             margin-bottom: 16px;
@@ -751,7 +778,7 @@
         }
 
         .article-body code {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.85em;
             background: var(--paper-warm);
             padding: 2px 6px;
@@ -934,6 +961,7 @@
                 아키텍처 결정의 이유, 그리고 기술 선택의 맥락을 공유합니다.
             </p>
         </section>
+
         <section class="posts-section">
             <div class="section-label">기획 연재</div>
             <h3 class="series-subtitle">🔮 연재기획: AI로 하는 바이브 코딩 - 타로편</h3>
@@ -1610,7 +1638,7 @@ fetchApi(<span style="color:#c3e88d">'v3/albums'</span>);</code></pre>
 <span style="color:#c792ea">const</span> theme = {
   primary: <span style="color:#c3e88d">'#c0392b'</span>,
   secondary: <span style="color:#c3e88d">'#1a1a2e'</span>,
-  fontFamily: <span style="color:#c3e88d">'Noto Sans KR'</span>,
+  fontFamily: <span style="color:#c3e88d">'Pretendard'</span>,
 } <span style="color:#c792ea">satisfies</span> <span style="color:#ffcb6b">ThemeConfig</span>;
 
 <span style="color:#6a6a8a">// theme.primary의 타입: '#c0392b' (리터럴 유지!)</span></code></pre>
