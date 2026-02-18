@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GitHub Pages로 정적 사이트를 빠르게 배포하는 방법을 단계별로 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-18.html">
+  <title>GitHub Pages로 내 사이트 10분만에 올리기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>GitHub Pages로 내 사이트 10분만에 올리기</h1>
+      <p class="meta">게시일: 2025년 10월 18일 · 11분 읽기</p>
+
+      <p>GitHub Pages는 정적 사이트를 무료로 공개하기 좋은 호스팅입니다. 포트폴리오, 프로젝트 데모, 문서 사이트에 특히 잘 맞고, Git 기반 워크플로를 쓰는 사람에게 유지보수가 편합니다.</p>
+
+      <h2>GitHub Pages란?</h2>
+      <p>GitHub 저장소에 올린 정적 파일(HTML/CSS/JS)을 웹사이트로 배포해주는 서비스입니다. HTTPS와 기본 서브도메인을 제공하며 커스텀 도메인 연결도 가능합니다.</p>
+      <div class="note">트래픽/용량/빌드 제한은 시점별로 변경될 수 있으니, 배포 전 GitHub 공식 문서를 확인하는 것이 안전합니다.</div>
+
+      <h2>준비물</h2>
+      <ul>
+        <li>GitHub 계정</li>
+        <li><code>index.html</code> 중심의 사이트 파일</li>
+      </ul>
+
+      <h2>1단계: GitHub 가입</h2>
+      <p><code>github.com</code>에서 가입합니다. 사용자명(username)은 사이트 주소와 연결되므로 신중하게 정하는 편이 좋습니다.</p>
+      <pre><code>username: honggildong
+주소: https://honggildong.github.io</code></pre>
+
+      <h2>2단계: 저장소 생성</h2>
+      <p><strong>New repository</strong>에서 저장소 이름을 <code>username.github.io</code> 형식으로 만듭니다. 예: <code>honggildong.github.io</code></p>
+      <p>공개(Public) 저장소로 생성합니다.</p>
+
+      <h2>3단계: 파일 업로드</h2>
+      <p>저장소 페이지에서 기존 파일 업로드 메뉴를 선택하고 <code>index.html</code>을 올린 뒤 커밋합니다. 이미지가 있으면 같은 경로에 함께 업로드해야 화면이 깨지지 않습니다.</p>
+
+      <h2>4단계: Pages 활성화</h2>
+      <p><strong>Settings → Pages</strong>로 이동해 배포 브랜치(main)를 지정하고 저장합니다. 몇 분 내로 사이트 URL이 활성화됩니다.</p>
+
+      <h2>5단계: 수정 반영</h2>
+      <p>파일을 수정해 커밋하면 자동으로 재배포됩니다. 자주 업데이트한다면 GitHub Desktop 또는 CLI로 로컬-원격 동기화 흐름을 만드는 것이 편합니다.</p>
+
+      <h2>React/Vue 프로젝트 배포 자동화</h2>
+      <p>정적 HTML이 아니라 프레임워크 프로젝트라면 빌드 결과물을 배포해야 합니다. GitHub Actions로 자동화하면 push만으로 배포 가능합니다.</p>
+      <pre><code>name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist</code></pre>
+
+      <h2>Netlify와 비교</h2>
+      <table>
+        <thead>
+          <tr><th>항목</th><th>GitHub Pages</th><th>Netlify</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>배포 방식</td><td>Git 기반</td><td>Git + 드래그앤드롭</td></tr>
+          <tr><td>학습 난이도</td><td>중</td><td>하</td></tr>
+          <tr><td>개발 워크플로 궁합</td><td>높음</td><td>높음</td></tr>
+          <tr><td>입문 편의성</td><td>보통</td><td>높음</td></tr>
+        </tbody>
+      </table>
+
+      <h2>마무리</h2>
+      <p>GitHub Pages는 한 번 설정하면 "수정 → 커밋 → 자동 반영" 흐름이 안정적으로 돌아갑니다. 코드 이력을 남기면서 운영하고 싶은 포트폴리오/문서형 사이트에 특히 적합합니다.</p>
+
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

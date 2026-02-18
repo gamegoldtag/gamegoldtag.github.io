@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="구형 안드로이드 폰에 Termux를 설치해 테스트용 웹서버를 만드는 방법을 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-21.html">
+  <title>남는 안드로이드 폰으로 웹서버 만들기 (Termux) | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    p { margin: 0 0 16px; }
+    ul { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>남는 안드로이드 폰으로 웹서버 만들기 (Termux)</h1>
+      <p class="meta">게시일: 2025년 9월 26일 · 12분 읽기</p>
+
+      <p>서랍 속 구형 안드로이드 폰도 테스트 서버로 활용할 수 있습니다. Termux를 사용하면 리눅스 명령어를 실행할 수 있고, 정적 파일 서버 또는 Node 기반 서버를 쉽게 띄울 수 있습니다.</p>
+
+      <h2>이 방식이 적합한 용도</h2>
+      <ul>
+        <li>개인 테스트 서버</li>
+        <li>개발 중인 화면 임시 공유</li>
+        <li>내부망 데모 서버</li>
+      </ul>
+
+      <h2>준비물</h2>
+      <ul>
+        <li>안드로이드 7.0 이상 기기</li>
+        <li>지속 전원(충전기)</li>
+        <li>Wi-Fi 연결</li>
+        <li>여유 저장공간</li>
+      </ul>
+
+      <h2>1단계: Termux 설치</h2>
+      <p>최신 유지 버전을 위해 F-Droid 경로 설치를 권장합니다.</p>
+      <pre><code>1) f-droid.org 접속
+2) F-Droid 설치
+3) F-Droid에서 termux 검색 후 설치</code></pre>
+
+      <h2>2단계: 초기 설정</h2>
+      <pre><code>pkg update && pkg upgrade -y
+termux-setup-storage</code></pre>
+
+      <h2>3단계: 서버 패키지 설치</h2>
+      <p>정적 파일만 서빙하면 lighttpd, 유연한 구성이 필요하면 Node.js를 사용합니다.</p>
+      <pre><code>pkg install lighttpd -y
+# 또는
+pkg install nodejs -y</code></pre>
+
+      <h2>4단계: 서버 실행</h2>
+      <p><strong>lighttpd</strong></p>
+      <pre><code>mkdir -p ~/www
+cd ~/www
+echo "&lt;h1&gt;내 폰 웹서버&lt;/h1&gt;" > index.html
+lighttpd -D -f /data/data/com.termux/files/usr/etc/lighttpd/lighttpd.conf</code></pre>
+      <p><strong>Node.js(serve)</strong></p>
+      <pre><code>mkdir -p ~/www
+cd ~/www
+echo "&lt;h1&gt;내 폰 웹서버&lt;/h1&gt;" > index.html
+npx serve .</code></pre>
+
+      <h2>5단계: 같은 Wi-Fi에서 접속</h2>
+      <pre><code>ifconfig | grep inet
+# 예: 192.168.0.15</code></pre>
+      <p>동일 네트워크 PC에서 <code>http://192.168.0.15:8080</code> 형태로 접속해 확인합니다.</p>
+
+      <h2>외부 접속(선택): ngrok</h2>
+      <p>외부 공유가 필요하면 터널링 도구를 사용합니다.</p>
+      <pre><code>pkg install wget -y
+wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz
+tar -xzf ngrok-v3-stable-linux-arm64.tgz
+./ngrok config add-authtoken YOUR_TOKEN
+./ngrok http 8080</code></pre>
+
+      <h2>현실적인 한계</h2>
+      <ul>
+        <li>상시 전원/발열 관리 필요</li>
+        <li>가정용 네트워크 안정성에 영향 받음</li>
+        <li>무료 터널 주소는 변동될 수 있음</li>
+        <li>배터리 수명 단축 가능성</li>
+      </ul>
+      <div class="note">이 방식은 24시간 상용 서비스보다는 테스트/데모 환경에 적합합니다. 공개 서비스 운영은 관리형 호스팅 또는 클라우드 인프라를 권장합니다.</div>
+
+      <h2>마무리</h2>
+      <p>구형 폰을 재활용해 테스트 서버를 만들면 로컬 검증과 공유가 훨씬 쉬워집니다. 비용을 거의 들이지 않고 네트워크/서버 기본 개념을 실습하기에도 좋은 방식입니다.</p>
+
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

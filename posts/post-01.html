@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Electron 앱에서 Rust N-API 바인딩으로 성능을 개선한 실전 가이드입니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-01.html">
+  <title>Electron 앱에서 Rust로 네이티브 성능 확보하기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    p { margin: 0 0 16px; }
+    pre { background: #2d2d3f; color: #e6e6e6; padding: 16px; border-radius: 10px; overflow-x: auto; font-size: 0.9rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>Electron 앱에서 Rust로 네이티브 성능 확보하기: N-API 바인딩 실전 가이드</h1>
+      <p class="meta">게시일: 2026년 2월 10일 · 12분 읽기</p>
+      <p>Electron 앱을 운영하다 보면 JavaScript 런타임만으로는 감당하기 어려운 CPU 작업이 반드시 등장합니다. 오디오 디코딩, 대용량 버퍼 처리, DRM 관련 검증 로직처럼 지연이 바로 체감되는 영역에서는 네이티브 계층이 필요합니다. 이 글은 Rust와 N-API를 조합해 성능 병목을 해결한 과정을 정리합니다.</p>
+      <h2>왜 Rust를 선택했는가</h2>
+      <p>기존에는 C++ 애드온을 사용했지만, 메모리 안전성 이슈가 운영 중 치명적인 장애로 이어졌습니다. Rust는 컴파일 단계에서 소유권과 빌림 규칙을 강제해 런타임 크래시 가능성을 크게 낮춥니다. 동시에 C++에 가까운 실행 성능을 제공합니다.</p>
+      <h2>napi-rs 기본 설정</h2>
+      <pre><code>[package]
+name = "audio-native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", features = ["napi8"] }
+napi-derive = "2"
+</code></pre>
+      <p>핵심은 <code>cdylib</code> 설정입니다. Node.js가 로드 가능한 동적 라이브러리로 빌드되며, JavaScript 레이어와 경계 비용을 최소화할 수 있습니다.</p>
+      <h2>핫패스 옮기기 원칙</h2>
+      <p>처음부터 전면 전환하지 않고, 프로파일링으로 병목 구간만 Rust로 이동했습니다. 경계 횟수가 많을수록 오버헤드가 커지므로, 작은 함수 호출을 반복하기보다 한 번에 처리할 수 있는 단위로 API를 설계했습니다.</p>
+      <h2>성과와 운영 관점</h2>
+      <p>동일 오디오 버퍼 기준으로 처리 시간은 약 10배 이상 단축됐고, GC pause로 인한 끊김 현상이 사라졌습니다. CI에서는 플랫폼별 프리빌트 바이너리를 생성해 패키징 단계에 포함했고, N-API ABI 안정성 덕분에 Node 버전 차이에 따른 장애도 줄었습니다.</p>
+      <p>결론적으로 Rust 도입의 핵심은 "핫패스 선별"과 "경계 최소화"입니다. 이 두 가지 원칙만 지켜도 Electron 앱의 체감 성능을 크게 개선할 수 있습니다.</p>
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

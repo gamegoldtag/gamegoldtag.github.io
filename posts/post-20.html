@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Vercel과 Netlify로 React/Vue/Next.js 프로젝트를 무료 배포하는 방법을 비교 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-20.html">
+  <title>Vercel/Netlify로 프론트엔드 무료 배포하기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>Vercel/Netlify로 프론트엔드 무료 배포하기</h1>
+      <p class="meta">게시일: 2025년 10월 3일 · 12분 읽기</p>
+
+      <p>React, Vue, Next.js 프로젝트를 배포할 때 Vercel과 Netlify는 가장 많이 쓰이는 선택지입니다. 두 서비스 모두 Git 기반 자동 배포를 제공하고, 무료 플랜으로 시작하기 좋습니다.</p>
+
+      <h2>왜 많이 쓰일까?</h2>
+      <p>핵심은 빌드 자동화입니다. 소스코드를 push하면 빌드와 배포를 플랫폼이 대신 처리합니다.</p>
+      <pre><code>로컬 빌드 + 수동 업로드
+→ Git push + 자동 빌드/배포</code></pre>
+
+      <h2>Netlify 배포</h2>
+      <p>Netlify는 입문자가 시작하기 쉬운 UI를 제공합니다. 특히 정적 사이트는 드래그앤드롭 배포가 간단합니다.</p>
+
+      <h3>방법 1: 드래그앤드롭</h3>
+      <ol>
+        <li><code>npm run build</code> 실행</li>
+        <li>Netlify 로그인</li>
+        <li>빌드 결과 폴더(<code>dist</code> 등) 업로드</li>
+      </ol>
+
+      <h3>방법 2: GitHub 연동</h3>
+      <ol>
+        <li>Add new site → Import from Git</li>
+        <li>저장소 선택</li>
+        <li>빌드 명령/출력 경로 입력</li>
+        <li>Deploy 실행</li>
+      </ol>
+
+      <h2>Vercel 배포</h2>
+      <p>Vercel은 프레임워크 자동 감지와 기본 설정이 강점입니다. Next.js 프로젝트에서 특히 운영 경험이 좋습니다.</p>
+      <ol>
+        <li>Vercel 로그인 후 새 프로젝트 생성</li>
+        <li>GitHub 저장소 연결</li>
+        <li>프레임워크 감지 확인</li>
+        <li>Deploy 실행</li>
+      </ol>
+
+      <h2>비교 포인트</h2>
+      <table>
+        <thead>
+          <tr><th>항목</th><th>Netlify</th><th>Vercel</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>입문 편의</td><td>높음</td><td>높음</td></tr>
+          <tr><td>드래그앤드롭</td><td>지원</td><td>비중 낮음</td></tr>
+          <tr><td>Next.js 궁합</td><td>좋음</td><td>매우 좋음</td></tr>
+          <tr><td>자동 배포</td><td>지원</td><td>지원</td></tr>
+        </tbody>
+      </table>
+      <div class="note">트래픽/빌드 시간/무료 한도는 플랜 변경 가능성이 있으므로, 실제 배포 전에 각 서비스 공식 요금표를 확인하세요.</div>
+
+      <h2>프레임워크별 선택 가이드</h2>
+      <ul>
+        <li>Next.js: Vercel 우선 검토</li>
+        <li>React/Vue/Svelte: Netlify/Vercel 모두 적합</li>
+        <li>정적 HTML: Netlify의 업로드 배포가 간단</li>
+      </ul>
+
+      <h2>배포 자동화 흐름</h2>
+      <pre><code>코드 수정 → git push → 자동 빌드 → 자동 배포 → 사이트 반영</code></pre>
+      <p>이 흐름을 만들면 수동 업로드, FTP, 서버 관리 부담이 크게 줄어듭니다.</p>
+
+      <h2>마무리</h2>
+      <p>두 서비스 모두 무료 시작이 가능하고 실무에서도 충분히 사용됩니다. 처음에는 설정이 쉬운 쪽으로 시작하고, 프로젝트 특성(프레임워크/팀 워크플로)에 맞춰 고르는 것이 가장 효율적입니다.</p>
+
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

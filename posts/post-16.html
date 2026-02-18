@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="초기 비용 부담 없이 AI와 무료 도구로 웹사이트를 만드는 현실적인 방법을 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-16.html">
+  <title>돈 없이 내 웹사이트 만드는 법 - AI가 다 해줌 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    p { margin: 0 0 16px; }
+    ul { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>돈 없이 내 웹사이트 만드는 법 - AI가 다 해줌</h1>
+      <p class="meta">게시일: 2025년 11월 1일 · 10분 읽기</p>
+
+      <p>웹사이트 제작은 예전보다 훨씬 저렴해졌고, 초기 단계는 사실상 무료 조합으로 시작할 수 있습니다. 핵심은 "AI로 제작 초안" + "무료 디자인/이미지" + "무료 호스팅" 조합을 현실적으로 쓰는 것입니다.</p>
+
+      <h2>비용이 발생하는 구간부터 나누기</h2>
+      <table>
+        <thead>
+          <tr><th>항목</th><th>유료 방식</th><th>무료 대체</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>웹사이트 제작</td><td>외주/개발자 의뢰</td><td>AI 초안 생성 (Claude/ChatGPT)</td></tr>
+          <tr><td>디자인 작업</td><td>유료 디자인 툴</td><td>무료 플랜(Figma/Canva)</td></tr>
+          <tr><td>이미지 소스</td><td>유료 스톡</td><td>Unsplash / Pexels</td></tr>
+          <tr><td>호스팅</td><td>월 과금형 서버</td><td>Netlify / GitHub Pages / Cloudflare Pages</td></tr>
+          <tr><td>도메인</td><td>연 과금</td><td>초기엔 무료 서브도메인 사용</td></tr>
+        </tbody>
+      </table>
+
+      <h2>무료 도구 조합 가이드</h2>
+      <p><strong>제작:</strong> Claude, ChatGPT 모두 초안 제작에 충분합니다. 문서 구조와 UI 요구사항을 구체적으로 전달하면 결과가 안정적입니다.</p>
+      <p><strong>이미지:</strong> Unsplash/Pexels에서 라이선스를 확인한 이미지를 사용하고, 필요하면 Canva 무료 플랜으로 크기와 비율을 맞춥니다.</p>
+      <p><strong>호스팅:</strong> 입문자는 Netlify, 버전 관리 중심이면 GitHub Pages, 글로벌 성능 중심이면 Cloudflare Pages가 편합니다.</p>
+
+      <h2>무료 서브도메인으로 먼저 시작하기</h2>
+      <pre><code>yoursite.netlify.app
+yourname.github.io
+yoursite.pages.dev</code></pre>
+      <p>초기에는 위 주소로도 충분히 공개 테스트가 가능합니다. 사이트 방향이 확정되면 커스텀 도메인을 연결해 브랜드 신뢰도를 높이면 됩니다.</p>
+
+      <h2>추천 조합</h2>
+      <ul>
+        <li>가장 쉬운 시작: Claude + Unsplash + Netlify</li>
+        <li>개발자 친화적: Claude + Canva + GitHub Pages</li>
+        <li>속도/엣지 배포 중시: ChatGPT + Pexels + Cloudflare Pages</li>
+      </ul>
+
+      <h2>비용 비교는 이렇게 보는 게 정확함</h2>
+      <p>외주 제작은 초기 제작비와 유지 비용이 함께 발생할 수 있습니다. 무료 조합은 초기 비용을 크게 줄여주지만, 기능 복잡도가 올라가면 결국 유료 인프라나 백엔드가 필요합니다.</p>
+      <div class="note">"완전 0원"은 정적 소개 사이트 기준에 가깝습니다. 로그인/결제/대규모 트래픽/DB가 필요한 서비스는 별도 비용을 고려해야 합니다.</div>
+
+      <h2>무료 조합의 한계</h2>
+      <ul>
+        <li>회원가입/로그인/결제 기능은 추가 백엔드가 필요</li>
+        <li>대규모 트래픽에서는 무료 한도 확인 필요</li>
+        <li>AI 생성 코드의 품질 검수(접근성, 모바일, 보안 헤더) 필요</li>
+      </ul>
+
+      <h2>마무리</h2>
+      <p>핵심은 "무조건 무료"가 아니라 "초기 비용 없이 빠르게 검증"입니다. 아이디어 단계에서는 무료 조합으로 충분히 시작할 수 있고, 성과가 나오면 필요한 부분만 유료로 확장하는 전략이 가장 현실적입니다.</p>
+
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

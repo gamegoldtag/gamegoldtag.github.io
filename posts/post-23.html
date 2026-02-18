@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Oracle Cloud Always Free로 VM을 만들고 Nginx로 웹사이트를 배포하는 전체 과정을 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-23.html">
+  <title>Oracle Cloud 무료 서버 제대로 쓰는 법 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    p { margin: 0 0 16px; }
+    ul { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .warn { background: #fff2ef; border: 1px solid #f1c2b8; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>Oracle Cloud 무료 서버 제대로 쓰는 법</h1>
+      <p class="meta">게시일: 2025년 9월 12일 · 14분 읽기</p>
+
+      <p>홈서버는 인터넷/전원 상태에 영향을 크게 받습니다. 24시간 구동이 필요하면 클라우드 서버가 안정적입니다. Oracle Cloud Always Free는 시작 비용을 낮추면서도 꽤 높은 사양을 제공해 개인 프로젝트에 많이 쓰입니다.</p>
+
+      <h2>왜 많이 선택할까?</h2>
+      <p>Always Free 리소스가 상대적으로 넉넉하기 때문입니다. 다만 제공 사양과 정책은 시점별로 변경될 수 있어, 배포 전 콘솔의 현재 한도를 확인해야 합니다.</p>
+      <pre><code>Always Free 예시 항목
+- ARM 기반 VM 리소스
+- 추가 VM 리소스(조건부)
+- 블록 스토리지
+- 월간 네트워크 전송량
+- 기간 제한 없는 무료 티어(정책 범위 내)</code></pre>
+
+      <h2>준비물</h2>
+      <ul>
+        <li>Oracle Cloud 계정</li>
+        <li>본인 인증 가능한 결제 수단(가입 검증용)</li>
+        <li>SSH 키 파일</li>
+      </ul>
+      <div class="warn">무료 범위를 넘거나 유료 리소스를 생성하면 과금될 수 있습니다. 생성 단계에서 Always Free 표시를 반드시 확인하세요.</div>
+
+      <h2>1단계: 계정 생성</h2>
+      <p><code>cloud.oracle.com</code>에서 계정을 만들고 인증을 완료합니다. 승인 시간은 계정/지역 상태에 따라 차이가 있습니다.</p>
+
+      <h2>2단계: VM 생성</h2>
+      <p><strong>Create a VM instance</strong>에서 Ubuntu 이미지와 Always Free 가능한 Shape를 선택합니다. SSH 공개키를 등록한 뒤 인스턴스를 생성합니다.</p>
+      <pre><code>권장 예시
+- Image: Ubuntu 22.04 LTS
+- Shape: Always Free 가능 Shape
+- Boot Volume: 필요 최소 용량부터 시작</code></pre>
+
+      <h2>3단계: SSH 접속</h2>
+      <pre><code>ssh -i ~/oracle-key.pem ubuntu@YOUR_PUBLIC_IP</code></pre>
+      <p>접속이 되면 서버 초기 업데이트를 진행합니다.</p>
+
+      <h2>4단계: Nginx 설치</h2>
+      <pre><code>sudo apt update && sudo apt upgrade -y
+sudo apt install nginx -y
+sudo systemctl enable nginx
+sudo systemctl start nginx</code></pre>
+      <p>브라우저에서 공인 IP로 접속해 Nginx 기본 페이지를 확인합니다.</p>
+
+      <h2>5단계: 방화벽/보안 규칙 열기</h2>
+      <p>Oracle 네트워크 보안 목록(또는 NSG)에서 80/443 포트를 허용해야 외부 접속이 가능합니다. 서버 내부 방화벽(UFW/iptables)도 함께 확인합니다.</p>
+      <pre><code># 예: UFW 사용 시
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw status</code></pre>
+
+      <h2>6단계: 사이트 업로드</h2>
+      <pre><code>scp -i ~/oracle-key.pem index.html ubuntu@YOUR_PUBLIC_IP:/tmp/index.html
+ssh -i ~/oracle-key.pem ubuntu@YOUR_PUBLIC_IP
+sudo mv /tmp/index.html /var/www/html/index.html</code></pre>
+
+      <h2>7단계: HTTPS 적용</h2>
+      <p>도메인이 있으면 Let's Encrypt를 적용합니다.</p>
+      <pre><code>sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d yourdomain.com</code></pre>
+
+      <h2>운영 시 주의점</h2>
+      <ul>
+        <li>장기간 미사용 계정/리소스 정책을 주기적으로 확인</li>
+        <li>콘솔 로그인/리소스 상태 점검 주기 유지</li>
+        <li>백업 스냅샷과 SSH 키 보관 정책 운영</li>
+      </ul>
+      <div class="note">일부 계정에서 장기간 비활성 상태 리소스가 회수될 수 있으므로, 정기 점검 일정을 캘린더에 등록하는 것이 안전합니다.</div>
+
+      <h2>Apache vs Nginx 간단 기준</h2>
+      <pre><code>Apache: 설정 직관성, 레거시 호환성 강점
+Nginx: 성능/메모리 효율, 리버스 프록시 강점</code></pre>
+      <p>개인 서버 첫 구성에서는 Nginx가 운영 단순성과 성능 측면에서 무난한 선택입니다.</p>
+
+      <h2>마무리</h2>
+      <p>Oracle Cloud Always Free는 홈서버보다 안정적인 24시간 운영 환경을 저비용으로 시작하기 좋은 선택지입니다. 핵심은 Always Free 범위를 정확히 지키고, 네트워크/보안 규칙을 명확히 관리하는 것입니다.</p>
+
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

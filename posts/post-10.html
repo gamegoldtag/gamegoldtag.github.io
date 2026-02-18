@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="실무에서 바로 적용 가능한 웹 보안 헤더 설정 가이드">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-10.html">
+  <title>웹 보안 헤더 설정 가이드 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    p { margin: 0 0 16px; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>웹 보안 헤더: 실무에서 먼저 적용해야 할 최소 구성</h1>
+      <p class="meta">게시일: 2025년 12월 12일 · 8분 읽기</p>
+      <p>보안 이슈는 코드 취약점만의 문제가 아닙니다. 서버 헤더 설정만으로 막을 수 있는 공격면이 많고, 적용 비용도 낮습니다. 핵심은 과도한 정책보다 안전한 기본값입니다.</p>
+      <h2>우선 적용 항목</h2>
+      <p>Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Strict-Transport-Security를 먼저 설정합니다. 이 네 가지는 재현 가능한 기준으로 운영하기 좋습니다.</p>
+      <h2>CSP 도입 전략</h2>
+      <p>처음부터 차단 모드로 가면 배포 리스크가 큽니다. report-only로 위반 로그를 수집한 뒤, 실제 사용 스크립트 출처를 정리해 점진적으로 차단 정책으로 전환하는 것이 안전합니다.</p>
+      <h2>운영 체크</h2>
+      <p>배포 파이프라인에 헤더 스냅샷 검증을 넣으면 회귀를 줄일 수 있습니다. 인프라 변경 시 누락되는 경우가 많기 때문에, 자동 검증이 필수입니다.</p>
+      <p>보안 헤더는 공격을 완전히 막는 도구가 아니라, 공격 성공 확률을 낮추는 기본 방어선입니다.</p>
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

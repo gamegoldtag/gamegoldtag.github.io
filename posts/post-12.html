@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="로그 설계와 모니터링으로 장애 대응 시간을 줄이는 방법">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-12.html">
+  <title>로그 설계와 관측성 개선 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    p { margin: 0 0 16px; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>로그 설계와 관측성: 장애 대응 시간을 절반으로 줄인 운영 방식</h1>
+      <p class="meta">게시일: 2025년 11월 30일 · 9분 읽기</p>
+      <p>장애 대응이 느린 팀의 공통점은 로그가 많은데 정보가 없는 상태입니다. 로그는 기록이 아니라 질문에 답해야 하며, 이를 위해 구조화와 상관관계 키 설계가 필요합니다.</p>
+      <h2>구조화 로그 기준</h2>
+      <p>모든 로그에 request_id, user_scope, feature_name, error_code를 통일해 넣습니다. 문자열 메시지 중심 로그는 검색은 되지만 집계가 어렵기 때문에 운영 효율이 떨어집니다.</p>
+      <h2>알림 품질 개선</h2>
+      <p>에러 개수 임계치만으로 알림을 보내면 노이즈가 커집니다. 에러율과 지연시간을 함께 평가해 실제 사용자 영향이 있는 경우만 우선 알림으로 올리는 것이 효과적입니다.</p>
+      <h2>회고 자동화</h2>
+      <p>장애 종료 후 로그를 수동 수집하지 않도록, 사건 단위 템플릿을 자동 생성하면 회고 품질이 안정됩니다. 동일 유형 재발도 더 빨리 막을 수 있습니다.</p>
+      <p>관측성은 도구 문제가 아니라 운영 습관입니다. 공통 필드와 기준만 지켜도 대응 속도는 즉시 개선됩니다.</p>
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="무료 호스팅 서비스를 상황별로 비교해 어떤 선택이 맞는지 정리한 가이드입니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-24.html">
+  <title>상황별 무료 호스팅 선택 가이드 - 뭘 써야 하나? | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    p { margin: 0 0 16px; }
+    ul { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 0.95rem; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <article class="card">
+      <h1>상황별 무료 호스팅 선택 가이드 - 뭘 써야 하나?</h1>
+      <p class="meta">게시일: 2025년 9월 5일 · 12분 읽기</p>
+
+      <p>무료 호스팅은 선택지가 많아 처음엔 오히려 결정이 어렵습니다. 이 글은 지금까지 다룬 서비스들을 목적 중심으로 정리해, "지금 내 상황에 맞는 한 가지"를 빠르게 고를 수 있게 만든 체크 가이드입니다.</p>
+
+      <h2>한눈에 보는 비교</h2>
+      <table>
+        <thead>
+          <tr><th>서비스</th><th>난이도</th><th>백엔드</th><th>상시운영</th><th>추천 대상</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Netlify</td><td>낮음</td><td>제한적</td><td>가능</td><td>입문자, 첫 배포</td></tr>
+          <tr><td>Cloudflare Pages</td><td>낮음</td><td>제한적</td><td>가능</td><td>성능/글로벌 트래픽</td></tr>
+          <tr><td>GitHub Pages</td><td>중간</td><td>불가(정적 중심)</td><td>가능</td><td>개발자 포트폴리오</td></tr>
+          <tr><td>Vercel</td><td>낮음</td><td>프레임워크 기반</td><td>가능</td><td>Next.js/프론트엔드</td></tr>
+          <tr><td>Oracle Cloud</td><td>높음</td><td>가능</td><td>가능</td><td>백엔드 포함 서비스</td></tr>
+          <tr><td>구형 노트북</td><td>중간</td><td>가능</td><td>조건부</td><td>테스트/개인 운영</td></tr>
+          <tr><td>안드로이드 폰</td><td>중간</td><td>가능</td><td>조건부</td><td>임시 데모</td></tr>
+        </tbody>
+      </table>
+      <div class="note">트래픽/빌드 시간/무료 한도는 서비스 정책에 따라 바뀔 수 있습니다. 실제 배포 전 공식 요금/제한 문서를 확인하세요.</div>
+
+      <h2>상황별 추천</h2>
+      <ul>
+        <li>소개 페이지 하나: Netlify</li>
+        <li>개발자 포트폴리오: GitHub Pages 또는 Netlify</li>
+        <li>React/Vue 프로젝트: Netlify 또는 Vercel</li>
+        <li>Next.js 프로젝트: Vercel 우선</li>
+        <li>글로벌 트래픽/엣지 성능: Cloudflare Pages</li>
+        <li>백엔드 API 필요: Oracle Cloud</li>
+        <li>빠른 내부 데모: 구형 노트북 + ngrok</li>
+        <li>즉석 임시 공유: 안드로이드 폰 + Termux/ngrok</li>
+      </ul>
+
+      <h2>목적별 조합 예시</h2>
+      <p><strong>완전 초보자</strong></p>
+      <pre><code>AI로 index.html 생성 → Netlify 드래그앤드롭 배포</code></pre>
+
+      <p><strong>개발자 포트폴리오</strong></p>
+      <pre><code>GitHub 저장소 → GitHub Pages 자동 배포</code></pre>
+
+      <p><strong>풀스택 개인 프로젝트</strong></p>
+      <pre><code>프론트: Vercel/Netlify
+백엔드: Oracle Cloud
+DB: 관리형 무료 플랜(Supabase 등)</code></pre>
+
+      <h2>처음 시작할 때 추천 순서</h2>
+      <pre><code>1) Netlify로 먼저 공개
+2) 수정 주기가 늘면 Git 연동 자동배포
+3) 백엔드가 필요해지면 Oracle Cloud 추가</code></pre>
+      <p>대부분의 개인 사이트는 1단계만으로도 충분히 운영됩니다.</p>
+
+      <h2>마무리</h2>
+      <p>정답은 "최고의 서비스"가 아니라 "현재 목적에 맞는 서비스"입니다. 무료 호스팅은 갈아타기 비용이 낮으니, 가장 쉬운 선택으로 먼저 시작하고 필요할 때 확장하는 방식이 가장 실용적입니다.</p>
+
+      <a class="back" href="/">홈으로 돌아가기</a>
+    </article>
+  </main>
+</body>
+</html>
