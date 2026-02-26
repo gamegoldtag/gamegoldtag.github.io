@@ -3,36 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="E2E 테스트 flaky 현상을 줄이는 실무 전략">
+  <meta name="description" content="E2E 테스트 flaky 현상의 구조적 원인과 Playwright 기반 안정화 전략. 비동기 대기, mock server, 테스트 격리, 실패 분석 루프를 코드 예시로 정리했습니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-11.html">
-  <title>E2E 테스트 안정화 전략 | DevInsight</title>
+  <title>E2E 테스트 flaky 줄이기: 구조적 안정화 전략 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
-    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
     .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
-    h1 { margin: 0 0 10px; font-size: 2rem; }
-    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>E2E 테스트 flaky 줄이기: 실패 원인을 구조적으로 제거하는 방법</h1>
-      <p class="meta">게시일: 2025년 12월 6일 · 10분 읽기</p>
-      <p>E2E가 불안정하면 테스트가 신뢰를 잃고, 결국 파이프라인에서 꺼지게 됩니다. flaky는 테스트 품질 문제가 아니라 시스템 경계 관리 문제로 보는 것이 맞습니다.</p>
-      <h2>자주 깨지는 원인</h2>
-      <p>비동기 대기 타이밍, 외부 API 응답 편차, 공유 테스트 데이터 충돌이 핵심 원인입니다. sleep 기반 대기는 제거하고, 상태 기반 대기 조건으로 바꿔야 합니다.</p>
-      <h2>안정화 전략</h2>
-      <p>테스트 계층을 smoke/regression/full로 분리하고, PR 단계에는 짧고 안정적인 세트만 실행합니다. 외부 의존성은 가능한 한 mock server로 고정해 변동성을 줄입니다.</p>
-      <h2>실패 분석 루프</h2>
-      <p>실패 시 스크린샷만 저장하면 부족합니다. 콘솔 로그, 네트워크 로그, 테스트 이벤트 타임라인을 함께 저장해야 재현 속도가 빨라집니다.</p>
-      <p>E2E의 목표는 커버리지 최대화가 아니라 배포 리스크 최소화입니다. 목적에 맞게 테스트를 줄이고 정리하는 것이 더 중요합니다.</p>
+      <p class="meta">게시일: 2025년 12월 6일 · 14분 읽기</p>
+
+      <p>팀에서 E2E 테스트를 처음 도입하면 초반에는 신뢰할 수 있는 안전망처럼 느껴집니다. 그런데 몇 달이 지나면 상황이 달라집니다. 같은 코드가 로컬에서는 통과하고 CI에서는 실패하거나, 동일한 테스트가 50%의 확률로 성공하는 상황이 반복됩니다. 결국 팀에서 E2E를 "참고만 하는 것"으로 격하시키거나 아예 파이프라인에서 제거하는 결론에 도달합니다.</p>
+
+      <p>flaky 테스트는 테스트 코드 품질 문제가 아니라 <strong>시스템 경계 관리 문제</strong>입니다. 이 글은 1년간 Playwright 기반 E2E 테스트를 안정화한 과정에서 발견한 패턴과 해결책을 정리합니다.</p>
+
+      <h2>flaky의 주요 원인 분류</h2>
+      <p>실제 E2E 실패를 분석해보면 원인이 몇 가지 패턴으로 집중됩니다:</p>
+
+      <ul>
+        <li><strong>비동기 타이밍:</strong> sleep 기반 대기, 로딩 완료 전 element 접근</li>
+        <li><strong>공유 테스트 데이터:</strong> 병렬 실행 시 같은 DB 상태를 여러 테스트가 수정</li>
+        <li><strong>외부 API 의존성:</strong> 서드파티 API 응답 지연, 간헐적 실패</li>
+        <li><strong>환경 차이:</strong> 로컬과 CI의 해상도, 폰트, 타임존, 리소스 제약 차이</li>
+        <li><strong>애니메이션/트랜지션:</strong> CSS 전환 효과가 완료되기 전 클릭</li>
+      </ul>
+
+      <h2>비동기 대기: sleep 제거하기</h2>
+      <p>가장 흔하고 가장 쉽게 해결할 수 있는 원인입니다. <code>page.waitForTimeout(1000)</code> 같은 고정 대기는 환경에 따라 너무 짧거나 너무 깁니다. 상태 기반 대기로 교체해야 합니다.</p>
+
+      <pre><code>// Bad: 고정 시간 대기 (환경마다 불안정)
+await page.click('#submit');
+await page.waitForTimeout(2000);
+await expect(page.locator('.success-message')).toBeVisible();
+
+// Good: 상태 기반 대기
+await page.click('#submit');
+// 성공 메시지가 나타날 때까지 대기 (기본 timeout 내)
+await expect(page.locator('.success-message')).toBeVisible();
+
+// API 응답 대기
+await page.click('#submit');
+// 네트워크 요청 완료 후 상태 확인
+await page.waitForResponse(
+  resp =&gt; resp.url().includes('/api/users') &amp;&amp; resp.status() === 200
+);
+await expect(page.locator('.user-list')).toBeVisible();</code></pre>
+
+      <h3>로딩 상태 처리</h3>
+      <pre><code>// 로딩 스피너가 사라질 때까지 대기
+await expect(page.locator('[data-testid="loading"]')).toBeHidden();
+
+// 특정 텍스트가 나타날 때까지 대기
+await expect(page.locator('h1')).toHaveText('대시보드');
+
+// 네비게이션 완료 대기
+await Promise.all([
+  page.waitForNavigation(),
+  page.click('a[href="/dashboard"]'),
+]);</code></pre>
+
+      <h2>테스트 데이터 격리</h2>
+      <p>병렬 실행 시 여러 테스트가 같은 데이터를 수정하면 순서 의존성이 생깁니다. 각 테스트가 독립적인 데이터 상태에서 시작하도록 격리해야 합니다.</p>
+
+      <pre><code">// playwright.config.ts
+export default defineConfig({
+  // 각 테스트 파일을 독립 워커에서 실행
+  workers: process.env.CI ? 2 : 4,
+  // 테스트 간 상태 격리
+  use: {
+    // 테스트마다 새 브라우저 컨텍스트 (쿠키, 스토리지 초기화)
+    ...devices['Desktop Chrome'],
+  },
+});
+
+// 테스트 파일에서 데이터 격리
+test.beforeEach(async ({ request }) => {
+  // 각 테스트 전 데이터 초기화 (테스트 전용 API)
+  await request.post('/api/test/reset', {
+    data: { scope: 'user-test-data' }
+  });
+});
+
+// 더 안전한 방법: 테스트별 고유 데이터 생성
+test('사용자 프로필 수정', async ({ page }) => {
+  const uniqueEmail = `test-${Date.now()}@example.com`;
+  await createUser({ email: uniqueEmail });
+  // 이 테스트에서만 사용하는 데이터로 진행
+});</code></pre>
+
+      <h2>외부 API 의존성 mock으로 고정</h2>
+      <p>결제 API, 인증 서버, 외부 데이터 API 등은 테스트 중 실패하거나 응답이 느려질 수 있습니다. 이런 외부 의존성은 mock server로 고정해 변동성을 제거합니다.</p>
+
+      <pre><code">// Playwright route interceptor로 API mock
+test.beforeEach(async ({ page }) => {
+  // 결제 API mock
+  await page.route('**/api/payments/**', async route =&gt; {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'success', transactionId: 'mock-123' }),
+    });
+  });
+
+  // 인증 API mock
+  await page.route('**/api/auth/me', async route =&gt; {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify({ id: 1, name: 'Test User', role: 'admin' }),
+    });
+  });
+});</code></pre>
+
+      <h2>테스트 계층 분리</h2>
+      <p>모든 E2E 테스트를 PR마다 실행하면 느리고, 불안정한 테스트 하나가 전체 파이프라인을 막습니다. 목적에 따라 세 계층으로 분리하는 방식을 사용합니다:</p>
+
+      <ul>
+        <li><strong>Smoke (PR 단계):</strong> 핵심 기능 5~10개, 30초 이내 완료. 가장 안정적인 테스트만 포함</li>
+        <li><strong>Regression (머지 후):</strong> 주요 사용자 시나리오, 3~5분 이내</li>
+        <li><strong>Full (야간/주간):</strong> 전체 E2E 커버리지, 시간 제약 없음</li>
+      </ul>
+
+      <pre><code">// playwright.config.ts - 태그 기반 실행 분리
+export default defineConfig({
+  projects: [
+    {
+      name: 'smoke',
+      grep: /@smoke/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'regression',
+      grep: /@regression/,
+    },
+  ],
+});
+
+// 테스트 파일에서 태그 사용
+test('@smoke 로그인 성공', async ({ page }) =&gt; {
+  // 이 테스트는 PR smoke 실행에 포함됨
+});
+
+test('@regression 장바구니 전체 플로우', async ({ page }) =&gt; {
+  // 머지 후 regression 실행에 포함됨
+});</code></pre>
+
+      <h2>실패 분석을 위한 아티팩트 수집</h2>
+      <p>실패 시 스크린샷만 저장하면 재현하기 어렵습니다. 문제를 빠르게 파악하려면 더 많은 맥락이 필요합니다.</p>
+
+      <pre><code">// playwright.config.ts
+export default defineConfig({
+  use: {
+    // 실패 시 자동 스크린샷
+    screenshot: 'only-on-failure',
+    // 실패 시 비디오 녹화
+    video: 'retain-on-failure',
+    // 실패 시 트레이스 수집 (네트워크, 콘솔, DOM 스냅샷)
+    trace: 'retain-on-failure',
+  },
+  reporter: [
+    ['html'],
+    ['junit', { outputFile: 'results.xml' }],
+  ],
+});</code></pre>
+
+      <p>Playwright의 trace는 테스트 실행 중 모든 액션, 네트워크 요청, 콘솔 로그를 타임라인으로 보여줍니다. 실패 원인을 찾는 시간이 크게 줄어듭니다.</p>
+
+      <h2>CI 환경 안정화</h2>
+      <p>로컬에서 통과하고 CI에서 실패하는 경우의 주요 원인:</p>
+      <ul>
+        <li><strong>리소스 부족:</strong> CI 환경의 CPU/메모리 제약으로 렌더링이 느림 → timeout 값 증가</li>
+        <li><strong>폰트/해상도 차이:</strong> 시각적 비교 테스트에서 픽셀 차이 발생 → threshold 조정</li>
+        <li><strong>타임존 차이:</strong> 날짜/시간 관련 로직 → CI에 <code>TZ=Asia/Seoul</code> 환경 변수 설정</li>
+      </ul>
+
+      <pre><code"># GitHub Actions - E2E 실행 예시
+- name: Run E2E tests
+  env:
+    TZ: Asia/Seoul
+  run: npx playwright test --project=smoke
+  timeout-minutes: 10
+
+- name: Upload test results
+  uses: actions/upload-artifact@v3
+  if: failure()
+  with:
+    name: playwright-report
+    path: playwright-report/</code></pre>
+
+      <h2>마무리</h2>
+      <p>E2E의 목표는 커버리지 최대화가 아니라 배포 리스크 최소화입니다. 불안정한 테스트 30개보다 안정적인 테스트 10개가 더 가치 있습니다. flaky 테스트를 발견하면 즉시 수정하거나 격리하는 문화가 중요합니다. 방치하면 팀 전체가 E2E를 신뢰하지 않게 됩니다.</p>
+
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>
   </main>

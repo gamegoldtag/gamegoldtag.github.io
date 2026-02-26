@@ -3,49 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="TypeScript 5.x에서 실무에 바로 적용 가능한 타입 패턴을 정리했습니다.">
+  <meta name="description" content="TypeScript 5.x에서 실무에 바로 적용 가능한 타입 패턴 7가지. Template Literal Types, Conditional Types, satisfies, infer, Discriminated Union 등을 코드와 함께 정리했습니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-02.html">
-  <title>TypeScript 5.x 실전 타입 패턴 | DevInsight</title>
+  <title>TypeScript 5.x의 실전 타입 패턴: 유지보수 비용을 줄이는 방법 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
   <style>
-    :root { --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
-    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
     .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
-    pre { background: #2d2d3f; color: #e6e6e6; padding: 16px; border-radius: 10px; overflow-x: auto; font-size: 0.9rem; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>TypeScript 5.x의 실전 타입 패턴: 유지보수 비용을 줄이는 방법</h1>
-      <p class="meta">게시일: 2026년 2월 5일 · 10분 읽기</p>
-      <p>TypeScript를 오래 사용해도 프로젝트가 커지면 타입은 쉽게 무너집니다. 핵심은 타입을 많이 쓰는 것이 아니라, 변화 지점을 타입 시스템이 먼저 감지하도록 설계하는 것입니다. 아래 세 패턴은 실무에서 반복적으로 효과가 있었습니다.</p>
-      <h2>1) Template Literal Types로 경로 제약</h2>
+      <p class="meta">게시일: 2026년 2월 5일 · 15분 읽기</p>
+
+      <p>TypeScript를 오래 사용해도 프로젝트가 커지면 타입이 점점 약해지는 경험을 하게 됩니다. <code>any</code>가 늘어나고, 타입 단언(<code>as</code>)이 여기저기 생기고, 실제로 타입 에러가 런타임까지 내려오는 상황이 반복됩니다. 문제는 TypeScript를 "쓰는" 것과 TypeScript를 "잘 쓰는" 것 사이의 차이입니다.</p>
+
+      <p>이 글은 실무에서 반복적으로 효과를 확인한 타입 패턴 7가지를 정리합니다. 이론적인 소개가 아니라 "어떤 상황에서 이 패턴이 필요한지"에 집중합니다.</p>
+
+      <h2>1. Template Literal Types로 문자열 제약</h2>
+      <p>API 경로, 이벤트 이름, CSS 클래스명처럼 특정 형식의 문자열을 다룰 때, 런타임 문자열 대신 타입으로 모델링하면 오타를 빌드 단계에서 잡을 수 있습니다.</p>
+
       <pre><code>type ApiVersion = 'v1' | 'v2';
 type Resource = 'users' | 'tracks' | 'playlists';
 type ApiPath = `${ApiVersion}/${Resource}`;
-</code></pre>
-      <p>경로 문자열을 런타임 문자열이 아니라 타입으로 모델링하면, 오타가 빌드 단계에서 바로 잡힙니다. API 증가 시에도 정의만 추가하면 호출부에 일관되게 반영됩니다.</p>
-      <h2>2) Conditional Types로 응답 타입 자동 매핑</h2>
+
+// OK
+const path1: ApiPath = 'v1/users';
+const path2: ApiPath = 'v2/playlists';
+
+// 컴파일 에러: 'v3/users'는 ApiPath에 없음
+const path3: ApiPath = 'v3/users';
+
+// 이벤트 이름 패턴 제약
+type EventName = `on${Capitalize&lt;string&gt;}`;
+// onLoad, onClick, onSubmit 등은 OK
+// load, click 등은 에러</code></pre>
+
+      <p>API 엔드포인트가 증가할 때 <code>Resource</code> 타입에 항목을 추가하기만 하면, 호출부 전체에 타입 검증이 자동으로 확산됩니다.</p>
+
+      <h2>2. Conditional Types로 응답 타입 자동 매핑</h2>
+      <p>엔드포인트마다 다른 응답 타입을 반환하는 API를 다룰 때, Conditional Types를 사용하면 호출부에서 타입 단언 없이 정확한 타입을 얻을 수 있습니다.</p>
+
       <pre><code>type ApiResponse&lt;T extends ApiPath&gt; =
   T extends `${string}/users` ? User[] :
   T extends `${string}/tracks` ? Track[] :
   T extends `${string}/playlists` ? Playlist[] :
   never;
-</code></pre>
-      <p>엔드포인트별 응답 구조가 다를 때 가장 자주 쓰는 패턴입니다. 호출하는 순간 결과 타입이 자동 추론되어 다운스트림 코드의 단언 캐스팅이 크게 줄어듭니다.</p>
-      <h2>3) satisfies로 검증과 추론 균형</h2>
-      <p><code>satisfies</code>는 객체가 규약을 만족하는지 검증하면서도 리터럴 정보를 보존합니다. 설정 객체, 권한 맵, 라우팅 테이블처럼 정확한 키가 중요한 영역에서 특히 유용합니다.</p>
+
+// 타입이 자동으로 추론됨
+async function fetchApi&lt;T extends ApiPath&gt;(path: T): Promise&lt;ApiResponse&lt;T&gt;&gt; {
+  const res = await fetch(`/api/${path}`);
+  return res.json();
+}
+
+const users = await fetchApi('v1/users');
+// users의 타입이 User[]로 자동 추론됨
+// as User[] 같은 단언 불필요</code></pre>
+
+      <h2>3. satisfies: 검증과 추론을 동시에</h2>
+      <p><code>satisfies</code>는 TypeScript 4.9에서 추가된 연산자입니다. 객체가 특정 타입을 만족하는지 검증하면서도, 리터럴 타입 정보를 보존합니다.</p>
+
+      <pre><code">// as const: 리터럴 보존, 타입 검증 없음
+// 타입 지정: 검증 가능, 리터럴 손실
+// satisfies: 검증 가능 + 리터럴 보존
+
+type Theme = {
+  colors: Record&lt;string, string&gt;;
+};
+
+// satisfies 사용
+const theme = {
+  colors: {
+    primary: '#c0392b',
+    secondary: '#2980b9',
+  }
+} satisfies Theme;
+
+// primary의 타입이 string이 아닌 '#c0392b' (리터럴)
+// 동시에 Theme 타입 검증됨
+theme.colors.primary; // 타입: '#c0392b'
+
+// 권한 맵 예시
+type Permission = 'read' | 'write' | 'admin';
+const rolePermissions = {
+  viewer: ['read'],
+  editor: ['read', 'write'],
+  admin: ['read', 'write', 'admin'],
+} satisfies Record&lt;string, Permission[]&gt;;
+
+// 각 키의 타입이 Permission[]로 검증됨
+// 잘못된 권한 값 입력 시 컴파일 에러</code></pre>
+
+      <h2>4. Discriminated Union으로 상태 모델링</h2>
+      <p>컴포넌트나 API 응답의 상태를 모델링할 때 가장 강력한 패턴입니다. 불가능한 상태를 타입으로 표현 불가능하게 만들어 런타임 에러를 방지합니다.</p>
+
+      <pre><code">// Bad: 가능한 상태가 명확하지 않음
+type State = {
+  isLoading: boolean;
+  data?: User[];
+  error?: Error;
+};
+// isLoading=true이면서 data가 있는 상태가 가능 (잘못된 상태)
+
+// Good: Discriminated Union
+type State =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: User[] }
+  | { status: 'error'; error: Error };
+
+function Component({ state }: { state: State }) {
+  switch (state.status) {
+    case 'loading':
+      return &lt;Spinner /&gt;;
+    case 'success':
+      return &lt;UserList users={state.data} /&gt;; // data가 있음이 보장됨
+    case 'error':
+      return &lt;ErrorMessage error={state.error} /&gt;;
+    case 'idle':
+      return null;
+  }
+}</code></pre>
+
+      <h2>5. infer로 타입 추출</h2>
+      <p>함수의 반환 타입이나 Promise가 감싼 타입을 추출할 때 <code>infer</code>를 사용합니다.</p>
+
+      <pre><code">// Promise의 내부 타입 추출
+type Awaited&lt;T&gt; = T extends Promise&lt;infer U&gt; ? U : T;
+
+// 함수 반환 타입 추출
+type ReturnType&lt;T&gt; = T extends (...args: any[]) => infer R ? R : never;
+
+// 배열 요소 타입 추출
+type ElementType&lt;T&gt; = T extends (infer U)[] ? U : never;
+
+// 실용적 사용: API 함수의 반환 타입 자동 추출
+const getUser = async (id: string): Promise&lt;User&gt; => {
+  return fetch(`/api/users/${id}`).then(r =&gt; r.json());
+};
+
+type UserResponse = Awaited&lt;ReturnType&lt;typeof getUser&gt;&gt;;
+// UserResponse = User
+// API 함수 시그니처 변경 시 자동으로 타입 동기화됨</code></pre>
+
+      <h2>6. Mapped Types로 타입 변환 자동화</h2>
+      <p>기존 타입을 변환해 새 타입을 만들 때 Mapped Types를 사용하면 타입 중복을 줄일 수 있습니다.</p>
+
+      <pre><code">// 모든 필드를 optional로
+type Partial&lt;T&gt; = { [K in keyof T]?: T[K] };
+
+// 모든 필드를 readonly로
+type Readonly&lt;T&gt; = { readonly [K in keyof T]: T[K] };
+
+// 폼 유효성 검사 타입 자동 생성
+type FormErrors&lt;T&gt; = {
+  [K in keyof T]?: string;  // 각 필드에 에러 메시지
+};
+
+type UserForm = {
+  email: string;
+  password: string;
+  name: string;
+};
+
+type UserFormErrors = FormErrors&lt;UserForm&gt;;
+// { email?: string; password?: string; name?: string; }
+// UserForm에 필드 추가 시 자동으로 FormErrors에도 반영</code></pre>
+
+      <h2>7. 타입 가드(Type Guard)로 런타임 안전성</h2>
+      <p>외부 API 응답이나 사용자 입력처럼 타입이 불확실한 데이터를 안전하게 처리하려면 타입 가드가 필요합니다.</p>
+
+      <pre><code">// Bad: as 단언 (런타임 에러 가능)
+const user = response.data as User;
+
+// Good: 타입 가드 함수
+function isUser(data: unknown): data is User {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'email' in data &&
+    typeof (data as User).email === 'string'
+  );
+}
+
+const data = await fetchApi('/api/user');
+if (isUser(data)) {
+  // 이 블록 내에서 data는 User 타입으로 보장됨
+  console.log(data.email);
+}
+
+// Zod를 활용한 런타임 타입 검증 (추천)
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string().optional(),
+});
+
+const user = UserSchema.parse(response.data);
+// 검증 실패 시 에러 throw, 성공 시 타입이 보장됨</code></pre>
+
       <h2>실무 적용 기준</h2>
-      <p>외부 API 경계는 엄격하게 타입화하고, 내부 모델은 과도한 제네릭보다 명시적 구조를 우선합니다. 복잡한 타입 유틸은 공용 패키지로 추출해 중복을 줄이면 리뷰 속도와 안정성이 함께 올라갑니다.</p>
-      <p>TypeScript 5.x 시대에는 타입이 문서를 넘어 설계 검증기로 동작합니다. 이 변화가 팀 생산성의 분기점이 됩니다.</p>
+      <p>이 패턴들을 모두 적용할 필요는 없습니다. 상황에 맞게 선택하는 것이 중요합니다:</p>
+      <ul>
+        <li><strong>외부 API 경계:</strong> Zod 또는 타입 가드로 런타임 검증 필수</li>
+        <li><strong>컴포넌트 상태:</strong> Discriminated Union으로 불가능한 상태 제거</li>
+        <li><strong>설정 객체:</strong> <code>satisfies</code>로 타입 검증 + 리터럴 보존</li>
+        <li><strong>과도한 제네릭 지양:</strong> 복잡한 타입 유틸은 공용 패키지로 추출</li>
+      </ul>
+
+      <p>TypeScript 5.x 시대에는 타입이 문서를 넘어 설계 검증기로 동작합니다. 타입이 잘 설계된 코드베이스는 새 팀원이 문서 없이도 API 사용 방법을 IDE에서 바로 파악할 수 있습니다.</p>
+
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>
   </main>

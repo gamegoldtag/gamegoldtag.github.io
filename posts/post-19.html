@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Cloudflare Pages로 정적 사이트를 빠르게 배포하는 방법과 GitHub Pages/Netlify 비교를 정리했습니다.">
+  <meta name="description" content="Cloudflare Pages로 정적 사이트를 빠르게 배포하는 방법과 GitHub Pages/Netlify 비교를 정리했습니다. Direct Upload부터 Git 자동 배포, 커스텀 도메인까지 설명합니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-19.html">
   <title>Cloudflare Pages - 빠른 무료 호스팅 가이드 | DevInsight</title>
@@ -13,63 +13,100 @@
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
     .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
-    h1 { margin: 0 0 10px; font-size: 2rem; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
     li { margin-bottom: 8px; }
-    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
     th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>Cloudflare Pages - GitHub Pages보다 빠른 무료 호스팅?</h1>
-      <p class="meta">게시일: 2025년 10월 10일 · 11분 읽기</p>
+      <p class="meta">게시일: 2025년 10월 10일 · 14분 읽기</p>
 
-      <p>Cloudflare Pages는 전 세계 엣지 네트워크를 기반으로 정적 사이트를 배포할 수 있는 서비스입니다. 무료 플랜만으로도 시작이 가능하고, Direct Upload와 Git 연동을 모두 지원합니다.</p>
+      <p>Cloudflare Pages는 전 세계 엣지 네트워크를 기반으로 정적 사이트를 배포할 수 있는 서비스입니다. 무료 플랜만으로도 시작이 가능하고, Direct Upload와 Git 연동을 모두 지원합니다. 특히 방문자가 전 세계에 분산되어 있거나, 한국 이외 지역에서 빠른 로딩이 필요한 경우 눈에 띄는 차이를 경험할 수 있습니다.</p>
 
       <h2>Cloudflare Pages가 주목받는 이유</h2>
-      <p>핵심은 엣지 배포입니다. 방문자와 가까운 위치에서 콘텐츠를 제공하기 때문에 지역에 따라 체감 성능이 좋아질 수 있습니다. 특히 전 세계 방문자를 대상으로 하는 사이트에서 이점이 큽니다.</p>
+      <p>핵심은 엣지(Edge) 배포입니다. 기존 호스팅은 특정 서버 위치에서 파일을 제공하지만, Cloudflare Pages는 전 세계 200여 개 데이터센터에 콘텐츠를 분산해 방문자와 가장 가까운 위치에서 제공합니다.</p>
+
+      <p>예를 들어 서울에 있는 서버에서만 파일을 제공하면, 미국·유럽·동남아시아 방문자는 물리적 거리 때문에 로딩이 느립니다. Cloudflare는 이 문제를 자동으로 해결합니다.</p>
+
       <div class="note">트래픽/빌드 횟수/기능 한도는 시점별로 달라질 수 있으므로, 적용 전 Cloudflare 공식 플랜 안내를 확인하세요.</div>
 
       <h2>준비물</h2>
       <ul>
-        <li>Cloudflare 계정</li>
-        <li>배포할 사이트 폴더(<code>index.html</code> 포함)</li>
-        <li>선택 사항: GitHub 저장소(자동 배포용)</li>
+        <li>Cloudflare 계정 (cloudflare.com 무료 가입)</li>
+        <li>배포할 사이트 폴더 (<code>index.html</code> 포함)</li>
+        <li>선택 사항: GitHub 저장소 (자동 배포용)</li>
       </ul>
 
       <h2>배포 방법 2가지</h2>
-      <ol>
-        <li><strong>Direct Upload:</strong> 폴더를 직접 올려 즉시 배포</li>
-        <li><strong>Git 연동:</strong> push 시 자동 빌드/배포</li>
-      </ol>
-      <p>처음에는 Direct Upload가 빠르고, 운영 단계에서는 Git 연동이 편합니다.</p>
+      <p>Cloudflare Pages는 두 가지 배포 방식을 모두 지원합니다. 처음 시작할 때는 Direct Upload가 가장 빠르고, 운영 단계로 넘어가면 Git 연동으로 전환하는 것이 효율적입니다.</p>
+      <table>
+        <thead>
+          <tr><th>방식</th><th>특징</th><th>추천 상황</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Direct Upload</td><td>폴더 직접 업로드, 즉시 배포</td><td>처음 시작, 빠른 테스트</td></tr>
+          <tr><td>Git 연동</td><td>push 시 자동 빌드/배포</td><td>운영 단계, 지속 업데이트</td></tr>
+        </tbody>
+      </table>
 
-      <h2>Direct Upload (초기 배포)</h2>
+      <h2>방법 1: Direct Upload (초기 배포)</h2>
       <ol>
-        <li>Cloudflare 로그인 후 <strong>Workers & Pages</strong> 이동</li>
-        <li><strong>Create</strong> 클릭 후 Pages 생성 시작</li>
-        <li><strong>Direct Upload</strong> 선택, 프로젝트 이름 지정</li>
-        <li>사이트 폴더 업로드 후 <strong>Deploy</strong> 실행</li>
+        <li>Cloudflare 로그인 후 <strong>Workers &amp; Pages</strong>로 이동</li>
+        <li><strong>Create</strong> 클릭 후 <strong>Pages</strong> 탭 선택</li>
+        <li><strong>Direct Upload</strong>를 선택하고 프로젝트 이름 지정</li>
+        <li>사이트 파일이 있는 폴더를 업로드 영역에 드래그앤드롭</li>
+        <li><strong>Deploy site</strong> 버튼 클릭</li>
       </ol>
-      <pre><code>예: project-name.pages.dev</code></pre>
+      <p>배포 완료 후 <code>project-name.pages.dev</code> 형식의 주소가 발급됩니다.</p>
 
-      <h2>GitHub 연동 (자동 배포)</h2>
+      <h3>파일 업데이트 방법</h3>
+      <p>수정 후 재배포하려면 프로젝트 페이지에서 "Create new deployment"를 선택하고 새 폴더를 업로드합니다. 이전 배포 이력도 유지됩니다.</p>
+
+      <h2>방법 2: GitHub 연동 (자동 배포)</h2>
       <ol>
-        <li><strong>Connect to Git</strong> 선택 후 저장소 연결</li>
-        <li>정적 HTML은 빌드 설정 없이 진행 가능</li>
-        <li>React/Vue는 빌드 명령과 output 디렉터리 지정</li>
-        <li><strong>Save and Deploy</strong> 후 push마다 자동 반영</li>
+        <li>Workers &amp; Pages → Create → Pages → <strong>Connect to Git</strong> 선택</li>
+        <li>GitHub 계정 연결 후 저장소 선택</li>
+        <li>빌드 설정 입력:
+          <ul>
+            <li>정적 HTML: 빌드 명령 없음, 출력 디렉터리 비워두기</li>
+            <li>React (Vite): 빌드 명령 <code>npm run build</code>, 출력 <code>dist</code></li>
+            <li>Next.js: 빌드 명령 <code>npm run build</code>, 출력 <code>.next</code></li>
+          </ul>
+        </li>
+        <li><strong>Save and Deploy</strong> 클릭</li>
       </ol>
+      <p>이후 GitHub에 push할 때마다 자동으로 빌드하고 배포합니다. 배포 상태는 Pages 대시보드에서 실시간으로 확인할 수 있습니다.</p>
 
-      <h2>서비스 비교 관점</h2>
+      <h2>커스텀 도메인 연결하기</h2>
+      <p>Cloudflare Pages에서 커스텀 도메인을 연결하면 추가 SSL 설정 없이 자동으로 HTTPS가 적용됩니다. 특히 도메인이 이미 Cloudflare에서 관리되고 있다면 클릭 몇 번으로 연결됩니다.</p>
+
+      <h3>도메인 연결 과정</h3>
+      <ol>
+        <li>Pages 프로젝트 → Custom domains → Add a custom domain</li>
+        <li>도메인 입력 후 Continue</li>
+        <li>Cloudflare 관리 도메인: 자동으로 DNS 레코드 추가</li>
+        <li>외부 도메인: CNAME 레코드를 도메인 관리 패널에서 직접 추가</li>
+      </ol>
+      <pre><code>CNAME 레코드 예시:
+이름: www (또는 @)
+값: project-name.pages.dev</code></pre>
+
+      <h2>서비스 비교</h2>
       <table>
         <thead>
           <tr><th>항목</th><th>GitHub Pages</th><th>Netlify</th><th>Cloudflare Pages</th></tr>
@@ -78,19 +115,38 @@
           <tr><td>입문 난이도</td><td>중</td><td>하</td><td>하~중</td></tr>
           <tr><td>배포 방식</td><td>Git 중심</td><td>Git + 업로드</td><td>Git + 업로드</td></tr>
           <tr><td>엣지 CDN</td><td>제한적</td><td>지원</td><td>강점</td></tr>
+          <tr><td>글로벌 성능</td><td>보통</td><td>좋음</td><td>매우 좋음</td></tr>
+          <tr><td>무료 커스텀 도메인</td><td>지원</td><td>지원</td><td>지원</td></tr>
           <tr><td>적합한 경우</td><td>개발자 워크플로</td><td>빠른 시작</td><td>성능/글로벌 트래픽</td></tr>
         </tbody>
       </table>
 
+      <h2>Cloudflare Pages 선택이 유리한 상황</h2>
+      <ul>
+        <li>사이트 방문자가 한국 이외 지역에도 분산되어 있는 경우</li>
+        <li>이미 Cloudflare에서 도메인을 관리하고 있는 경우</li>
+        <li>가능한 빠른 로딩 속도가 중요한 경우 (이커머스, 랜딩 페이지)</li>
+        <li>Direct Upload와 Git 연동을 상황에 따라 유연하게 전환하고 싶은 경우</li>
+      </ul>
+
+      <h2>자주 막히는 상황</h2>
+      <ul>
+        <li><strong>배포 후 "Page Not Found" 오류:</strong> <code>index.html</code>이 폴더 루트에 있는지 확인</li>
+        <li><strong>이미지 안 보임:</strong> 이미지 파일이 같은 폴더에 있고, 파일명 대소문자가 정확한지 확인</li>
+        <li><strong>React/Vue 빌드 실패:</strong> Node.js 버전을 프로젝트 요건에 맞게 Environment Variables에서 설정</li>
+        <li><strong>커스텀 도메인 SSL 오류:</strong> DNS 설정 후 최대 24시간까지 대기 필요</li>
+      </ul>
+
       <h2>무엇을 선택할까?</h2>
       <ul>
-        <li>완전 입문: Netlify</li>
-        <li>Git 기반 운영: GitHub Pages</li>
-        <li>글로벌 성능/확장성: Cloudflare Pages</li>
+        <li><strong>완전 입문, 빠른 시작:</strong> Netlify</li>
+        <li><strong>Git 기반 개발 워크플로:</strong> GitHub Pages</li>
+        <li><strong>글로벌 성능, 확장성:</strong> Cloudflare Pages</li>
+        <li><strong>Next.js 프로젝트:</strong> Vercel</li>
       </ul>
 
       <h2>마무리</h2>
-      <p>Cloudflare Pages는 무료 시작, 빠른 배포, Git 자동화까지 균형이 좋은 선택지입니다. 특히 방문자 지역이 다양한 사이트라면 후보군에 반드시 넣을 만합니다.</p>
+      <p>Cloudflare Pages는 무료 시작, 빠른 배포, Git 자동화까지 균형이 좋은 선택지입니다. 특히 방문자 지역이 다양한 사이트나, 이미 Cloudflare로 도메인을 관리하는 경우라면 후보군에 반드시 넣을 만합니다. 처음 배포는 Direct Upload로 빠르게 시작하고, 운영이 안정화되면 Git 연동으로 전환하는 방식이 가장 효율적입니다.</p>
 
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>

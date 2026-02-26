@@ -3,36 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="실무에서 바로 적용 가능한 웹 보안 헤더 설정 가이드">
+  <meta name="description" content="실무에서 바로 적용 가능한 웹 보안 헤더 설정 가이드. CSP, HSTS, X-Content-Type-Options 등 핵심 헤더를 Nginx 설정 예시와 함께 정리했습니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-10.html">
-  <title>웹 보안 헤더 설정 가이드 | DevInsight</title>
+  <title>웹 보안 헤더: 실무 적용 최소 구성 가이드 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
-    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
     .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
-    h1 { margin: 0 0 10px; font-size: 2rem; }
-    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 0.93rem; }
+    th { background: #f0ede4; text-align: left; padding: 10px 12px; border: 1px solid var(--border); }
+    td { padding: 9px 12px; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #faf9f6; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .warn { background: #fff2ef; border: 1px solid #f1c2b8; border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>웹 보안 헤더: 실무에서 먼저 적용해야 할 최소 구성</h1>
-      <p class="meta">게시일: 2025년 12월 12일 · 8분 읽기</p>
-      <p>보안 이슈는 코드 취약점만의 문제가 아닙니다. 서버 헤더 설정만으로 막을 수 있는 공격면이 많고, 적용 비용도 낮습니다. 핵심은 과도한 정책보다 안전한 기본값입니다.</p>
-      <h2>우선 적용 항목</h2>
-      <p>Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Strict-Transport-Security를 먼저 설정합니다. 이 네 가지는 재현 가능한 기준으로 운영하기 좋습니다.</p>
-      <h2>CSP 도입 전략</h2>
-      <p>처음부터 차단 모드로 가면 배포 리스크가 큽니다. report-only로 위반 로그를 수집한 뒤, 실제 사용 스크립트 출처를 정리해 점진적으로 차단 정책으로 전환하는 것이 안전합니다.</p>
-      <h2>운영 체크</h2>
-      <p>배포 파이프라인에 헤더 스냅샷 검증을 넣으면 회귀를 줄일 수 있습니다. 인프라 변경 시 누락되는 경우가 많기 때문에, 자동 검증이 필수입니다.</p>
-      <p>보안 헤더는 공격을 완전히 막는 도구가 아니라, 공격 성공 확률을 낮추는 기본 방어선입니다.</p>
+      <p class="meta">게시일: 2025년 12월 12일 · 13분 읽기</p>
+
+      <p>보안은 코드 취약점만의 문제가 아닙니다. 서버 응답 헤더 설정만으로 막을 수 있는 공격 경로가 상당히 많습니다. 특히 XSS, 클릭재킹, MIME sniffing, 정보 노출 같은 일반적인 공격을 헤더 몇 개로 방어할 수 있습니다.</p>
+
+      <p>이 글은 즉시 적용 가능한 보안 헤더 구성을 Nginx 예시와 함께 정리합니다. 복잡한 이론보다 "지금 당장 배포할 수 있는" 설정에 집중합니다.</p>
+
+      <h2>핵심 보안 헤더 요약</h2>
+      <table>
+        <tr><th>헤더</th><th>방어하는 공격</th><th>우선순위</th></tr>
+        <tr><td>Content-Security-Policy</td><td>XSS, 인라인 스크립트 실행</td><td>높음</td></tr>
+        <tr><td>Strict-Transport-Security</td><td>HTTP 다운그레이드, 중간자 공격</td><td>높음</td></tr>
+        <tr><td>X-Content-Type-Options</td><td>MIME sniffing</td><td>높음</td></tr>
+        <tr><td>X-Frame-Options</td><td>클릭재킹</td><td>높음</td></tr>
+        <tr><td>Referrer-Policy</td><td>URL 정보 노출</td><td>중간</td></tr>
+        <tr><td>Permissions-Policy</td><td>브라우저 기능 오남용</td><td>중간</td></tr>
+      </table>
+
+      <h2>Nginx 기본 보안 헤더 구성</h2>
+      <p>가장 먼저 적용할 헤더 세트입니다. 대부분의 서비스에서 문제없이 동작하는 안전한 기본값입니다.</p>
+
+      <pre><code># /etc/nginx/conf.d/security-headers.conf
+# 또는 server 블록 내에 직접 추가
+
+# MIME sniffing 방지
+add_header X-Content-Type-Options "nosniff" always;
+
+# 클릭재킹 방지 (동일 출처에서만 iframe 허용)
+add_header X-Frame-Options "SAMEORIGIN" always;
+
+# HTTPS 강제 (1년, 서브도메인 포함)
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+# Referrer 정보 최소화
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+# 불필요한 브라우저 기능 비활성화
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+# 서버 버전 정보 숨기기
+server_tokens off;</code></pre>
+
+      <div class="note">
+        <code>always</code> 파라미터는 4xx, 5xx 에러 응답에도 헤더를 포함시킵니다. 없으면 에러 응답에서 보안 헤더가 누락됩니다.
+      </div>
+
+      <h2>Content-Security-Policy: 단계별 도입 전략</h2>
+      <p>CSP는 강력하지만 잘못 설정하면 서비스 기능이 동작하지 않을 수 있습니다. 반드시 단계적으로 도입해야 합니다.</p>
+
+      <h3>1단계: Report-Only 모드로 모니터링</h3>
+      <p>차단하지 않고 위반 사항만 수집합니다. 실제 사용자 트래픽에서 어떤 리소스가 사용되는지 파악하는 단계입니다.</p>
+
+      <pre><code># Report-Only: 차단하지 않고 위반 로그만 수집
+add_header Content-Security-Policy-Report-Only "
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https:;
+  report-uri /csp-report;
+" always;</code></pre>
+
+      <h3>2단계: 수집된 위반 기반으로 정책 수정</h3>
+      <p>1~2주 동안 위반 리포트를 수집한 뒤, 실제 사용하는 외부 스크립트와 스타일 출처를 정책에 추가합니다.</p>
+
+      <pre><code># 수집 후 명시적 허용 목록 구성 예시
+add_header Content-Security-Policy "
+  default-src 'self';
+  script-src 'self'
+    https://cdn.jsdelivr.net
+    https://pagead2.googlesyndication.com;
+  style-src 'self' 'unsafe-inline'
+    https://fonts.googleapis.com;
+  font-src 'self'
+    https://fonts.gstatic.com
+    https://cdn.jsdelivr.net;
+  img-src 'self' data: https:;
+  connect-src 'self' https://analytics.example.com;
+  frame-ancestors 'self';
+" always;</code></pre>
+
+      <h3>3단계: unsafe-inline 제거 (선택적)</h3>
+      <p><code>unsafe-inline</code>을 허용하면 인라인 스크립트가 실행 가능해 XSS 방어 효과가 떨어집니다. nonce 기반 허용으로 전환하면 인라인 스크립트를 특정 nonce가 있는 것만 허용할 수 있습니다.</p>
+
+      <pre><code># nonce 기반 CSP (서버에서 동적 생성 필요)
+import crypto from 'crypto';
+
+// 요청마다 랜덤 nonce 생성
+const nonce = crypto.randomBytes(16).toString('base64');
+
+// 응답 헤더에 포함
+res.setHeader(
+  'Content-Security-Policy',
+  `script-src 'self' 'nonce-${nonce}'`
+);
+
+// HTML 템플릿에서 사용
+// &lt;script nonce="${nonce}"&gt;
+//   // 이 스크립트만 실행 허용
+// &lt;/script&gt;</code></pre>
+
+      <h2>HSTS: HTTPS 강제 적용</h2>
+      <p>HSTS는 브라우저가 해당 도메인에 항상 HTTPS로만 접속하도록 강제합니다. 한 번 설정되면 <code>max-age</code> 기간 동안 브라우저가 HTTP 요청을 자동으로 HTTPS로 업그레이드합니다.</p>
+
+      <pre><code># 기본 설정 (1년)
+add_header Strict-Transport-Security "max-age=31536000" always;
+
+# 서브도메인 포함 (권장)
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+# HSTS Preload 목록 등록 (신중하게 결정)
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;</code></pre>
+
+      <div class="warn">HSTS를 설정하기 전에 반드시 해당 도메인과 모든 서브도메인이 유효한 SSL 인증서로 서비스되는지 확인하세요. 인증서 문제가 생기면 사용자가 사이트에 접근할 수 없게 됩니다. <code>preload</code>는 한번 등록하면 되돌리기 어려우므로 특히 신중하게 결정해야 합니다.</div>
+
+      <h2>Node.js / Express 환경</h2>
+      <p>Nginx 앞단이 없는 Node.js 환경이라면 <code>helmet</code> 라이브러리가 표준 방법입니다.</p>
+
+      <pre><code>import helmet from 'helmet';
+import express from 'express';
+
+const app = express();
+
+// 기본 보안 헤더 전체 적용
+app.use(helmet());
+
+// CSP 커스텀 설정
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  })
+);</code></pre>
+
+      <h2>보안 헤더 점수 확인 및 CI 자동화</h2>
+      <p>설정 후 <code>securityheaders.com</code>에서 도메인을 입력하면 보안 헤더 등급(A+~F)과 누락된 헤더를 확인할 수 있습니다. 배포 파이프라인에 자동 검증을 넣으면 인프라 변경 시 설정 누락을 감지할 수 있습니다.</p>
+
+      <pre><code>#!/bin/bash
+# scripts/check-security-headers.sh
+URL="${1:-https://example.com}"
+REQUIRED_HEADERS=(
+  "strict-transport-security"
+  "x-content-type-options"
+  "x-frame-options"
+  "referrer-policy"
+  "content-security-policy"
+)
+
+HEADERS=$(curl -sI "$URL")
+FAILED=0
+
+for header in "${REQUIRED_HEADERS[@]}"; do
+  if echo "$HEADERS" | grep -qi "^$header:"; then
+    echo "✅ $header"
+  else
+    echo "❌ Missing: $header"
+    FAILED=1
+  fi
+done
+
+exit $FAILED</code></pre>
+
+      <h2>자주 놓치는 항목들</h2>
+      <ul>
+        <li><strong>에러 페이지에도 헤더 적용:</strong> Nginx <code>always</code> 파라미터 필수</li>
+        <li><strong>서버 버전 정보 숨기기:</strong> <code>Server</code> 헤더에 Nginx 버전, PHP 버전이 노출되지 않도록</li>
+        <li><strong>인프라 변경 시 헤더 재확인:</strong> 리버스 프록시 교체 시 헤더 설정이 초기화되는 경우 있음</li>
+        <li><strong>개발/프로덕션 정책 분리:</strong> CSP를 개발 중 너무 엄격하게 설정하면 개발 생산성이 저하됨</li>
+        <li><strong>CDN 레이어 확인:</strong> CDN을 사용하는 경우 CDN이 헤더를 덮어쓰거나 제거하는지 확인</li>
+      </ul>
+
+      <h2>마무리</h2>
+      <p>보안 헤더는 공격을 완전히 막는 도구가 아닙니다. 공격 성공 확률을 낮추는 기본 방어선입니다. 적용 비용이 낮고 효과가 명확한 보안 조치이므로, 새 서비스를 배포할 때 반드시 초기 체크리스트에 포함해야 합니다.</p>
+
+      <p>배포 파이프라인에 헤더 검증 단계를 넣으면 인프라 변경으로 인한 설정 누락을 자동으로 감지할 수 있습니다. 보안은 한 번 설정하고 끝나는 것이 아니라 지속적으로 검증되어야 합니다.</p>
+
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>
   </main>

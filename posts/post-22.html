@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="구형 노트북을 홈서버로 구성하고 ngrok으로 외부 공개하는 전체 과정을 정리했습니다.">
+  <meta name="description" content="구형 노트북을 홈서버로 구성하고 ngrok으로 외부 공개하는 전체 과정을 정리했습니다. Node.js 서버 설치, pm2 자동 시작, 절전 설정, Cloudflare Tunnel 대안까지 포함합니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-22.html">
   <title>구형 노트북을 홈서버로 - ngrok으로 외부 공개까지 | DevInsight</title>
@@ -13,95 +13,161 @@
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
     .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
-    h1 { margin: 0 0 10px; font-size: 2rem; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul { margin: 0 0 16px 20px; }
     li { margin-bottom: 8px; }
-    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>구형 노트북을 홈서버로 - ngrok으로 외부 공개까지</h1>
-      <p class="meta">게시일: 2025년 9월 19일 · 13분 읽기</p>
+      <p class="meta">게시일: 2025년 9월 19일 · 15분 읽기</p>
 
-      <p>구형 노트북은 홈서버 용도로 재활용 가치가 높습니다. 폰 기반 서버보다 발열과 성능 여유 측면에서 유리하고, 키보드/화면이 있어 관리도 편합니다. 이 글에서는 Node.js 서버를 띄우고 ngrok으로 외부 공개하는 흐름을 정리합니다.</p>
+      <p>구형 노트북은 홈서버 용도로 재활용 가치가 높습니다. 폰 기반 서버보다 발열과 성능 여유 측면에서 유리하고, 키보드/화면이 있어 관리도 편합니다. 이 글에서는 Node.js 서버를 띄우고, pm2로 자동 시작을 설정하고, ngrok으로 외부 공개하는 전체 흐름을 단계별로 정리합니다.</p>
 
-      <h2>노트북 홈서버가 유리한 이유</h2>
+      <h2>노트북 홈서버가 폰 서버보다 유리한 이유</h2>
       <ul>
         <li>장시간 구동 시 발열/전원 관리가 상대적으로 안정적</li>
         <li>성능 여유가 있어 웹서버 + 간단한 API 동시 운영 가능</li>
-        <li>입출력 장치가 있어 장애 대응이 쉬움</li>
+        <li>키보드/화면이 있어 장애 발생 시 직접 대응이 쉬움</li>
+        <li>배터리 수명 영향 없이 24시간 운영 가능 (전원 연결 유지)</li>
+        <li>더 많은 RAM과 저장공간 활용 가능</li>
       </ul>
 
       <h2>준비물</h2>
       <ul>
-        <li>구형 노트북(Windows/macOS/Linux)</li>
-        <li>지속 전원 연결</li>
-        <li>인터넷 연결</li>
-        <li>ngrok 계정(외부 공개용)</li>
+        <li>구형 노트북 (Windows/macOS/Linux)</li>
+        <li>지속 전원 연결 (필수)</li>
+        <li>인터넷 연결 (유선 권장)</li>
+        <li>ngrok 계정 (외부 공개용, ngrok.com 무료 가입)</li>
       </ul>
 
       <h2>1단계: Node.js 설치</h2>
-      <p>LTS 버전을 설치한 뒤 버전을 확인합니다.</p>
+      <p>공식 사이트(nodejs.org)에서 LTS 버전을 설치한 뒤 버전을 확인합니다:</p>
       <pre><code>node -v
 npm -v</code></pre>
 
-      <h2>2단계: 로컬 서버 실행</h2>
-      <p><strong>정적 파일 서버</strong></p>
-      <pre><code>npx serve .</code></pre>
-      <p><strong>Express 서버</strong></p>
+      <h2>2단계: 서버 코드 작성</h2>
+
+      <h3>정적 파일 서버 (빠른 시작)</h3>
+      <p>HTML/CSS/JS 파일만 서빙하는 경우, npx serve를 사용하면 별도 코드 없이 바로 서버를 시작할 수 있습니다:</p>
+      <pre><code>npx serve ./public</code></pre>
+
+      <h3>Express 서버 (API 포함)</h3>
       <pre><code>mkdir my-server && cd my-server
 npm init -y
 npm install express</code></pre>
+
       <pre><code>// server.js
 const express = require('express');
 const app = express();
 
+app.use(express.json());
 app.use(express.static('public'));
-app.get('/api/hello', (req, res) => res.json({ message: '홈서버 작동 중!' }));
 
-app.listen(3000, () => console.log('http://localhost:3000'));</code></pre>
+app.get('/api/hello', (req, res) => {
+  res.json({ message: '홈서버 작동 중!', time: new Date() });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`서버 실행: http://localhost:${PORT}`));</code></pre>
+
       <pre><code>node server.js</code></pre>
 
+      <p>브라우저에서 <code>http://localhost:3000</code>으로 접속해 서버가 동작하는지 확인합니다.</p>
+
       <h2>3단계: ngrok으로 외부 공개</h2>
-      <p>ngrok 설치 후 토큰을 등록하고 터널을 엽니다.</p>
-      <pre><code>ngrok config add-authtoken YOUR_TOKEN
+      <p>ngrok은 로컬 서버를 외부에서 접속 가능한 공개 URL로 터널링해 주는 도구입니다. ngrok.com에서 무료 계정을 만들고 인증 토큰을 발급받습니다:</p>
+      <pre><code># ngrok 설치 후 (공식 사이트에서 OS에 맞는 버전 다운로드)
+ngrok config add-authtoken YOUR_AUTH_TOKEN
+
+# 포트 3000을 외부에 공개
 ngrok http 3000</code></pre>
-      <p>출력되는 <code>https://*.ngrok-free.app</code> 주소로 외부 접속이 가능합니다.</p>
 
-      <h2>4단계: 절전/덮개 설정</h2>
-      <p>노트북이 절전 모드로 전환되면 서버가 멈추므로 덮개 동작과 절전 정책을 조정합니다. 운영체제 전원 설정에서 "덮개 닫을 때 동작"과 "절전 진입"을 확인하세요.</p>
+      <p>터널이 열리면 다음과 같은 출력이 나타납니다:</p>
+      <pre><code>Forwarding  https://xxxx-xxx-xxx-xxx.ngrok-free.app -> http://localhost:3000</code></pre>
+      <p>이 주소를 다른 사람에게 공유하면 어디서든 접속이 가능합니다.</p>
 
-      <h2>서버 자동 시작(pm2)</h2>
-      <pre><code>npm install -g pm2
-pm2 start server.js --name my-server
-pm2 startup
-pm2 save</code></pre>
-      <p>재부팅 후에도 서버 프로세스를 자동 복구할 수 있습니다.</p>
+      <div class="note">ngrok 무료 플랜의 주소는 세션 재시작 시 변경됩니다. 데모 공유 후에는 ngrok을 종료해 불필요한 노출을 막는 것이 좋습니다.</div>
 
-      <h2>현실적인 한계</h2>
+      <h2>4단계: 절전 모드 설정 변경</h2>
+      <p>노트북이 절전 모드로 전환되면 서버가 멈춥니다. 운영체제별로 설정을 조정해야 합니다:</p>
+
+      <h3>Windows</h3>
+      <p>제어판 → 전원 옵션 → "절전 모드 설정":
       <ul>
-        <li>가정용 인터넷 장애 시 서비스 중단</li>
-        <li>ngrok 무료 주소는 재시작 시 변경 가능</li>
-        <li>전기 사용량 및 하드웨어 노후화 고려 필요</li>
-        <li>포트/접근 제어 등 기본 보안 설정 필요</li>
+        <li>배터리 전원: 해당 없음 (전원 연결 상태 유지)</li>
+        <li>전원 연결 시 화면 끄기: 원하는 시간 설정</li>
+        <li>전원 연결 시 컴퓨터를 절전 모드로: "안 함" 설정</li>
+        <li>덮개 닫을 때: "아무것도 안 함" 설정</li>
       </ul>
-      <div class="note">공개 서비스 운영은 홈서버보다 관리형 클라우드가 안정적입니다. 홈서버는 테스트/데모/개인 프로젝트 단계에서 특히 유용합니다.</div>
 
-      <h2>Cloudflare Tunnel 대안</h2>
-      <p>고정 주소가 필요하고 도메인이 있다면 Cloudflare Tunnel도 좋은 선택지입니다.</p>
-      <pre><code>cloudflared tunnel create my-tunnel
+      <h3>macOS</h3>
+      <p>시스템 설정 → 배터리 → 전원 어댑터:
+      <ul>
+        <li>"전원 어댑터 사용 중 컴퓨터를 잠자기 상태로 전환 안 함" 선택</li>
+        <li>화면 잠금은 별도로 설정 가능</li>
+      </ul>
+
+      <h3>Linux (Ubuntu 등)</h3>
+      <pre><code># 덮개 닫기 시 동작 변경
+sudo nano /etc/systemd/logind.conf
+
+# 다음 줄 수정 또는 추가
+HandleLidSwitch=ignore
+
+# 적용
+sudo systemctl restart systemd-logind</code></pre>
+
+      <h2>5단계: pm2로 서버 자동 시작</h2>
+      <p>노트북을 재부팅해도 서버가 자동으로 다시 시작되도록 pm2를 설정합니다:</p>
+      <pre><code># pm2 설치
+npm install -g pm2
+
+# 서버 등록 및 시작
+pm2 start server.js --name my-server
+
+# 재부팅 후 자동 시작 설정
+pm2 startup    # 출력된 명령어를 복사해 실행
+pm2 save       # 현재 실행 중인 프로세스 목록 저장</code></pre>
+
+      <p>유용한 pm2 명령어:</p>
+      <pre><code>pm2 list        # 실행 중인 프로세스 목록
+pm2 logs        # 로그 실시간 보기
+pm2 restart all # 모든 프로세스 재시작
+pm2 stop all    # 모든 프로세스 중지</code></pre>
+
+      <h2>Cloudflare Tunnel 대안 (고정 주소 필요 시)</h2>
+      <p>ngrok 무료 플랜은 주소가 변경되지만, 도메인이 있고 Cloudflare를 사용한다면 고정 주소를 무료로 사용할 수 있습니다:</p>
+      <pre><code># cloudflared 설치 후
+cloudflared tunnel login
+cloudflared tunnel create my-tunnel
 cloudflared tunnel route dns my-tunnel mysite.com
 cloudflared tunnel run my-tunnel</code></pre>
 
+      <h2>현실적인 한계와 주의점</h2>
+      <ul>
+        <li><strong>인터넷 안정성:</strong> 가정용 인터넷 장애 시 서비스가 중단됩니다. 중요한 서비스는 클라우드 호스팅이 적합합니다.</li>
+        <li><strong>보안:</strong> 외부에 공개하는 서버라면 불필요한 포트는 방화벽으로 차단하세요.</li>
+        <li><strong>전기 요금:</strong> 24시간 가동하면 전기 사용량이 증가합니다. 월 수백 원~수천 원 수준입니다.</li>
+        <li><strong>하드웨어 노후화:</strong> 장시간 구동으로 냉각팬이나 배터리(전원 연결 해도) 노후화가 진행될 수 있습니다.</li>
+        <li><strong>IP 변경:</strong> 가정용 인터넷은 공인 IP가 바뀔 수 있습니다. ngrok이나 Cloudflare Tunnel을 사용하면 이 문제를 우회할 수 있습니다.</li>
+      </ul>
+
+      <div class="note">공개 서비스 운영은 홈서버보다 관리형 클라우드가 안정적입니다. 홈서버는 테스트/데모/개인 프로젝트 단계에서 특히 유용합니다.</div>
+
       <h2>마무리</h2>
-      <p>구형 노트북 + Node.js + 터널링 조합은 비용 대비 학습 효과가 큽니다. 클라우드 비용 없이도 배포, 네트워크, 프로세스 관리 개념을 실전으로 익힐 수 있습니다.</p>
+      <p>구형 노트북 + Node.js + pm2 + 터널링 조합은 비용 대비 학습 효과가 큽니다. 클라우드 비용 없이도 배포, 네트워크, 프로세스 관리 개념을 실전으로 익힐 수 있고, 팀 내 데모 서버로도 충분히 활용할 수 있습니다. 이 경험이 쌓이면 나중에 클라우드 서버를 관리할 때도 훨씬 수월하게 접근할 수 있게 됩니다.</p>
 
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>

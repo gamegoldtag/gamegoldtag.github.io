@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="코딩을 몰라도 AI를 활용해 포트폴리오 사이트를 만들고 배포하는 방법을 단계별로 정리했습니다.">
+  <meta name="description" content="코딩을 몰라도 AI를 활용해 포트폴리오 사이트를 만들고 배포하는 방법을 단계별로 정리했습니다. 프롬프트 예시, 이미지 교체, 무료 배포까지 실전 가이드입니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-14.html">
   <title>코딩 몰라도 AI로 내 포트폴리오 사이트 만들기 | DevInsight</title>
@@ -14,74 +14,147 @@
     .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; }
+    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
     li { margin-bottom: 8px; }
-    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px; overflow-x: auto; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>코딩 몰라도 AI로 내 포트폴리오 사이트 만들기</h1>
-      <p class="meta">게시일: 2025년 11월 15일 · 10분 읽기</p>
+      <p class="meta">게시일: 2025년 11월 15일 · 14분 읽기</p>
 
-      <p>취업 준비나 프리랜서 활동을 하다 보면 포트폴리오 사이트가 필요해집니다. 개발 경험이 없어도 AI 도구를 활용하면 기본형 사이트를 빠르게 만들 수 있습니다. 핵심은 코드 작성 자체보다, 원하는 구조를 정확히 설명하고 반복 수정하는 과정입니다.</p>
+      <p>취업 준비나 프리랜서 활동을 하다 보면 포트폴리오 사이트가 필요해집니다. "개발을 배워야 하나?"라는 고민이 생기지만, AI 도구를 활용하면 코딩 경험 없이도 기본형 사이트를 만들 수 있습니다. 핵심은 코드 작성 자체보다, 원하는 구조를 정확히 설명하고 반복 수정하는 과정입니다.</p>
 
-      <h2>포트폴리오에 꼭 들어갈 기본 구성</h2>
+      <p>이 글은 디자이너, 사진작가, 프리랜서, 취준생 등 코딩 경험이 없는 분들을 위한 실전 가이드입니다.</p>
+
+      <h2>포트폴리오 사이트에 꼭 들어가야 하는 것들</h2>
+      <p>AI에게 요청하기 전에 포함할 내용을 먼저 정해두면 결과물 품질이 크게 올라갑니다. 기본 포트폴리오에는 다음 네 섹션이 필수입니다:</p>
       <ul>
-        <li>간단한 자기소개</li>
-        <li>전문 분야 또는 기술 스택</li>
-        <li>작업물/프로젝트 목록</li>
-        <li>연락 가능한 채널</li>
+        <li><strong>자기소개:</strong> 이름, 직업/역할, 한 줄 슬로건 또는 강점 요약</li>
+        <li><strong>전문 분야 또는 기술 스택:</strong> 무엇을 잘하는지 구체적으로</li>
+        <li><strong>작업물/프로젝트:</strong> 대표 작업 3~6개, 각 작업 제목+간단 설명</li>
+        <li><strong>연락 채널:</strong> 이메일, SNS, 오픈 카톡 등 실제 연락 가능한 수단</li>
       </ul>
-      <p>이 네 가지가 정리되면 AI에게 지시하기 쉬워지고, 결과물 품질도 안정됩니다.</p>
 
       <h2>1단계: 내 정보 먼저 정리하기</h2>
-      <p>프롬프트 전에 텍스트로 정보부터 정리하세요. 아래처럼 간단한 메모만 있어도 충분합니다.</p>
+      <p>프롬프트를 작성하기 전에 아래 형식으로 정보를 먼저 정리하세요. 이 내용이 AI 요청의 기반이 됩니다.</p>
       <pre><code>이름: 홍길동
 직업: 프리랜서 그래픽 디자이너
-전문 분야: 로고 디자인, 브랜딩, SNS 콘텐츠
-작업물: A카페 로고 / B쇼핑몰 SNS / C스타트업 인쇄물
+한 줄 소개: 브랜드의 첫인상을 만드는 디자이너
+전문 분야: 로고 디자인, 브랜딩, SNS 콘텐츠 제작
+대표 작업물:
+  - A카페 로고 리브랜딩 (2024)
+  - B쇼핑몰 SNS 콘텐츠 패키지 (2024)
+  - C스타트업 명함/인쇄물 디자인 (2023)
 연락처: hong@email.com
-인스타그램: @honggildong</code></pre>
+인스타그램: @honggildong_design</code></pre>
 
       <h2>2단계: AI에게 구체적으로 요청하기</h2>
-      <p>ChatGPT 또는 Claude에 기능과 톤을 함께 지정해 요청합니다. 예: "상단 소개 → 작업물 카드 3개 → 연락처 순서", "모바일 반응형", "한 파일(HTML/CSS/JS)".</p>
-      <p>막연한 요청보다 레이아웃, 색상, 섹션 수, 모바일 조건을 명시할수록 수정 횟수가 줄어듭니다.</p>
+      <p>ChatGPT 또는 Claude에 기능과 디자인 조건을 함께 지정해서 요청합니다. 막연한 요청보다 레이아웃, 색상, 섹션 구성, 기술 요건을 명시할수록 수정 횟수가 줄어듭니다.</p>
 
-      <h2>3단계: 결과 확인 후 짧게 반복 수정</h2>
-      <p>생성 코드를 <code>index.html</code>로 저장해 브라우저에서 확인합니다. 이후 한 번에 크게 바꾸기보다 "카드 이미지 영역 확대", "폰트 변경", "스크롤 이동 메뉴 추가"처럼 작은 단위로 수정 요청하는 방식이 빠릅니다.</p>
+      <h3>실전 프롬프트 예시 (그래픽 디자이너)</h3>
+      <pre><code>포트폴리오 웹사이트를 HTML로 만들어주세요.
 
-      <h2>4단계: 실제 작업물 이미지 반영</h2>
-      <p>AI 초안에는 대체 이미지가 들어가는 경우가 많습니다. 작업물 이미지를 같은 폴더에 넣고 파일명을 맞춰 교체하세요.</p>
-      <pre><code>&lt;img src="work1.jpg" alt="작업물 1"&gt;
-&lt;img src="cafe-logo.jpg" alt="A카페 로고 작업"&gt;</code></pre>
+[내 정보]
+이름: 홍길동
+직업: 프리랜서 그래픽 디자이너
+소개: 브랜드의 첫인상을 만드는 디자이너
 
-      <h2>5단계: 무료 호스팅으로 배포</h2>
-      <p>Netlify, GitHub Pages, Cloudflare Pages 같은 무료 서비스를 활용하면 공개가 가능합니다. Netlify는 UI가 단순해 입문자가 시작하기 쉽습니다.</p>
+[섹션 구성]
+1) 상단 히어로: 이름 + 직업 + 짧은 소개문 + 연락하기 버튼
+2) 전문 분야: 카드 3개 (로고 디자인 / 브랜딩 / SNS 콘텐츠)
+3) 대표 작업물: 카드 3개, 각각 이미지 영역 + 제목 + 설명 1줄
+4) 연락처: 이메일 아이콘 + 인스타그램 링크
+
+[디자인 조건]
+- 배경: 흰색, 포인트 컬러: 남색(#1a237e)
+- 폰트: Pretendard (CDN)
+- 모바일 반응형 필수
+- HTML/CSS/JS 한 파일
+
+[기타]
+- 한국어
+- 이미지는 work1.jpg, work2.jpg, work3.jpg 파일명 사용</code></pre>
+
+      <h3>직업별 프롬프트 포인트</h3>
+      <ul>
+        <li><strong>개발자:</strong> 기술 스택 배지, GitHub 링크, 프로젝트 데모 버튼 요청</li>
+        <li><strong>사진작가:</strong> 풀스크린 그리드 갤러리, 라이트박스 효과 요청</li>
+        <li><strong>번역가/작가:</strong> 작업 유형 목록, 고객사 로고, 후기 섹션 요청</li>
+        <li><strong>강사/컨설턴트:</strong> 경력 타임라인, 수강 후기, 강의 목록 요청</li>
+      </ul>
+
+      <h2>3단계: 코드 저장 후 브라우저에서 확인</h2>
+      <p>AI가 생성한 코드를 복사해 <code>index.html</code>로 저장하고 브라우저에서 직접 확인합니다.</p>
+      <ul>
+        <li><strong>Windows:</strong> 메모장 실행 → 코드 붙여넣기 → "파일 형식: 모든 파일"로 변경 → <code>index.html</code>로 저장</li>
+        <li><strong>macOS:</strong> TextEdit 실행 → 포맷 메뉴 → "일반 텍스트 만들기" → 붙여넣기 → <code>index.html</code>로 저장</li>
+        <li><strong>VS Code 추천:</strong> 설치 후 New File → <code>index.html</code> 저장 → 코드 붙여넣기 (미리보기 기능 활용 가능)</li>
+      </ul>
+
+      <h2>4단계: 작은 단위로 수정 반복하기</h2>
+      <p>초안을 확인한 뒤, 마음에 안 드는 부분을 한 번에 2~3개씩 묶어서 수정 요청합니다. 한꺼번에 너무 많이 바꾸면 코드가 뒤섞일 수 있습니다.</p>
+      <pre><code>아래 3가지만 수정해주세요:
+1) 작업물 카드의 이미지 영역 높이를 더 크게 (현재 너무 작음)
+2) 연락하기 버튼에 hover 시 색상 변화 효과 추가
+3) 모바일에서 카드가 1열로 표시되도록 수정</code></pre>
+
+      <h2>5단계: 실제 작업물 이미지 교체하기</h2>
+      <p>AI 초안에는 대체 이미지 URL이 들어가는 경우가 많습니다. 실제 작업물 이미지를 사용하려면:</p>
       <ol>
-        <li>서비스 가입</li>
-        <li><code>index.html</code> 포함 폴더 업로드</li>
-        <li>발급된 주소 확인</li>
-        <li>모바일/데스크톱 점검 후 공유</li>
+        <li>작업물 이미지를 <code>index.html</code>과 같은 폴더에 넣기</li>
+        <li>파일명을 코드에 지정한 이름과 동일하게 맞추기</li>
+        <li>이미지 크기가 너무 크면 최대 너비 1200px 이하로 줄이기 (로딩 속도 개선)</li>
       </ol>
+      <pre><code>&lt;!-- 코드 안의 이미지 태그 --&gt;
+&lt;img src="work1.jpg" alt="A카페 로고 리브랜딩"&gt;
+&lt;img src="work2.jpg" alt="B쇼핑몰 SNS 콘텐츠"&gt;
+&lt;img src="work3.jpg" alt="C스타트업 인쇄물"&gt;</code></pre>
+
+      <div class="note">작업물 이미지가 없으면 Unsplash(unsplash.com)에서 관련 이미지를 라이선스 확인 후 임시로 사용할 수 있습니다.</div>
+
+      <h2>6단계: 무료 호스팅으로 배포하기</h2>
+      <p>Netlify는 폴더를 드래그앤드롭하면 즉시 배포되어 입문자에게 가장 쉽습니다.</p>
+
+      <h3>Netlify 배포 순서</h3>
+      <ol>
+        <li><code>netlify.com</code> 가입 (이메일 또는 GitHub 계정 사용)</li>
+        <li>대시보드에서 "Add new site" → "Deploy manually" 클릭</li>
+        <li><code>index.html</code>과 이미지 파일이 있는 폴더를 화면에 드래그앤드롭</li>
+        <li>업로드 완료 후 <code>*.netlify.app</code> 주소 확인</li>
+        <li>주소를 SNS, 이메일 서명, 명함 등에 활용</li>
+      </ol>
+
+      <h2>완성도를 높이는 체크리스트</h2>
+      <p>공개 전 아래 항목을 확인하면 완성도가 크게 올라갑니다:</p>
+      <ul>
+        <li>데스크톱과 스마트폰에서 모두 레이아웃 확인</li>
+        <li>이름, 연락처, 이메일 주소 오기입 여부 확인</li>
+        <li>이미지 alt 텍스트가 실제 내용을 설명하는지 확인</li>
+        <li>페이지 제목(<code>&lt;title&gt;</code>)이 이름 또는 사이트 목적을 담고 있는지 확인</li>
+        <li>외부 링크(SNS, GitHub 등)가 실제로 연결되는지 확인</li>
+      </ul>
 
       <h2>한계와 체크포인트</h2>
       <ul>
-        <li>복잡한 기능(로그인/결제)은 별도 백엔드가 필요합니다.</li>
-        <li>AI 코드 품질은 요청 문맥에 따라 달라집니다.</li>
-        <li>저작권, 개인정보 노출, 연락처 오기입을 배포 전에 확인하세요.</li>
+        <li>복잡한 기능(로그인/결제/예약 시스템)은 별도 백엔드가 필요합니다.</li>
+        <li>AI 코드 품질은 요청 문맥에 따라 달라집니다. 결과가 이상하면 요청을 더 구체적으로 다듬으세요.</li>
+        <li>저작권, 개인정보 노출, 연락처 오기입을 배포 전에 반드시 확인하세요.</li>
       </ul>
       <div class="note">무료 플랜의 기능과 한도는 시점별로 변경될 수 있으므로, 배포 전에 각 서비스 공식 안내를 확인하는 것을 권장합니다.</div>
 
       <h2>마무리</h2>
-      <p>정리하면 "내 정보 정리 → AI 요청 → 로컬 확인 → 수정 반복 → 배포" 순서입니다. 코드를 완벽히 이해하지 못해도, 명확한 요구와 검수 습관만 있으면 실사용 가능한 포트폴리오 사이트를 만들 수 있습니다.</p>
+      <p>정리하면 "내 정보 정리 → AI 요청 → 로컬 확인 → 수정 반복 → 이미지 교체 → 배포" 순서입니다. 코드를 완벽히 이해하지 못해도, 명확한 요구와 검수 습관만 있으면 실사용 가능한 포트폴리오 사이트를 만들 수 있습니다. 첫 버전이 완벽할 필요는 없습니다. 공개 후 피드백을 받으며 점진적으로 개선해나가는 것이 가장 현실적인 방식입니다.</p>
 
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>

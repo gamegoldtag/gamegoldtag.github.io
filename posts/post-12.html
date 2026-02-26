@@ -3,36 +3,240 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="로그 설계와 모니터링으로 장애 대응 시간을 줄이는 방법">
+  <meta name="description" content="구조화 로그 설계와 관측성 개선으로 장애 대응 시간을 줄이는 방법. 공통 필드 설계, 알림 품질 개선, 자동화된 회고 템플릿까지 실무 사례를 정리했습니다.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-12.html">
-  <title>로그 설계와 관측성 개선 | DevInsight</title>
+  <title>로그 설계와 관측성: 장애 대응 시간을 절반으로 줄인 운영 방식 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
-    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.8; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
     .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
-    h1 { margin: 0 0 10px; font-size: 2rem; }
-    h2 { margin: 34px 0 12px; font-size: 1.2rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
-    .back { display: inline-block; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <article class="card">
       <h1>로그 설계와 관측성: 장애 대응 시간을 절반으로 줄인 운영 방식</h1>
-      <p class="meta">게시일: 2025년 11월 30일 · 9분 읽기</p>
-      <p>장애 대응이 느린 팀의 공통점은 로그가 많은데 정보가 없는 상태입니다. 로그는 기록이 아니라 질문에 답해야 하며, 이를 위해 구조화와 상관관계 키 설계가 필요합니다.</p>
-      <h2>구조화 로그 기준</h2>
-      <p>모든 로그에 request_id, user_scope, feature_name, error_code를 통일해 넣습니다. 문자열 메시지 중심 로그는 검색은 되지만 집계가 어렵기 때문에 운영 효율이 떨어집니다.</p>
-      <h2>알림 품질 개선</h2>
-      <p>에러 개수 임계치만으로 알림을 보내면 노이즈가 커집니다. 에러율과 지연시간을 함께 평가해 실제 사용자 영향이 있는 경우만 우선 알림으로 올리는 것이 효과적입니다.</p>
-      <h2>회고 자동화</h2>
-      <p>장애 종료 후 로그를 수동 수집하지 않도록, 사건 단위 템플릿을 자동 생성하면 회고 품질이 안정됩니다. 동일 유형 재발도 더 빨리 막을 수 있습니다.</p>
-      <p>관측성은 도구 문제가 아니라 운영 습관입니다. 공통 필드와 기준만 지켜도 대응 속도는 즉시 개선됩니다.</p>
+      <p class="meta">게시일: 2025년 11월 30일 · 14분 읽기</p>
+
+      <p>장애가 났을 때 팀의 대응 속도를 가장 크게 좌우하는 것은 도구의 성능이 아닙니다. 로그가 질문에 답할 수 있는 구조로 되어 있는가의 차이입니다. "결제 오류가 몇 시부터 얼마나 발생했는가", "어떤 사용자가 영향을 받았는가", "어디서 처음 시작됐는가"라는 질문에 5분 이내에 답할 수 있다면 로그가 잘 설계된 것입니다.</p>
+
+      <p>이 글은 로그 구조를 바꾼 뒤 장애 대응 시간이 평균 40분에서 18분으로 줄어든 실무 경험을 정리합니다.</p>
+
+      <h2>문제: 로그가 많은데 정보가 없는 상태</h2>
+      <p>개선 전 로그 상태는 이런 모습이었습니다:</p>
+
+      <pre><code">// 문제 있는 로그 패턴
+console.log('결제 실패');
+console.error('Error: ' + err.message);
+logger.info('user login');
+logger.warn('Database query slow');</code></pre>
+
+      <p>이 로그들의 공통 문제는 다음과 같습니다:</p>
+      <ul>
+        <li>어떤 사용자의 요청인지 알 수 없음</li>
+        <li>어떤 요청 흐름에서 발생했는지 추적 불가 (request_id 없음)</li>
+        <li>메시지가 자유 형식이라 집계 어려움</li>
+        <li>에러 컨텍스트(어떤 값이 들어왔는지, 어떤 상태였는지) 없음</li>
+      </ul>
+
+      <h2>구조화 로그: 공통 필드 정의</h2>
+      <p>모든 로그에 공통 필드를 통일하는 것이 출발점입니다. 이 필드들이 있어야 장애 시 필터링과 집계가 가능합니다.</p>
+
+      <pre><code">// 공통 로그 필드 정의
+interface LogContext {
+  timestamp: string;      // ISO 8601
+  level: 'debug' | 'info' | 'warn' | 'error';
+  request_id: string;     // 요청 추적 ID (UUID)
+  user_id?: string;       // 요청 사용자 ID (없으면 anonymous)
+  service: string;        // 서비스/모듈 이름
+  action: string;         // 수행 중인 동작 (snake_case)
+  duration_ms?: number;   // 처리 시간
+  error_code?: string;    // 에러 코드 (표준화)
+  [key: string]: unknown; // 추가 컨텍스트
+}
+
+// Winston 기반 구조화 로거
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),  // 항상 JSON 형식
+  ),
+  transports: [
+    new winston.transports.Console(),
+  ],
+});
+
+// 사용 예시
+logger.info({
+  request_id: req.id,
+  user_id: req.user?.id,
+  service: 'payment',
+  action: 'charge_attempt',
+  amount: payload.amount,
+  currency: payload.currency,
+});</code></pre>
+
+      <h2>Request ID로 요청 추적하기</h2>
+      <p>하나의 사용자 요청이 여러 서비스, 여러 함수를 거칠 때 동일한 request_id를 유지해야 전체 흐름을 추적할 수 있습니다.</p>
+
+      <pre><code">// Express 미들웨어: 요청마다 request_id 생성 또는 수신
+import { v4 as uuidv4 } from 'uuid';
+import { AsyncLocalStorage } from 'async_hooks';
+
+export const requestContext = new AsyncLocalStorage<{ requestId: string }>();
+
+app.use((req, res, next) => {
+  // 업스트림에서 전달된 ID 사용하거나 새로 생성
+  const requestId = req.headers['x-request-id'] as string ?? uuidv4();
+  req.id = requestId;
+  res.setHeader('X-Request-Id', requestId);
+
+  // AsyncLocalStorage로 요청 컨텍스트 전파
+  requestContext.run({ requestId }, () => next());
+});
+
+// 어디서든 request_id를 자동으로 포함하는 로거
+function getLogger(service: string) {
+  return {
+    info: (data: object) => {
+      const ctx = requestContext.getStore();
+      logger.info({ ...data, service, request_id: ctx?.requestId });
+    },
+    error: (data: object) => {
+      const ctx = requestContext.getStore();
+      logger.error({ ...data, service, request_id: ctx?.requestId });
+    },
+  };
+}</code></pre>
+
+      <h2>에러 코드 표준화</h2>
+      <p>자유 형식 에러 메시지는 집계가 어렵습니다. 에러 코드를 표준화하면 "지난 1시간 동안 PAYMENT_CARD_DECLINED 에러가 몇 번 발생했는가"를 쿼리 한 줄로 확인할 수 있습니다.</p>
+
+      <pre><code">// 에러 코드 정의
+export const ErrorCodes = {
+  // 인증
+  AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+
+  // 결제
+  PAYMENT_CARD_DECLINED: 'PAYMENT_CARD_DECLINED',
+  PAYMENT_INSUFFICIENT_FUNDS: 'PAYMENT_INSUFFICIENT_FUNDS',
+  PAYMENT_GATEWAY_ERROR: 'PAYMENT_GATEWAY_ERROR',
+
+  // 유효성 검사
+  VALIDATION_REQUIRED: 'VALIDATION_REQUIRED',
+  VALIDATION_FORMAT: 'VALIDATION_FORMAT',
+} as const;
+
+// 에러 로그 예시
+logger.error({
+  request_id: req.id,
+  service: 'payment',
+  action: 'charge',
+  error_code: ErrorCodes.PAYMENT_CARD_DECLINED,
+  error_message: err.message,
+  user_id: req.user.id,
+  amount: payload.amount,
+  card_last_four: payload.card.last4,
+});</code></pre>
+
+      <h2>알림 품질 개선: 노이즈 줄이기</h2>
+      <p>에러 개수 임계치만으로 알림을 설정하면 새벽에 불필요한 알림을 받는 상황이 생깁니다. 실제 사용자 영향 여부를 함께 평가해야 합니다.</p>
+
+      <pre><code">// 알림 조건 설계 예시 (Prometheus + AlertManager)
+
+# 에러율 기반 (에러 개수가 아닌 비율)
+- alert: HighErrorRate
+  expr: |
+    rate(http_requests_total{status=~"5.."}[5m])
+    /
+    rate(http_requests_total[5m]) > 0.05
+  for: 2m
+  labels:
+    severity: critical
+  annotations:
+    summary: "5xx 에러율 5% 초과 (2분 지속)"
+
+# 지연시간 기반 (p95 기준)
+- alert: HighLatency
+  expr: |
+    histogram_quantile(0.95,
+      rate(http_request_duration_seconds_bucket[5m])
+    ) > 2
+  for: 5m
+  labels:
+    severity: warning
+  annotations:
+    summary: "API 응답 p95가 2초 초과"</code></pre>
+
+      <h2>성능 로그: 느린 쿼리/API 자동 감지</h2>
+      <p>장애가 아닌 성능 저하도 로그로 감지할 수 있습니다. 일정 시간을 초과하는 작업을 자동으로 경고 로그로 기록합니다.</p>
+
+      <pre><code">// 데이터베이스 쿼리 성능 로깅 (Prisma 예시)
+const prismaWithLogging = prisma.$extends({
+  query: {
+    async $allOperations({ operation, model, args, query }) {
+      const start = Date.now();
+      const result = await query(args);
+      const duration = Date.now() - start;
+
+      if (duration > 500) {  // 500ms 초과 시 경고
+        logger.warn({
+          service: 'database',
+          action: 'slow_query',
+          model,
+          operation,
+          duration_ms: duration,
+        });
+      }
+
+      return result;
+    },
+  },
+});</code></pre>
+
+      <h2>자동화된 장애 타임라인 생성</h2>
+      <p>장애 종료 후 로그를 수동으로 수집해 타임라인을 만드는 작업은 시간이 많이 걸립니다. request_id와 에러 코드가 구조화되어 있으면 이 작업을 자동화할 수 있습니다.</p>
+
+      <pre><code">// 장애 타임라인 조회 스크립트 예시 (Elasticsearch)
+GET /logs-*/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "range": { "timestamp": { "gte": "2025-12-01T14:00:00", "lte": "2025-12-01T15:00:00" } } },
+        { "term": { "error_code": "PAYMENT_GATEWAY_ERROR" } }
+      ]
+    }
+  },
+  "aggs": {
+    "per_minute": {
+      "date_histogram": { "field": "timestamp", "fixed_interval": "1m" }
+    }
+  },
+  "sort": [{ "timestamp": "asc" }]
+}</code></pre>
+
+      <h2>마무리</h2>
+      <p>관측성은 도구 문제가 아니라 운영 습관입니다. Elasticsearch나 DataDog이 없어도, 공통 필드와 구조화 로그 기준만 지키면 대응 속도는 즉시 개선됩니다. 가장 먼저 해야 할 것은 request_id를 모든 로그에 포함시키는 것입니다. 이 하나만 해도 장애 원인 파악 시간이 크게 줄어듭니다.</p>
+
       <a class="back" href="/">홈으로 돌아가기</a>
     </article>
   </main>
