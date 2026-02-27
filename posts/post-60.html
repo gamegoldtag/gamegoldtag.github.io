@@ -53,7 +53,7 @@
 
 <p>Rust 학습의 벽은 ownership이 아니라 lifetime이다. Ownership은 "이해하면" 간단하지만, lifetime은 "이해한 후에도" 복잡하다.</p>
 
-<p>25년을 C++로 했던 나도 처음엔 한국말 같은 에러 메시지를 봤다. "for&lt;'a&gt; &Self::Foo(fn(&'a str) -> &'a str)"... 이게 뭐라는 건가?</p>
+<p>C++을 오랫동안 해온 나도 처음엔 한국말 같은 에러 메시지를 봤다. "for&lt;'a&gt; &Self::Foo(fn(&'a str) -> &'a str)"... 이게 뭐라는 건가?</p>
 
 <p>이 글은 Rust lifetime의 5가지 실전 패턴을 정리한 것이다.</p>
 
@@ -340,13 +340,13 @@ impl Parser {
 <li>성능이 예측 가능해진다</li>
 </ul>
 
-<p>25년 경력의 깨달음: lifetime 에러 메시지는 불친절하지만, 거의 항상 옳다. 에러를 읽고 따르면 된다.</p>
+<p>오랜 개발 경험에서 얻은 깨달음: lifetime 에러 메시지는 불친절하지만, 거의 항상 옳다. 에러를 읽고 따르면 된다.</p>
 
       <div class="author-box">
         <div class="author-avatar">iL</div>
         <div class="author-info">
           <strong>ian.lab</strong>
-          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html">연락처</a>로 보내주세요.</p>
+          <p>오랫동안 실무를 해온 개발자입니다. 현장에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html">연락처</a>로 보내주세요.</p>
         </div>
       </div>
 
