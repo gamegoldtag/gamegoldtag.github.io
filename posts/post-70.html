@@ -49,7 +49,7 @@
     <article class="post-card">
       <h1>JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지</h1>
       <p class="meta">게시일: 2025년 11월 14일 · 14분 읽기</p>
-<p>나는 오랫동안 개발하면서 JWT 관련 보안 문제를 꽤 많이 봤다. 특히 프로덕션에서 localStorage에 토큰을 저장하는 코드를 본 적이 있는데, XSS 한 방이면 끝나는 상황이었다. JWT는 간단해 보이지만 실제로 구현할 때는 놓치기 쉬운 보안 포인트가 많다. 이 글에서는 내가 경험한 실수들과 해결책을 정리했다.</p>
+<p>나는 개발하면서 JWT 관련 보안 문제를 꽤 많이 봤다. 특히 프로덕션에서 localStorage에 토큰을 저장하는 코드를 본 적이 있는데, XSS 한 방이면 끝나는 상황이었다. JWT는 간단해 보이지만 실제로 구현할 때는 놓치기 쉬운 보안 포인트가 많다. 이 글에서는 내가 경험한 실수들과 해결책을 정리했다.</p>
 
 <h3>1. 토큰 저장 위치: httpOnly Cookie vs localStorage</h3>
 
@@ -301,7 +301,7 @@ const token = jwt.sign({
         <div class="author-avatar">iL</div>
         <div class="author-info">
           <strong>ian.lab</strong>
-          <p>오랫동안 실무를 해온 개발자입니다. 현장에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html">연락처</a>로 보내주세요.</p>
+          <p>실무 개발자입니다. 현장에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html">연락처</a>로 보내주세요.</p>
         </div>
       </div>
 
