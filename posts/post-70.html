@@ -41,7 +41,7 @@
     "headline": "JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지",
     "author": { "@type": "Person", "name": "ian.lab" },
     "publisher": { "@type": "Person", "name": "ian.lab" },
-    "datePublished": "2026-02-01",
+    "datePublished": "2025-11-14",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-70.html" }
   }
   </script>
@@ -70,7 +70,7 @@
   <main class="post-wrap">
     <article class="post-card">
       <h1>JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지</h1>
-      <p class="meta">게시일: 2026년 2월 1일 · 14분 읽기</p>
+      <p class="meta">게시일: 2025년 11월 14일 · 14분 읽기</p>
 <p>나는 28년을 개발하면서 JWT 관련 보안 문제를 꽤 많이 봤다. 특히 프로덕션에서 localStorage에 토큰을 저장하는 코드를 본 적이 있는데, XSS 한 방이면 끝나는 상황이었다. JWT는 간단해 보이지만 실제로 구현할 때는 놓치기 쉬운 보안 포인트가 많다. 이 글에서는 내가 경험한 실수들과 해결책을 정리했다.</p>
 
 <h3>1. 토큰 저장 위치: httpOnly Cookie vs localStorage</h3>

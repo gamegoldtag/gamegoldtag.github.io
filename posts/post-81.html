@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="28년차 개발자가 AI 발전의 한계와 천장을 분석합니다. AGI 논쟁, LLM의 기술적 한계, 그리고 실제 개발 현장에서 체감하는 AI 수준까지 깊이 있게 다룹니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-81.html">
+  <title>AI 발전의 끝은 어디인가 — 28년차 개발자가 본 기술의 천장 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+    .site-header { background: var(--card); border-bottom: 1px solid var(--border); }
+    .header-inner { max-width: 800px; margin: 0 auto; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.3rem; font-weight: 700; text-decoration: none; color: var(--ink); }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { text-decoration: none; color: var(--ink); font-size: 0.95rem; }
+    .nav-links a:hover { color: var(--accent); }
+    .container-narrow { max-width: 800px; margin: 0 auto; }
+    .breadcrumb { display: flex; align-items: center; font-size: 0.9rem; color: var(--muted); margin: 16px 0; }
+    .breadcrumb a { color: var(--accent); text-decoration: none; }
+    .breadcrumb .sep { margin: 0 8px; }
+    .post-wrap { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    .post-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    .site-footer { background: var(--card); border-top: 1px solid var(--border); margin-top: 60px; }
+    .footer-inner { max-width: 800px; margin: 0 auto; padding: 24px 20px; text-align: center; }
+    .footer-inner p { margin: 0 0 12px; }
+    .footer-links { display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; }
+    .footer-links a { color: var(--accent); text-decoration: none; }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "AI 발전의 끝은 어디인가 — 28년차 개발자가 본 기술의 천장",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-12-23",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-81.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>AI 발전의 끝은 어디인가 — 28년차 개발자가 본 기술의 천장</h1>
+      <p class="meta">게시일: 2025년 12월 23일 · 18분 읽기</p>
+
+      <p>지난달에 한 스타트업 창업자가 나에게 물었다. "AI가 계속 이런 식으로 발전하면, 2030년쯤엔 AGI가 나올까요?" 나는 한숨을 쉬었다. 불과 두 달 전에도 똑같은 질문을 받았고, 그 전해도, 그 전전해도. 1998년부터 개발해온 시간 동안 나는 이런 질문들을 몇십 번 들었다. 다만 주인공이 바뀌었을 뿐이다. ActiveX, Flash, 블록체인, 메타버스... 그리고 이제 AI다.</p>
+
+      <p>AI의 미래를 논할 때 우리는 실제로 얘기하고 싶은 것이 무엇인지부터 명확히 해야 한다. 기술적 발전의 한계는 어디인가? 현재의 대규모 언어 모델이 극복해야 할 근본적인 문제는 무엇인가? 그리고 가장 중요하게, 실제 개발 현장에서 우리가 체감하는 AI의 수준은 정확히 어떤 상태인가? 이 글은 기술 커뮤니티의 흥분과 좌절을 거리를 두고 바라본, 한 명의 경험이 많은 개발자의 냉정한 분석이다.</p>
+
+      <h2>28년이 지난 지금도 우리는 같은 대화를 반복한다</h2>
+
+      <p>1998년, 나는 여전히 ActiveX가 미래라고 믿는 개발자들을 봤다. 우리는 Microsoft의 약속을 진심으로 받아들였다. 플러그인 기반의 인터넷 애플리케이션이 미래라고. 그것이 모든 소프트웨어의 방식을 바꿀 거라고. 2008년쯤 되자 Flash가 차례였다. 어도비는 플러그인 없이도 웹에서 리치한 경험을 제공한다고 했다. 기업들은 수백억 원을 들여 Flash 기반의 포탈을 구축했다. 나도 그 프로젝트에 참여했다.</p>
+
+      <p>2017년, 블록체인이 미래가 될 거라고 했다. 모든 데이터베이스를 블록체인으로 대체할 것이고, 중앙 서버는 사라질 거라고. 2021년부터 메타버스 이야기가 나왔다. 5년 안에 세상이 가상 세계로 바뀔 거라고. 기업들은 수조 원대의 투자를 했다. 지금 어디에 있는가?</p>
+
+      <p>이제 2026년이다. AI가 모든 것을 바꿀 거라고 한다. 개발자는 2년 안에 시장에서 사라질 거라고. AGI는 2027년부터 2035년 사이에 나올 거라고. 나는 이런 말들을 들을 때마다 같은 감정을 느낀다. 설렘도 있지만, 더 강한 건 피로다.</p>
+
+      <p>문제는 이 모든 기술들이 실제로 정말로 중요한 것들이었다는 점이다. ActiveX는 당시로서는 혁신적이었다. Flash는 웹 경험을 근본적으로 바꿨다. 블록체인은 분산 합의의 새로운 가능성을 열었다. 메타버스 기술들은 실제로 유용한 곳에서 쓰이고 있다. 다만 우리의 예상과 현실 사이에는 항상 거대한 차이가 있었다.</p>
+
+      <blockquote>기술 하이프 사이클에서 가장 위험한 순간은 기술이 이미 성숙했을 때인데, 우리는 여전히 마지막 남은 변화를 기대할 때다.</blockquote>
+
+      <h2>현재 LLM의 근본적인 한계들</h2>
+
+      <p>Claude 3.5, GPT-4, Gemini 2.0이 나온 지금, 우리가 직면하고 있는 기술적 현실을 정직하게 봐야 한다. 이 모델들은 정말로 놀랍다. 내가 써본 도구 중에 가장 강력하다. 하지만 동시에 명백한 한계들이 있다. 그리고 이 한계들은 단순히 "더 큰 모델을 학습하면 해결된다"는 식의 문제가 아니다.</p>
+
+      <h3>맥락의 깊이 문제</h3>
+
+      <p>가장 기본적인 문제부터 시작하자. 현재의 모든 LLM은 토큰 기반으로 작동한다. 입력과 출력의 토큰 개수가 늘어날수록 성능이 저하된다. 이것은 이론적인 문제가 아니라, 매일 느껴지는 현실이다.</p>
+
+      <p>내가 Kakao에서 지난 6개월간 작업한 프로젝트를 예로 들자. 우리는 레거시 코드베이스를 현대화하고 있었다. 50만 줄 규모의 TypeScript 프로젝트였다. AI에게 "이 아키텍처의 문제점을 찾아달라"고 요청했을 때, AI는 처음 보는 파일들에 대해서는 합리적인 분석을 제공했다. 하지만 전체 시스템의 맥락—왜 이런 구조를 택했는지, 과거의 결정들이 현재의 코드에 어떻게 영향을 미쳤는지—을 이해하려면, 우리는 여전히 직접 코드를 읽어야 했다.</p>
+
+      <p>이것이 왜 중요한가? 진정한 아키텍처 리뷰나 시스템 리팩토링은 단순히 "이 함수는 너무 길다"는 지적을 넘어선다. 그것은 역사적 맥락, 비즈니스 제약, 팀의 역량, 미래의 요구사항을 모두 고려해야 한다. 현재의 어떤 LLM도 이것을 온전히 해내지 못한다.</p>
+
+      <h3>진정한 추론의 부재</h3>
+
+      <p>두 번째 한계는 더 근본적이다. LLM은 추론하는 것처럼 보이지만, 실제로는 패턴을 완성하고 있을 뿐이다. 이것이 무슨 차이냐고 물을 수 있겠지만, 실제로 이것은 거대한 차이다.</p>
+
+      <p>구체적인 예를 보자. 나는 최근에 Claude에게 다음과 같은 문제를 주었다. "이 복잡한 버그를 추적하기 위해 어떤 단계별 접근 방식을 추천하시겠습니까?"라고 물었을 때, AI는 일반적인 디버깅 방법론을 제시했다. 변수 추적, 로그 추가, 단위 테스트 작성 등등. 하지만 이것은 맥락을 무시한 일반적인 조언이었다.</p>
+
+      <p>실제로 그 버그는 부동소수점 연산의 정확도 문제에서 비롯된 것이었다. 세 가지 다른 숫자 형식이 서로 상호작용하는 방식 때문이었다. 이것을 찾으려면 단순한 일반적 방법론이 아니라, 그 시스템의 수학적 기초를 이해하고 거기서부터 거꾸로 추론해야 했다. LLM은 이런 "거꾸로 추론"을 제대로 못 한다.</p>
+
+      <p>왜인가? LLM은 학습 데이터에서 본 패턴을 따르는 데 최적화되어 있다. 하지만 진정한 추론이란, 본 적 없는 문제를 새로운 방식으로 조합하는 것이다. 이것은 신경망의 현재 아키텍처로는 근본적으로 어렵다.</p>
+
+      <h3>일관성과 신뢰성의 문제</h3>
+
+      <p>AI는 같은 질문을 두 번 하면 다른 답변을 한다. 이것은 "창의성"이 아니라 신뢰성의 문제다. 개발 환경에서 이것은 치명적이다. 프로덕션 시스템에서 기댈 수 있는 도구가 되려면, 같은 입력에 대해 같은 출력(또는 최소한 예측 가능한 변동)을 제공해야 한다.</p>
+
+      <p>내가 최근에 경험한 예: 우리 팀이 테스트 케이스를 자동으로 생성하도록 AI를 구성했다. 같은 코드 함수에 대해 요청할 때마다, AI는 다른 테스트 케이스를 생성했다. 어떤 것들은 겹쳤고, 어떤 것들은 완전히 빠졌다. 결국 우리는 AI가 생성한 테스트를 모두 수동으로 검토하고 정렬해야 했다. 이것이 생산성 향상이 되는가?</p>
+
+      <h3>실제 통합의 어려움</h3>
+
+      <p>마지막으로, 가장 실무적인 한계가 있다. 우리가 매일 접하는 것은 "대화형 AI"가 아니라, 프로덕션 시스템 안에 통합되어야 하는 AI 기능이다.</p>
+
+      <p>예를 들어, 우리는 자동 코드 완성 시스템을 구축했다. 이것은 단순히 "좋은 추천을 제공한다"는 것보다는, "정확한 타입 정보를 유지하면서 기존 코드 스타일을 따른다"는 것이 중요하다. 또는 "제안한 코드가 실제로 컴파일되고 실행된다"는 것이 중요하다.</p>
+
+      <p>이런 제약 조건들이 있을 때, 현재의 LLM은 흔히 "좋지만 불완전한" 결과를 낸다. 개발자는 여전히 50%의 시간을 AI가 생성한 코드를 검수하고 수정하는 데 쓴다.</p>
+
+      <h2>개발 현장에서 체감하는 AI의 실제 수준</h2>
+
+      <p>이론적인 한계를 넘어, 실제 업무에서 AI는 어느 정도 도움이 되는가? 나는 지난 6개월간 매일 GitHub Copilot, Claude, ChatGPT를 사용했다. 정직한 평가를 하자면, 그것은 도움이 된다. 하지만 우리가 기대하는 수준의 도움은 아니다.</p>
+
+      <h3>AI가 정말 잘하는 것들</h3>
+
+      <p>먼저 긍정적인 부분부터 얘기하자. AI는 정말로 특정 작업에서 뛰어나다.</p>
+
+      <p><strong>보일러플레이트 코드 생성:</strong> 새로운 React 컴포넌트를 만들 때, AI는 매우 빠르고 정확한 기초 코드를 제공한다. 기본 구조, 스타일 설정, 이벤트 핸들러 등등. 이런 반복적인 패턴은 AI가 자주 본 것들이므로, AI는 여기서 시간을 절약해준다.</p>
+
+      <p><strong>문서화와 주석:</strong> 기존 코드에 설명을 추가해달라고 하면, AI는 꽤 좋은 결과를 낸다. 특히 복잡한 알고리즘에 대해, AI는 인간의 관점을 반영하지 않은 객관적인 설명을 할 수 있다.</p>
+
+      <p><strong>간단한 버그 패턴 인식:</strong> "이 에러 메시지가 뜨면 보통 뭘까?"라는 질문에, AI는 많은 경우 올바른 답변을 한다. 왜냐하면 이런 패턴들이 스택오버플로우, 깃허브 이슈에 수천 번 나왔기 때문이다.</p>
+
+      <p><strong>언어 간 변환:</strong> Python 코드를 JavaScript로 변환해달라는 요청에, AI는 대부분 작동하는 코드를 제시한다. 구조가 유지되고, 문법이 올바르기 때문이다.</p>
+
+      <p><strong>정규식과 같은 복잡한 패턴:</strong> 정규식을 직접 작성하는 것은 번거롭지만, "이 이메일 형식을 맞추는 정규식을 만들어달라"고 요청하면, AI는 매우 정확하게 제시한다.</p>
+
+      <h3>AI가 흔히 실패하는 것들</h3>
+
+      <p>반대로, AI가 흔히 실패하거나 일관성 있게 실패하는 영역들이 있다.</p>
+
+      <p><strong>복잡한 아키텍처 결정:</strong> "마이크로서비스를 써야 할까?"라는 질문에, AI는 일반적인 장단점을 나열한다. 하지만 당신의 팀 규모, 조직의 성숙도, 현재의 기술 스택, 비용 제약을 모두 고려한 맞춤형 답변은 주지 못한다.</p>
+
+      <p><strong>기존 코드베이스의 깊은 이해:</strong> "이 코드의 문제를 찾아달라"는 요청에, AI는 표면적인 문제들(이름 지정, 함수 길이)은 찾지만, "왜 이전 개발자가 이런 구조를 택했는지"는 이해하지 못한다.</p>
+
+      <p><strong>성능 최적화:</strong> "이 함수가 느려요"라고 하면, AI는 일반적인 최적화 기법들을 제안한다. 하지만 실제로 그것이 당신의 상황에서 가장 중요한 최적화인지는 알 수 없다. 프로파일링 결과를 보지 않고는.</p>
+
+      <p><strong>장기 유지보수성을 고려한 설계:</strong> AI가 제안하는 코드는 "지금 작동한다"는 기준에서는 좋지만, "3년 후에도 유지보수하기 쉬울까?"라는 관점에서는 부족하다.</p>
+
+      <h3>실무에서의 생산성 증감</h3>
+
+      <p>그렇다면 실제로 생산성이 얼마나 올랐는가? 나의 경험을 수치화하면, 대략 20~30% 정도다. 개발 초기 단계에서는 더 높을 수 있고(40~50%), 복잡한 문제 해결 단계에서는 거의 도움이 되지 않는다(0~10%).</p>
+
+      <p>특히 주목할 점은, 생산성 증가가 균등하지 않다는 것이다. 주니어 개발자는 더 큰 이득을 본다. 왜냐하면 그들은 여전히 학습 중이기 때문에, AI의 예시들이 그들에게 교육적 가치가 있다. 반면 시니어 개발자는 이미 알고 있는 것들을 AI가 반복해서 제시하는 경우가 많으므로, 상대적으로 덜 유용하다.</p>
+
+      <h2>그렇다면 AGI는 언제 올까?</h2>
+
+      <p>이제 원래 질문으로 돌아가자. AGI(일반 인공지능)은 정말로 올까? 그리고 언제?</p>
+
+      <p>정직하게 답하자면, 현재의 LLM 아키텍처에서는 AGI로의 진화가 직선적이지 않을 것 같다. 더 큰 모델, 더 많은 데이터, 더 좋은 하드웨어는 확실히 성능을 올린다. 하지만 현재 우리가 직면한 한계들—진정한 추론, 진정한 학습, 시간에 따른 적응—은 단순히 규모의 문제가 아니다.</p>
+
+      <p>이것은 아키텍처 혁신이 필요하다는 뜻이다. 그리고 그런 혁신은 예측 불가능하다. 1998년에 누가 딥러닝이 2012년에 이미지 인식을 지배할 거라고 예상했는가? 또는 2019년에 누가 변환기 모델이 NLP를 이렇게 바꿀 거라고 생각했는가?</p>
+
+      <p>하지만 동시에, 나는 현재의 LLM이 AGI의 필요조건이 아닐 수도 있다고 생각한다. 우리는 지능을 인간의 지능으로 정의하는 경향이 있다. 하지만 진정한 일반지능이란, 인간의 방식과 완전히 다를 수도 있다. 오히려 우리가 기대하는 방식의 "일반지능"이 가능할지 자체가 의문이다.</p>
+
+      <blockquote>기술 예측에서 가장 정확한 것은 항상 회의론이다. 왜냐하면 큰 혁신은 예측할 수 없기 때문이고, 작은 개선은 확실하기 때문이다.</blockquote>
+
+      <p>내가 할 수 있는 최선의 예측은 이것이다. 앞으로 5년간 AI는 계속해서 더 능력 있어질 것이다. 그리고 그것은 특정 영역에서는 정말로 혁신적일 것이다. 하지만 우리가 AGI라고 부를 만한 수준에 도달할 가능성은... 50% 미만이라고 본다. 그리고 그것이 온다면, 우리가 지금 예상하는 방식과는 다를 것이다.</p>
+
+      <h2>그래서 우리는 뭘 해야 하는가?</h2>
+
+      <p>AI의 미래가 불확실하다면, 개발자로서 우리는 어떻게 대비해야 할까?</p>
+
+      <p>첫째, AI를 도구로 받아들이되, 만능 도구가 아닌 "특정 작업에 뛰어난" 도구로 본다. Figma가 모든 디자인 작업을 하지는 못하지만, 매우 유용한 것처럼, AI도 그런 도구가 될 것이다.</p>
+
+      <p>둘째, 기본 실력을 계속 갈아야 한다. 알고리즘, 시스템 설계, 아키텍처—이런 것들은 AI가 완전히 대체하기 어렵다. 오히려 이런 실력이 있을수록, AI를 더 잘 활용할 수 있다.</p>
+
+      <p>셋째, 기술 트렌드의 과장을 거르는 능력을 기르자. 28년간 나는 많은 "혁신"을 봤다. 그 중 정말로 판도를 바꾼 것들은 몇 개뿐이었다. 우리의 일은 지금 당신 앞에 있는 문제를 푸는 것이지, 2030년의 불확실한 미래에 대비하는 것이 아니다.</p>
+
+      <p>AI는 확실히 앞으로도 중요할 것이다. 하지만 그것이 모든 것을 바꿀 것이라는 말은 거짓일 가능성이 높다. 기술 변화는 항상 예상보다 느리고, 예상과 다른 방향에서 온다. 이것이 28년의 경험이 나에게 가르쳐준 교훈이다.</p>
+
+      <a class="back" href="/archive.html">&larr; 전체 글 목록으로</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>&copy; 2026 DevInsight. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+        <a href="/contact.html">연락처</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

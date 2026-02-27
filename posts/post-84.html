@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI로 할 수 있는 것과 절대 못 하는 것의 경계선을 실무에서 검증한 경험으로 설명합니다. 코드 생성부터 아키텍처 설계까지, 정확한 한계를 알아야 효과적으로 활용할 수 있습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-84.html">
+  <title>AI로 할 수 있는 것과 절대 못 하는 것 — 실무에서 검증한 경계선 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+    .site-header { background: var(--card); border-bottom: 1px solid var(--border); }
+    .header-inner { max-width: 800px; margin: 0 auto; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.3rem; font-weight: 700; text-decoration: none; color: var(--ink); }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { text-decoration: none; color: var(--ink); font-size: 0.95rem; }
+    .nav-links a:hover { color: var(--accent); }
+    .container-narrow { max-width: 800px; margin: 0 auto; }
+    .breadcrumb { display: flex; align-items: center; font-size: 0.9rem; color: var(--muted); margin: 16px 0; }
+    .breadcrumb a { color: var(--accent); text-decoration: none; }
+    .breadcrumb .sep { margin: 0 8px; }
+    .post-wrap { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    .post-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    .site-footer { background: var(--card); border-top: 1px solid var(--border); margin-top: 60px; }
+    .footer-inner { max-width: 800px; margin: 0 auto; padding: 24px 20px; text-align: center; }
+    .footer-inner p { margin: 0 0 12px; }
+    .footer-links { display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; }
+    .footer-links a { color: var(--accent); text-decoration: none; }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "AI로 할 수 있는 것과 절대 못 하는 것 — 실무에서 검증한 경계선",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-02",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-84.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>AI로 할 수 있는 것과 절대 못 하는 것 — 실무에서 검증한 경계선</h1>
+      <p class="meta">게시일: 2026년 1월 2일 · 17분 읽기</p>
+
+      <p>이 글을 읽는 사람들 중 많은 사람이 같은 실수를 하고 있을 것이다. AI에게 자신이 하는 일의 전부를 맡기려고 한다. 또는 AI는 절대 도움이 되지 않는다고 고집한다. 둘 다 틀렸다.</p>
+
+      <p>경계선이 있다. 명확한 경계선이. AI가 정말로 잘하는 것들이 있고, 절대 못 하는 것들이 있다. 그리고 그 경계선을 정확히 아는 것이, AI를 효과적으로 활용하는 핵심이다. 이 글은 내가 지난 6개월간 매일 사용하면서 정확히 파악한 그 경계선들을 정리한 것이다.</p>
+
+      <h2>AI가 정말로 잘하는 것들</h2>
+
+      <h3>코드 생성: 특히 구조화된 패턴</h3>
+
+      <p>AI는 코드 생성에서 정말로 뛰어나다. 하지만 "모든" 코드에서 뛰어난 것은 아니다. 구체적으로는:</p>
+
+      <p><strong>CRUD 작업:</strong> Create, Read, Update, Delete 같은 기본 작업. AI는 데이터베이스 스키마를 보고, 자동으로 CRUD 엔드포인트를 생성할 수 있다. 우리 팀에서는 이것으로 대략 60~70% 시간을 절약했다.</p>
+
+      <p>예를 들어, 새로운 테이블을 만들 때:</p>
+
+      <pre><code>-- 스키마
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(100),
+  created_at TIMESTAMP
+)
+
+-- AI에게 "이 테이블의 CRUD 엔드포인트를 Express.js로 만들어달라"고 하면</code></pre>
+
+      <p>AI는 정확한 경로(GET /users, POST /users, PUT /users/:id, DELETE /users/:id)와 적절한 에러 처리를 포함한 코드를 생성한다. 거의 수정이 필요 없다.</p>
+
+      <p><strong>반복적인 UI 컴포넌트:</strong> "이 디자인 시스템에 따라 Button, Input, Modal 컴포넌트를 만들어달라"는 요청. AI는 일관된 구조, Props, 스타일을 가진 컴포넌트를 빠르게 생성한다. 특히 CSS-in-JS나 Tailwind를 쓰면 더욱 정확하다.</p>
+
+      <p><strong>테스트 코드의 기본 틀:</strong> 함수를 주고 "이것에 대한 단위 테스트를 작성해달라"고 하면, AI는 정상 경로, 에러 경로, 엣지 케이스까지 포함한 테스트 템플릿을 생성한다. 물론 당신은 여전히 실제 테스트 케이스를 검증해야 하지만, 기본 구조는 AI가 만든다.</p>
+
+      <h3>코드 번역 및 마이그레이션</h3>
+
+      <p>Python 함수를 JavaScript로 변환하거나, JavaScript 클래스를 TypeScript로 변환하는 작업. AI는 이것에서 매우 정확하다.</p>
+
+      <p>우리는 최근에 레거시 JavaScript 코드(약 5000줄)를 TypeScript로 마이그레이션했다. 전체 파일을 AI에게 주고 "이것을 TypeScript로 변환해달라"고 했을 때, AI가 생성한 코드는 95% 이상 정확했다. 나머지 5%는 우리가 손으로 수정했다.</p>
+
+      <p>이것이 가능한 이유는, 언어 간의 문법 변환은 일반적인 패턴이고, AI가 수백만 개의 코드 예제에서 이 패턴을 학습했기 때문이다.</p>
+
+      <h3>문서 작성과 주석 추가</h3>
+
+      <p>복잡한 함수를 보고 "이것의 역할을 설명하는 주석을 달아달라"고 하면, AI는 매우 좋은 설명을 제공한다. 특히 알고리즘이나 수학적인 로직의 경우, 인간이 작성한 주석보다 더 명확할 때도 있다.</p>
+
+      <p>예를 들어, 복잡한 동적 프로그래밍 코드에 주석을 달 때, AI는 "이 부분은 메모이제이션을 위한 것이고, 이것이 필요한 이유는..."이라고 정확하게 설명한다.</p>
+
+      <h3>정보 검색과 요약</h3>
+
+      <p>"이 라이브러리의 문서를 읽고, 주요 기능들을 요약해달라" 같은 작업. AI는 제공받은 문서를 빠르게 분석하고, 가장 중요한 부분들을 추출한다. 이것은 많은 시간을 절약해준다.</p>
+
+      <p>특히, 새로운 라이브러리나 프레임워크를 배울 때, AI와 대화하면서 학습하는 것은 문서를 직접 읽는 것보다 훨씬 빠르다.</p>
+
+      <h3>리팩토링 제안</h3>
+
+      <p>"이 코드를 더 간단하게 만들 수 있을까?"는 질문. AI는 코드를 분석하고, 더 깔끔한 방식을 제안한다. 특히 중복을 제거하거나, 더 효율적인 알고리즘을 사용할 때 유용하다.</p>
+
+      <p>하지만 여기서 주의할 점이 있다. AI가 제안한 "더 간단한" 코드가 항상 "더 좋은" 코드는 아니다. 가독성, 성능, 유지보수성을 고려한 전체적인 평가가 필요하다.</p>
+
+      <h2>AI가 못 하는 것들</h2>
+
+      <h3>아키텍처 설계: 가장 중요한 결정</h3>
+
+      <p>이것이 가장 중요한 경계선이다. AI는 주어진 아키텍처 안에서는 코드를 잘 생성하지만, 아키텍처 자체를 설계하는 것은 못 한다.</p>
+
+      <p>"이 시스템을 어떻게 설계할까?"는 질문에, AI는 일반적인 패턴들(모놀리식, 마이크로서비스, 이벤트 기반)을 나열한다. 하지만 "당신의 팀이 5명이고, 요구사항이 매달 바뀌고, 현재 기술 스택은 Node.js라면?"이라는 맥락을 고려한 결정을 AI는 못 한다.</p>
+
+      <p>우리는 최근에 마이크로서비스로 전환할지 말지 고민했다. AI는 "마이크로서비스의 장점은... 단점은..."이라고 설명했다. 하지만 우리가 실제로 필요한 것은 "당신의 상황에서는 모놀리식이 낫다. 왜냐하면..." 같은 맥락 있는 조언이었다.</p>
+
+      <p>결국 우리는 팀 내의 경험 많은 엔지니어들과 토론해서 결정했다. AI는 정보를 제공할 뿐, 결정은 할 수 없다.</p>
+
+      <h3>레거시 코드의 이해</h3>
+
+      <p>이것은 실제로 매우 중요한데, 많은 개발자들이 간과한다. AI는 새로 작성된 코드는 잘 이해한다. 하지만 5년 전에 작성된, 이제 사라진 라이브러리를 사용하는 레거시 코드는 이해하기 어렵다.</p>
+
+      <p>예를 들어, 우리는 10년 전 프로젝트의 버그를 수정해야 했다. 코드는 여러 개의 deprecated 라이브러리를 사용하고 있었다. AI에게 이 코드를 보여줬을 때, AI는 "이것은 오래된 코드네요. 최신 버전으로 업그레이드하는 것을 추천합니다"라고 했다. 정확한 조언이지만, 우리가 필요한 것은 "이 버그의 근본 원인이 뭘까?"였다.</p>
+
+      <p>결국 우리는 여전히 그 코드를 작성한 개발자에게 물어봐야 했다. 또는 많은 시간을 들여 코드를 분석했다. AI는 도움이 되지 않았다.</p>
+
+      <h3>복잡한 비즈니스 로직의 구현</h3>
+
+      <p>금융, 전자상거래, 의료 시스템 같은 도메인에서는, 단순한 코딩이 아니라 도메인 지식이 필요하다. 예를 들어, "결제 시스템을 구현해달라"는 요청에, AI는 기술적으로 올바른 코드를 생성할 수 있다. 하지만 "환율 변동을 어떻게 처리할까?" "환불은 언제까지 가능해야 할까?" 같은 비즈니스 결정은 AI가 못 한다.</p>
+
+      <p>우리의 경험: AI가 생성한 결제 로직의 기본 틀은 좋았다. 하지만 우리의 비즈니스 모델(정기 결제, 부분 환불, 다중 통화)을 반영하려면, 깊은 수정이 필요했다. 이 부분은 전문 도메인 지식을 가진 팀원이 해야 했다.</p>
+
+      <h3>성능 최적화의 초기 결정</h3>
+
+      <p>"이 함수가 느려요. 최적화해달라"는 요청에, AI는 일반적인 최적화 기법들을 제시한다. 루프를 효율적으로 만들기, 캐싱 추가하기, 알고리즘 개선하기 등등.</p>
+
+      <p>하지만 실제로 중요한 질문은 "어느 부분이 느린가?"이다. 프로파일링 없이는 답할 수 없다. AI는 이 질문을 못 한다. AI가 할 수 있는 최선은 "일반적으로 이 부분이 병목이 될 수 있다"는 추측이다.</p>
+
+      <p>우리의 경험: 한 번은 응답 시간이 느린 API가 있었다. AI는 데이터베이스 쿼리를 최적화하라고 제시했다. 하지만 프로파일링을 해보니, 실제 병목은 이미지 처리 라이브러리였다. AI의 제시는 틀렸다.</p>
+
+      <h3>예외 처리와 엣지 케이스의 발견</h3>
+
+      <p>"이 함수의 엣지 케이스는 뭘까?"는 질문에, AI는 몇 가지를 제시한다. 그런데 자신이 생각하지 못한 엣지 케이스도 있다.</p>
+
+      <p>예를 들어, 사용자 입력을 처리하는 함수에서:</p>
+
+      <ul>
+        <li>빈 문자열: AI가 고려한다</li>
+        <li>null/undefined: AI가 고려한다</li>
+        <li>매우 긴 문자열 (메모리 문제): AI가 생각할 수도, 못 할 수도 있다</li>
+        <li>특수 유니코드 문자: AI가 자주 놓친다</li>
+        <li>시스템의 다른 부분과의 상호작용으로 인한 엣지 케이스: AI는 절대 생각하지 못한다</li>
+      </ul>
+
+      <p>마지막 항목이 가장 중요하다. "이 함수의 입력이 동시에 들어올 때는?", "다른 스레드에서 이 데이터를 변경할 때는?"이라는 시스템 수준의 질문은, AI가 코드만 보고는 알 수 없다.</p>
+
+      <h3>기술적 부채의 평가</h3>
+
+      <p>"이 코드가 나쁜가?"는 질문. AI는 명백한 안티패턴을 찾을 수 있다. 하지만 "기술적 부채"는 절대적인 것이 아니라, 상황에 따라 다르다.</p>
+
+      <p>예를 들어, 코드 복제(code duplication)는 보통 나쁘다. 하지만 성급한 추상화는 더 나쁠 수 있다. 두 개의 거의 비슷한 함수가 미래에 다르게 진화할 가능성이 높으면, 복제된 상태로 두는 것이 낫다.</p>
+
+      <p>AI는 "코드가 복제됐네요. DRY 원칙에 따라 함수를 통합하세요"라고 할 것이다. 하지만 그것이 당신의 상황에 맞는지는 모른다.</p>
+
+      <h2>경계선에 있는 것들: 신중해야 할 영역</h2>
+
+      <h3>보안 관련 결정</h3>
+
+      <p>AI에게 "SQL 인젝션을 방지하는 코드를 작성해달라"고 하면, AI는 정확한 코드를 생성한다. 준비된 문(prepared statement)을 사용하고, 입력을 검증한다.</p>
+
+      <p>하지만 "우리의 인증 시스템을 설계해달라"는 요청은 다르다. AI는 OAuth, JWT, Session 같은 방식을 설명할 수 있다. 하지만 "당신의 조직의 규정상 GDPR을 준수해야 하고, 동시에 사용자 경험도 좋아야 한다면?"이라는 질문은 답할 수 없다.</p>
+
+      <p>우리의 접근: 보안 관련해서는 AI를 도우미로 생각한다. AI가 코드를 생성하고, 우리의 보안 팀이 검증한다. AI의 결정을 신뢰하지 않는다.</p>
+
+      <h3>알고리즘 설계</h3>
+
+      <p>"이 문제를 푸는 알고리즘을 작성해달라"는 요청. AI는 일반적인 알고리즘들(정렬, 검색, 그래프 탐색)은 잘 구현한다. 하지만 특수한 문제에 맞춰진 최적 알고리즘을 설계하는 것은 못 한다.</p>
+
+      <p>예를 들어, "이 시스템에서 추천을 어떻게 할까?"는 질문. AI는 협력 필터링, 콘텐츠 기반 필터링 같은 일반적인 방식을 제시한다. 하지만 당신의 특수한 상황(예: 제품이 매일 추가되는 전자상거래 사이트)에 최적화된 알고리즘은 설계하지 못한다.</p>
+
+      <h2>실무에서의 황금 법칙</h2>
+
+      <p>지금까지의 분석을 바탕으로, 내가 정한 AI 활용의 황금 법칙들이 있다.</p>
+
+      <h3>1. 기술적 결정은 인간이, 기술적 구현은 AI가</h3>
+
+      <p>"이 시스템의 구조를 어떻게 할까?"는 결정. 이것은 인간이 한다. 비즈니스 요구사항, 팀의 역량, 기술 스택, 미래의 요구사항을 고려해야 한다.</p>
+
+      <p>하지만 "이 구조에 맞춰서 코드를 작성해달라"는 것. 이것은 AI가 할 수 있다.</p>
+
+      <h3>2. AI의 결과는 항상 검증한다</h3>
+
+      <p>AI가 코드를 생성했다고 해서, 그것을 즉시 배포하면 안 된다. 반드시 코드 리뷰를 하고, 테스트를 한다. 특히 보안이나 성능이 관련된 부분은 더욱 주의한다.</p>
+
+      <p>우리의 팀 문화: "AI가 생성했으니까 좋을 거야"라는 생각을 절대 하지 않는다. 오히려 "AI가 생성했으니까 더 신중히 봐야 해"라고 생각한다.</p>
+
+      <h3>3. 도메인 지식이 필요한 부분은 AI에 의존하지 않는다</h3>
+
+      <p>만약 당신이 특정 도메인의 전문가라면, 그 부분은 당신이 한다. AI의 "일반적인" 조언이 당신의 "특수한" 상황에는 맞지 않을 수 있다.</p>
+
+      <h3>4. 반복되는 패턴만 AI에게 맡긴다</h3>
+
+      <p>CRUD, 보일러플레이트, 일반적인 유틸리티 함수. 이런 것들은 패턴이 반복되므로, AI가 잘한다.</p>
+
+      <p>하지만 한 번만 하는 것, 특수한 것, 창의성이 필요한 것은 인간이 한다.</p>
+
+      <h3>5. AI와의 대화를 통해 아이디어를 정제한다</h3>
+
+      <p>AI가 당신의 아이디어를 실현하는 것이 아니라, AI와 대화하면서 당신의 아이디어를 더 명확히 한다. "이런 구조는 어떨까?", "이 경우는 어떻게 될까?" 같은 질문을 AI에게 던진다. AI의 답변을 통해 당신은 더 나은 설계에 도달한다.</p>
+
+      <h2>결론: 경계선을 알면 AI를 효과적으로 쓸 수 있다</h2>
+
+      <p>AI의 능력은 정말로 인상적이다. 하지만 그 능력에는 명확한 경계선이 있다. 그 경계선을 정확히 아는 것이, AI를 효과적으로 활용하는 핵심이다.</p>
+
+      <p>가장 흔한 실수는 두 가지다. 첫째, AI를 과대평가하는 것. "AI가 모든 것을 할 수 있다"고 생각한다. 둘째, AI를 과소평가하는 것. "AI는 도움이 안 된다"고 생각한다.</p>
+
+      <blockquote>진실은 그 사이에 있다. AI는 특정 작업에서 정말로 훌륭한 도구다. 하지만 모든 작업을 할 수는 없다. 경계선을 알고, 그에 맞춰 AI를 사용하자.</blockquote>
+
+      <p>우리 팀이 지난 6개월간 배운 가장 중요한 것은 이것이다. AI는 당신의 "시간을 절약해주는 도구"이다. 하지만 "당신의 판단을 대체하지는 못한다". 따라서 진정한 가치는, AI의 생산성 향상에 있는 것이 아니라, 인간이 더 높은 수준의 문제에 집중할 수 있게 해주는 것에 있다.</p>
+
+      <p>이 경계선을 명확히 하고, 당신의 팀에 전달하자. 그러면 AI로부터 최대의 이득을 얻을 수 있을 것이다.</p>
+
+      <a class="back" href="/archive.html">&larr; 전체 글 목록으로</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>&copy; 2026 DevInsight. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+        <a href="/contact.html">연락처</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

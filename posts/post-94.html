@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="28년 경력의 현실감 있는 개발자가 직접 Cursor, Claude Code, Copilot Chat을 써본 솔직한 후기. 실제 프로젝트에서 무엇이 작동하고 무엇이 실패했는가?">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-94.html">
+  <title>28년차 개발자가 바이브 코딩을 써본 솔직한 후기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "28년차 개발자가 바이브 코딩을 써본 솔직한 후기",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-06",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-94.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI & 후기</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>28년차 개발자가 바이브 코딩을 써본 솔직한 후기</h1>
+      <p class="meta">게시일: 2026년 2월 6일 · 20분 읽기</p>
+
+      <p>나는 지난 6개월간 거의 매일 Cursor, Claude Code, GitHub Copilot을 사용했다. 진지한 마음으로, 진정으로 내 업무에 도움이 되는지 검증하려는 목적으로. 이 글은 그 경험에 대한 정직한 기록이다.</p>
+
+      <p>결론부터 말하면: 도움이 된다. 하지만 마케팅이 약속하는 만큼은 아니다. 그리고 특정 상황에서는 오히려 시간을 낭비하게 된다.</p>
+
+      <h2>첫 만남: Cursor with TypeScript</h2>
+
+      <p>지난 가을, 회사에서 기존 React 프로젝트를 TypeScript로 마이그레이션하기로 했다. 규모는 꽤 컸다. 500개 이상의 컴포넌트. 그때 나는 생각했다. "이게 Cursor의 진짜 쓸모를 보여줄 프로젝트다."</p>
+
+      <p>내 프롬프트는 이랬다:</p>
+
+      <blockquote>
+        이 React 컴포넌트를 TypeScript로 변환해줘. Props의 타입을 정의하고, 컴포넌트의 상태 관리도 타입을 지정해. 기존 기능은 유지해야 해.
+      </blockquote>
+
+      <p>결과는? 생각보다 훨씬 좋았다. Cursor는 컴포넌트를 분석해서 자동으로 Props 타입을 생성했다.</p>
+
+      <pre>// 이전 (JavaScript)
+const UserCard = ({ user, onDelete, onUpdate }) => {
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;{user.name}&lt;/h2&gt;
+      &lt;button onClick={() => onDelete(user.id)}&gt;Delete&lt;/button&gt;
+    &lt;/div&gt;
+  );
+};
+
+// Cursor의 결과
+interface User {
+  id: string;
+  name: string;
+}
+
+interface UserCardProps {
+  user: User;
+  onDelete: (id: string) => void;
+  onUpdate: (user: User) => void;
+}
+
+const UserCard: React.FC&lt;UserCardProps&gt; = ({ user, onDelete, onUpdate }) => {
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;{user.name}&lt;/h2&gt;
+      &lt;button onClick={() => onDelete(user.id)}&gt;Delete&lt;/button&gt;
+    &lt;/div&gt;
+  );
+};
+      </pre>
+
+      <p>이 작업은 정말 빨랐다. 손으로 했다면 1개월이 걸렸을 것이다. Cursor와 함께는 2주일이면 됐다. 그리고 결과의 질도 나쁘지 않았다.</p>
+
+      <p>그때 나는 생각했다. "오, 이거 진짜 좋네."</p>
+
+      <h2>흥분이 식은 순간: Claude Code with 복잡한 로직</h2>
+
+      <p>좋은 경험 후, 나는 자신감이 생겼다. 더 복잡한 작업에 Claude Code를 시도해봤다. 우리 팀의 데이터 처리 라이브러리를 리팩토링하는 작업이었다.</p>
+
+      <p>요구사항은 이랬다:</p>
+
+      <blockquote>
+        사용자 데이터의 여러 소스(API, CSV, 데이터베이스)를 통합해서 하나의 형식으로 변환하는 라이브러리. 중복 제거, 데이터 유효성 검사, 필드 매핑이 필요해. 그리고 대규모 데이터(10만 개 이상의 레코드)를 1초 안에 처리해야 해.
+      </blockquote>
+
+      <p>나는 Cursor에 요청했다. 생성된 코드는 겉으로는 좋아 보였다:</p>
+
+      <pre>class DataIntegrator {
+  async transformData(sources) {
+    const unified = [];
+
+    for (const source of sources) {
+      const data = await source.fetch();
+      const validated = this.validate(data);
+      const mapped = this.mapFields(validated);
+      unified.push(...mapped);
+    }
+
+    return this.deduplicateAndSort(unified);
+  }
+
+  deduplicateAndSort(data) {
+    const unique = new Map();
+    data.forEach(item => {
+      unique.set(item.id, item);
+    });
+    return Array.from(unique.values());
+  }
+}
+      </pre>
+
+      <p>이 코드는 작동한다. 하지만 성능은? 최악이었다. 10만 개 레코드 처리에 5초가 걸렸다. 요구사항은 1초였다.</p>
+
+      <p>문제는:</p>
+
+      <ul>
+        <li>순차 처리. 동시에 여러 소스를 처리할 수 있는데 순차로 함</li>
+        <li>중복 제거를 배열 전체에서 함. 각 소스별로 먼저 할 수 있음</li>
+        <li>메모리 효율이 나쁨. 대규모 데이터를 한 번에 메모리에 로드</li>
+      </ul>
+
+      <p>내 프롬프트에 이 조건들을 명시했어야 했다. 하지만 AI는 "일반적으로 작동하는 코드"를 생성했을 뿐이다.</p>
+
+      <p>결국 나는 직접 다시 작성했다. 스트림 기반 처리, 배치 동시 실행, 인덱싱. 3시간이 걸렸다. 그 시간을 AI로 절약하지 못했다. 오히려 AI 코드를 분석하고 버리는 시간을 낭비했다.</p>
+
+      <p>그때 배운 교훈: AI는 "평범한" 코드는 완벽하지만, "최적화된" 코드는 못 만든다.</p>
+
+      <h2>Copilot Chat: 도움이 되는 상황과 안 되는 상황</h2>
+
+      <p>GitHub Copilot Chat은 다르다. IDE 안에서 직접 대화할 수 있어서, 더 빠르고 편하다. 나는 여러 가지를 시도했다:</p>
+
+      <h3>잘 된 경우: 버그 디버깅</h3>
+
+      <p>복잡한 정규식에서 원하지 않는 동작이 있었다. 나는 Copilot Chat에 물었다:</p>
+
+      <blockquote>
+        이 정규식이 특정 경우에 틀린 결과를 줘. 예를 들어서 "user@example.com"은 맞게 매칭되는데 "user+tag@example.com"은 안 돼. 왜일까?
+      </blockquote>
+
+      <p>Copilot은 즉시 답했다:</p>
+
+      <blockquote>
+        당신의 정규식 /^[a-z]+@[a-z.]+$/는 '+' 문자를 허용하지 않습니다. 이메일 주소 표준에 따르면 + 문자는 로컬 부분에서 허용됩니다.
+      </blockquote>
+
+      <p>완벽한 진단이었다. 그리고 수정한 정규식도 제안했다. 이런 경우 Copilot은 정말 훌륭하다. 왜냐하면 버그의 원인을 설명하는 것은 AI가 잘하기 때문이다.</p>
+
+      <h3>덜 된 경우: 새로운 기능 설계</h3>
+
+      <p>나는 "새로운 캐싱 레이어를 설계해줄래?"라고 물었다. 요구사항은:</p>
+
+      <ul>
+        <li>메모리 기반</li>
+        <li>TTL(Time-to-Live) 지원</li>
+        <li>최대 크기 제한</li>
+        <li>LRU(Least Recently Used) 제거 정책</li>
+      </ul>
+
+      <p>생성된 코드는 작동했지만, 설계 관점에서는 미흡했다:</p>
+
+      <pre>// 문제: 동시성 처리가 없음
+// 다중 요청이 동시에 같은 캐시 키를 접근할 때 race condition 발생 가능
+class Cache {
+  constructor(maxSize, ttl) {
+    this.data = new Map();
+    this.timestamps = new Map();
+    this.accessTimes = new Map();
+    this.maxSize = maxSize;
+    this.ttl = ttl;
+  }
+
+  get(key) {
+    if (!this.data.has(key)) return null;
+    if (Date.now() - this.timestamps.get(key) > this.ttl) {
+      this.delete(key);
+      return null;
+    }
+    this.accessTimes.set(key, Date.now());
+    return this.data.get(key);
+  }
+}
+      </pre>
+
+      <p>이 코드는 단일 스레드에서는 문제없다. 하지만 Node.js의 비동기 특성상, 동시 요청에서는 문제가 생길 수 있다. AI는 이런 미묘한 점을 놓쳤다.</p>
+
+      <p>새로운 설계나 아키텍처가 필요한 경우, Copilot은 "평범한" 솔루션을 제시한다. 혁신적이거나 최적화된 솔루션은 아니다.</p>
+
+      <h2>실제 프로젝트에서의 활용: 3가지 사례</h2>
+
+      <h3>사례 1: REST API 마이그레이션 (성공)</h3>
+
+      <p>우리는 Express.js에서 Fastify로 마이그레이션했다. 50개의 엔드포인트가 있었다.</p>
+
+      <p>프롬프트: "Express 라우터를 Fastify로 변환해줄래?"</p>
+
+      <p>Cursor가 생성한 코드:</p>
+
+      <pre>// Express
+app.get('/users/:id', async (req, res) => {
+  const user = await db.findUser(req.params.id);
+  res.json(user);
+});
+
+// Fastify로 변환 (Cursor)
+fastify.get('/users/:id', async (request, reply) => {
+  const user = await db.findUser(request.params.id);
+  reply.send(user);
+});
+      </pre>
+
+      <p>완벽했다. 모든 50개 엔드포인트가 자동으로 변환되고, 테스트도 통과했다. 예상 시간 1주일 → 실제 시간 2일. 이건 큰 성공이었다.</p>
+
+      <p>왜 성공했을까? 패턴이 정해져 있었기 때문이다. Express와 Fastify의 API 차이는 단순하고 명확하다.</p>
+
+      <h3>사례 2: 복잡한 상태 관리 로직 (부분 성공)</h3>
+
+      <p>Redux 스토어의 복잡한 리듀서를 Zustand로 변환했다.</p>
+
+      <p>처음 60%는 AI가 잘 변환했다. 하지만 나머지 40%는 문제가 있었다:</p>
+
+      <ul>
+        <li>미들웨어 로직의 변환이 정확하지 않음</li>
+        <li>데이터 정규화 부분을 제대로 이해 못함</li>
+        <li>비동기 작업 처리가 불완전했음</li>
+      </ul>
+
+      <p>결국 손수정한 부분이 40%. AI를 믹서기로, 손으로 조정하는 방식으로 진행했다. 예상 시간 3일 → 실제 시간 2.5일. 조금 도움이 됐지만, 완전 자동화는 아니었다.</p>
+
+      <h3>사례 3: 성능 최적화 (실패)</h3>
+
+      <p>우리 대시보드의 메인 페이지가 느렸다. 로딩에 3초가 걸렸다.</p>
+
+      <p>나는 Copilot에 물었다: "이 페이지를 최적화해줄래? 가능하면 1초 이내로."</p>
+
+      <p>Copilot의 제안:</p>
+
+      <ul>
+        <li>코드 스플리팅 (이미 하고 있음)</li>
+        <li>이미지 최적화 (이미 되어 있음)</li>
+        <li>캐싱 (너무 일반적)</li>
+      </ul>
+
+      <p>AI는 일반적인 최적화 기법만 제시했다. 우리의 실제 병목은:</p>
+
+      <ul>
+        <li>DB 쿼리가 N+1 문제를 일으킴</li>
+        <li>메인 번들에 불필요한 라이브러리가 포함됨</li>
+        <li>렌더링 최적화가 부족함</li>
+      </ul>
+
+      <p>이런 구체적인 문제는 AI가 찾아내지 못했다. 결국 나는 프로파일러를 직접 들고 분석했다. 이 경우 AI는 전혀 도움이 안 됐다.</p>
+
+      <h2>패턴 찾기: 언제 AI가 도움이 될까?</h2>
+
+      <p>여러 프로젝트를 진행하면서 패턴이 보였다:</p>
+
+      <table>
+        <tr>
+          <th>상황</th>
+          <th>AI 효율</th>
+          <th>이유</th>
+        </tr>
+        <tr>
+          <td>보일러플레이트 변환</td>
+          <td>90%</td>
+          <td>패턴이 정해져 있음</td>
+        </tr>
+        <tr>
+          <td>표준 기능 구현</td>
+          <td>75%</td>
+          <td>많은 예제 데이터가 있음</td>
+        </tr>
+        <tr>
+          <td>버그 분석</td>
+          <td>80%</td>
+          <td>설명하는 것을 잘함</td>
+        </tr>
+        <tr>
+          <td>코드 리뷰</td>
+          <td>70%</td>
+          <td>관례를 알고 있음</td>
+        </tr>
+        <tr>
+          <td>성능 최적화</td>
+          <td>30%</td>
+          <td>컨텍스트가 필요</td>
+        </tr>
+        <tr>
+          <td>새로운 설계</td>
+          <td>40%</td>
+          <td>창의성이 필요</td>
+        </tr>
+        <tr>
+          <td>보안 강화</td>
+          <td>50%</td>
+          <td>엣지 케이스가 많음</td>
+        </tr>
+        <tr>
+          <td>복잡한 알고리즘</td>
+          <td>35%</td>
+          <td>깊이 있는 이해가 필요</td>
+        </tr>
+      </table>
+
+      <h2>비용 분석</h2>
+
+      <p>실제로 시간을 얼마나 절약했을까?</p>
+
+      <p><strong>Cursor (월 $20):</strong> 월 평균 30시간 절약. 비용 효율이 좋다. 주로 보일러플레이트와 리팩토링에서 시간을 절약했다.</p>
+
+      <p><strong>GitHub Copilot Chat (월 $10):</strong> 월 평균 10시간 절약. 사실 더 많이 썼지만, 실제로 생산성을 높인 경우는 적었다.</p>
+
+      <p><strong>Claude Pro (월 $20):</strong> 월 평균 15시간 절약. Cursor보다는 덜하지만 특정 분야에서 좋다. 특히 설명과 분석에서 우수하다.</p>
+
+      <p>합계: 월 55시간 절약. 내 월 업무 시간 160시간의 34%다.</p>
+
+      <p>하지만 더 중요한 것은, "절약한 시간이 정말 생산성 향상으로 이어졌는가?"라는 질문이다. 답은 "부분적"이다. 일부는 다른 작업에 충당했지만, 일부는 그냥 쉬었다. 또는 AI 코드를 검증하는 데 시간을 썼다.</p>
+
+      <h2>신입과 베테랑의 차이</h2>
+
+      <p>흥미롭게도, AI 도구의 효율은 경력에 따라 다르다.</p>
+
+      <p>우리 팀의 신입(2년차)은 AI를 사용한 후 생산성이 2배 올랐다. 왜일까? 신입에게는 AI가 "선생님" 역할을 했기 때문이다. "이렇게 하면 되나요?"라는 질문에 AI가 빠르게 답했다.</p>
+
+      <p>하지만 나는? 생산성이 1.3배 올랐다. 왜냐하면 나는 대개 이미 방법을 알고 있었기 때문이다. AI는 내가 "알고 있는 것"을 빠르게 구현해주는 도구일 뿐이었다.</p>
+
+      <p>흥미로운 점은, 복잡한 문제에서는 역으로 신입이 AI에 속는 경우가 있다는 것이다. "AI가 이렇게 했으니까 맞겠지"라고 생각하고, 실제로 검증하지 않는다. 나는 항상 의심한다.</p>
+
+      <h2>6개월 사용 후 최종 평가</h2>
+
+      <p>마이너스:</p>
+
+      <ul>
+        <li>완전 자동화는 불가능. 대부분의 경우 수정이 필요하다.</li>
+        <li>AI가 만든 코드를 이해하지 못하면, 나중에 악몽이 된다.</li>
+        <li>성능이나 보안이 중요한 코드는 직접 작성하는 게 낫다.</li>
+        <li>너무 의존하면, 정말 중요한 순간에 손으로 못 한다.</li>
+      </ul>
+
+      <p>플러스:</p>
+
+      <ul>
+        <li>반복적인 작업에서 정말 유용하다.</li>
+        <li>코드 작성 속도는 확실히 빨라진다.</li>
+        <li>버그 분석과 설명에서 도움이 된다.</li>
+        <li>신입 개발자의 학습을 가속화할 수 있다.</li>
+      </ul>
+
+      <p>결론: 좋은 도구다. 하지만 "개발자를 대체하는" 정도는 아니다. 오히려 "좋은 개발자를 더 좋게 만드는" 도구다. 그런데 나쁜 개발자는... 더 나쁘게 만들 수도 있다.</p>
+
+      <h2>앞으로의 계획</h2>
+
+      <p>나는 계속 이 도구들을 쓸 것이다. 하지만 더 선택적으로 쓸 것이다.</p>
+
+      <ul>
+        <li><strong>Cursor:</strong> 리팩토링, 마이그레이션 작업에만. 새로운 설계에는 쓰지 않을 것.</li>
+        <li><strong>Copilot Chat:</strong> 버그 분석과 설명용으로만. 코드 생성은 최소화.</li>
+        <li><strong>Claude Pro:</strong> 복잡한 개념 설명과 아키텍처 논의용으로.</li>
+      </ul>
+
+      <p>그리고 팀 전체에 하는 권고사항도 생겼다: "AI가 생성한 코드는 2배로 엄격하게 리뷰하세요. 특히 성능과 보안 부분을."</p>
+
+      <p>28년을 개발하면서 배운 것 중 하나는, 새로운 도구가 나올 때마다 그것을 수용하되 의심해야 한다는 것이다. 그것이 정말 도움이 되는지 검증하고, 어디서 한계가 있는지 알아야 한다.</p>
+
+      <p>바이브 코딩도 그렇다. 좋은 도구지만, 만능은 아니다. 그리고 잘 써야 한다.</p>
+
+      <a class="back" href="/archive.html">&larr; 전체 글 목록으로</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>&copy; 2026 DevInsight. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+        <a href="/contact.html">연락처</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
