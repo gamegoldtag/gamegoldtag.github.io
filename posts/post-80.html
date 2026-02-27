@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI 코딩 도구의 부상, Rust 생태계 성숙, TypeScript 진화, 경력 회고와 2026년 계획을 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-80.html">
+  <title>2025년 회고 — 28년차 개발자가 올해 배운 것들 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "2025년 회고 — 28년차 개발자가 올해 배운 것들",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-24",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-80.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발자 생활</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>2025년 회고 — 28년차 개발자가 올해 배운 것들</h1>
+      <p class="meta">게시일: 2026년 2월 24일 · 14분 읽기</p>
+<p>올해는 AI가 개발자의 일하는 방식을 근본적으로 바꾼 해였다. 적응하거나 도태되거나. 나는 적응하기로 했고, 이 글에서 그 여정을 정리했다.</p>
+
+<h3>AI 코딩 도구의 부상</h3>
+
+<p>1월, GitHub Copilot을 본격적으로 사용하기 시작했다. 처음엔 회의적이었다. "AI가 뭘 알겠어?" 하는 생각이었다.</p>
+
+<p>하지만 3개월 후, 내 생산성이 30% 올랐다. 더 정확하게는, 보일러플레이트 코드 작성에 드는 시간이 줄었다.</p>
+
+<p>5월, Claude Sonnet이 나왔다. 더 강력했다. 복잡한 로직도 제시할 수 있게 됐다. 내 역할이 바뀌었다.</p>
+
+<p><strong>예전:</strong> 자판 두드려서 코드 작성</p>
+
+<p><strong>지금:</strong> 아이디어 → 프롬프트 → 코드 검토 → 테스트</p>
+
+<p>더 높은 수준의 작업에 집중할 수 있게 됐다. 아키텍처, 성능, 보안. AI가 이런 것까지는 못한다. 여전히 인간이 필요한 영역이다.</p>
+
+<p>가장 놀라웠던 건, Cursor라는 IDE였다. VSCode를 AI가 개선한 버전. 이제 이걸 없이는 못 산다.</p>
+
+<h3>Rust 생태계의 성숙</h3>
+
+<p>2024년에 Rust로 백엔드 프로젝트를 시작했는데, 올해는 그것이 정말 생산적이었다.</p>
+
+<p><strong>Tokio</strong> (async runtime)이 안정화됐고,</p>
+
+<p><strong>Axum</strong> (웹 프레임워크)은 더 이상 장난이 아니었다.</p>
+
+<p>그리고 **Rust for systems programming**이라는 원래 목적 외에도, 웹 백엔드에서도 성능과 안정성으로 두드러졌다.</p>
+
+<p>내 프로젝트:</p>
+
+<pre><code class="language-rust">
+// Axum + Tokio로 만든 API 서버
+use axum::{Router, routing::get};
+use tokio::net::TcpListener;
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new()
+        .route("/", get(hello));
+
+    let listener = TcpListener::bind("0.0.0.0:3000")
+        .await
+        .unwrap();
+
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn hello() -> &'static str {
+    "Hello, Rust!"
+}
+</code></pre>
+
+<p>이 코드는 Node.js의 수십 배 빠르다. 메모리도 적게 쓴다. 이제 더 이상 "Rust는 너무 복잡해"라고 말할 수 없다.</p>
+
+<h3>TypeScript는 계속 나아지고 있다</h3>
+
+<p>TypeScript 5.3, 5.4, 5.5가 나왔다. 각각 새로운 기능들이 추가됐다.</p>
+
+<p><strong>몇 가지 주목할 만한 개선</strong></p>
+
+<p><code>const type parameters</code>는 제네릭 코드를 더 정확하게 한다.</p>
+
+<pre><code class="language-typescript">
+// 이제 가능
+function getProperty<const T extends object>(obj: T, key: keyof T) {
+  return obj[key];
+}
+
+const person = { name: "John", age: 30 } as const;
+const name = getProperty(person, "name");  // 타입이 "John"
+</code></pre>
+
+<p><code>Module Resolution</code> 개선으로 import가 더 명확해졌다.</p>
+
+<p><code>Decorator</code는 드디어 정식 기능이 될 보인다.</p>
+
+<p>TypeScript는 이제 느려도 너무 느리다. 빌드 시간이 문제다. 가 나왔고, 많은 프로젝트가 전환 중이다. Vite + SWC 조합이 새로운 표준이 되는 중이다.</p>
+
+<h3>경력 회고</h3>
+
+<p>28년을 개발하면서 가장 큰 변화는 무엇인가?</p>
+
+<p><strong>초반 (1-5년):</strong> 언어 배우기</p>
+
+<p>C++, Java, Python을 배웠다. 문법이 중요했다.</p>
+
+<p><strong>중반 (5-15년):</strong> 구조 이해하기</p>
+
+<p>데이터 구조, 알고리즘, 디자인 패턴이 중요해졌다.</p>
+
+<p><strong>후반 (15-28년):</strong> 체계 구축하기</p>
+
+<p>개인의 능력도 중요하지만, 팀을 어떻게 구성하고 시스템을 어떻게 설계하는지가 훨씬 중요했다.</p>
+
+<p><strong>그리고 지금:</strong> AI와 함께하기</p>
+
+<p>이제 "개발자"는 코딩 능력 이상을 요구한다. AI를 어떻게 활용할 것인가가 새로운 기술이다.</p>
+
+<h3>이 블로그를 시작한 이유</h3>
+
+<p>28년을 개발하면서 배운 게 많은데, 그걸 혼자만 아는 게 아깝다는 생각이 들었다. 또 나이가 들수록 우리가 현역인 시대가 짧아진다는 생각이 들었다.</p>
+
+<p>3년 전부터 "언젠가 블로그를 시작해야지" 했는데, 미루고 미렀다. "완벽할 때" 를 기다렸다. 하지만 완벽함은 오지 않는다.</p>
+
+<p>그래서 이 블로그를 시작했다. 현재의 나로서 할 수 있는 최선을 하자는 마음으로.</p>
+
+<h3>2026년의 계획</h3>
+
+<p><strong>1. 더 많이 쓰기</strong></p>
+
+<p>매주 최소 하나의 글을 올릴 계획이다. 주제는 정해진 대로가 아니라, 그 주에 배운 것들.</p>
+
+<p><strong>2. AI와의 관계 재정의</strong></p>
+
+<p>AI가 "도구"에서 "동료"로 변했다. 이 변화에 완전히 적응해야 한다.</p>
+
+<p><strong>3. 다음 세대 개발자 멘토링</strong></p>
+
+<p>28년을 어떻게 버텼는지, 무엇이 중요한지를 나누고 싶다. 블로그도 그 일부다.</p>
+
+<p><strong>4. Rust로 하나의 완성도 높은 프로젝트 만들기</strong></p>
+
+<p>배운 것을 실제로 구현해서 오픈소스로 공개하고 싶다.</p>
+
+<h3>마지막 생각</h3>
+
+<p>28년이라는 시간은 기나긴 여정이다. 기술은 빠르게 변했다. C에서 시작해서 Python, JavaScript, Rust를 거쳤다. 플랫폼도 변했다. Windows desktop에서 웹, 모바일, 클라우드로.</p>
+
+<p>하지만 변하지 않은 것도 있다. 코드는 여전히 사람이 읽어야 한다. 시스템은 여전히 견고해야 한다. 개발자는 여전히 학습해야 한다.</p>
+
+<p>AI가 나왔다고 해서 개발자가 필요 없어질까? 절대 아니다. 더 높은 수준의 사고가 필요해질 뿐이다.</p>
+
+<p>2025년은 변화의 한 해였다. 2026년은 그 변화를 완전히 내 것으로 만드는 한 해가 되길 원한다.</p>
+
+<p>이 블로그를 읽는 분들께: 어떤 기술을 배우든, 기초를 중요히 여기세요. 트렌드는 와도 가도 하지만, 기초는 영원합니다. 그리고 배운 것을 공유하세요. 우리는 모두 같은 여정을 가고 있으니까요.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-46.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">우주전자파(미립자파)가 만드는 소프트웨어 버그 — 나만의 헛소리 이론</span>
+        </a>
+        <a class="related-item" href="/posts/post-52.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">사이드 프로젝트가 본업에 미치는 영향 — 28년 경험에서 느낀 것</span>
+        </a>
+        <a class="related-item" href="/posts/post-57.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">나만의 개발 루틴 — 새벽 코딩부터 지식 정리까지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

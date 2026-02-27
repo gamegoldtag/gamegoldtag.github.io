@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="8년 VS Code 경험. 필수 확장, 키바인딩, 멀티루트 워크스페이스, task/launch 설정">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-30.html">
+  <title>VS Code 설정 완전판 — 시니어 개발자의 작업 환경 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "VS Code 설정 완전판 — 시니어 개발자의 작업 환경",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-06-30",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-30.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI &amp; 개발 도구</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>VS Code 설정 완전판 — 시니어 개발자의 작업 환경</h1>
+      <p class="meta">게시일: 2025년 6월 30일 · 14분 읽기</p>
+
+<h2>VS Code를 진짜로 만들어 쓰는 방법</h2>
+
+<p>VS Code를 8년 써왔다. 처음엔 기본 설정으로 썼는데, 시간이 지나면서 커스터마이징에 빠졌다. 매년 설정 파일이 조금씩 바뀌고, 지금의 설정이 가장 안정적이라고 생각한다. 이걸 공유하겠다.</p>
+
+<h3>꼭 필요한 확장 (Must-Have Extensions)</h3>
+
+<p>너무 많은 확장을 설치하면 VS Code가 느려진다. 정말 필요한 것만 엄선했다.</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 코드 포매팅 및 린트
+- Prettier - Code formatter
+- ESLint
+- Pylint (Python 개발자)
+
+// 언어 지원
+- TypeScript Vue Plugin (Volar)
+- Rust-analyzer
+- Python
+- Go
+
+// 버전 관리
+- GitLens — Git supercharged
+- Git Graph
+- GitHub Pull Requests and Issues
+
+// 생산성
+- Thunder Client (API 테스트)
+- REST Client
+- Database Clients
+- Docker
+
+// 테마
+- GitHub Dark Default
+- One Dark Pro
+
+// 필수 유틸
+- Bracket Pair Colorizer 2
+- Peacock (워크스페이스 구분)
+- Code Spell Checker
+- Error Lens
+
+// 개발 보조
+- Live Share
+- CodeTour
+</code></pre>
+
+<p>VS Code의 Extension Marketplace에서 직접 이 이름들을 검색해서 설치하면 된다.</p>
+
+<h3>settings.json 완성판</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+{
+  // 에디터 기본 설정
+  "editor.fontFamily": "JetBrains Mono, Courier New",
+  "editor.fontSize": 13,
+  "editor.lineHeight": 1.6,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.trimAutoWhitespace": true,
+  "editor.wordWrap": "on",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll.prettier": true
+  },
+
+  // 파일 제외
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/dist": true,
+    "**/build": true
+  },
+
+  // 검색 제외
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+
+  // Prettier 설정
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ESLint
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.format.enable": true,
+
+  // TypeScript
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // 터미널
+  "terminal.integrated.fontSize": 12,
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.defaultProfile.linux": "bash",
+
+  // Git
+  "git.autofetch": false,
+  "git.confirmSync": true,
+  "gitlens.advanced.telemetry.enabled": false,
+
+  // 기타
+  "workbench.startupEditor": "none",
+  "workbench.editor.enablePreview": false,
+  "security.workspace.trust.untrustedFiles": "open",
+  "breadcrumbs.enabled": true,
+  "window.zoomLevel": 0
+}
+</code></pre>
+
+<h3>keybindings.json 커스텀</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+[
+  // 라인 이동
+  {
+    "key": "alt+up",
+    "command": "editor.action.moveLinesUpAction"
+  },
+  {
+    "key": "alt+down",
+    "command": "editor.action.moveLinesDownAction"
+  },
+
+  // 포매팅
+  {
+    "key": "shift+alt+f",
+    "command": "editor.action.formatDocument"
+  },
+
+  // 코멘트 토글
+  {
+    "key": "cmd+/",
+    "command": "editor.action.commentLine",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+
+  // 터미널 포커스
+  {
+    "key": "ctrl+`",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+
+  // 사이드바
+  {
+    "key": "cmd+b",
+    "command": "workbench.action.toggleSidebarVisibility"
+  },
+
+  // 파일 탐색
+  {
+    "key": "cmd+p",
+    "command": "workbench.action.quickOpen"
+  },
+
+  // 심볼 검색
+  {
+    "key": "cmd+shift+o",
+    "command": "workbench.action.gotoSymbol"
+  },
+
+  // 전역 심볼 검색
+  {
+    "key": "cmd+t",
+    "command": "workbench.action.showAllSymbols"
+  },
+
+  // 다중 커서
+  {
+    "key": "cmd+d",
+    "command": "editor.action.selectHighlights",
+    "when": "editorFocus"
+  }
+]
+</code></pre>
+
+<h3>멀티루트 워크스페이스</h3>
+
+<p>모노레포 작업할 때 정말 유용하다:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// monorepo.code-workspace
+{
+  "folders": [
+    {
+      "name": "Root",
+      "path": "."
+    },
+    {
+      "name": "Web App",
+      "path": "apps/web"
+    },
+    {
+      "name": "API Server",
+      "path": "apps/api"
+    },
+    {
+      "name": "Admin Panel",
+      "path": "apps/admin"
+    },
+    {
+      "name": "UI Library",
+      "path": "packages/ui"
+    },
+    {
+      "name": "Utilities",
+      "path": "packages/utils"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "files.exclude": {
+      "**/node_modules": true
+    }
+  }
+}
+
+// 열기
+code monorepo.code-workspace
+</code></pre>
+
+<p>이렇게 하면 각 폴더가 별도로 표시되고, 전체 모노레포를 효율적으로 관리할 수 있다.</p>
+
+<h3>tasks.json으로 자동화</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: install",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "presentation": {
+        "echo": true,
+        "reveal": "always"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "npm: start",
+      "type": "shell",
+      "command": "npm",
+      "args": ["start"],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "npm: build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "npm: test",
+      "type": "shell",
+      "command": "npm",
+      "args": ["test"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "pnpm: install",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["install"]
+    }
+  ]
+}
+</code></pre>
+
+<h3>launch.json으로 디버깅</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Node.js: Debug",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/index.ts",
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src",
+      "sourceMapPathOverride": {
+        "webpack:///*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Attach to Docker",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "address": "localhost"
+    }
+  ]
+}
+</code></pre>
+
+<h3>워크스페이스별 설정</h3>
+
+<p>다양한 프로젝트 타입에 맞춘 설정:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// React 프로젝트용
+{
+  "search.useRipgrep": true,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "emmet.includeLanguages": {
+    "typescriptreact": "html"
+  }
+}
+
+// Python 프로젝트용
+{
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.formatting.provider": "black",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.formatOnSave": true
+  }
+}
+
+// Rust 프로젝트용
+{
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  }
+}
+</code></pre>
+
+<h3>유용한 팁들</h3>
+
+<ul>
+<li>Cmd+Shift+P로 명령 팔레트 열기</li>
+<li>Cmd+K Cmd+S로 키바인딩 전체 목록 보기</li>
+<li>Cmd+, 로 설정 열기</li>
+<li>Peacock 확장으로 워크스페이스별 색상 구분</li>
+<li>GitLens로 파일의 각 라인의 커밋 히스토리 확인</li>
+<li>Thunder Client로 VS Code 안에서 API 테스트</li>
+<li>Debug 패널에서 Watch 추가로 특정 변수 추적</li>
+</ul>
+
+<h3>마무리</h3>
+
+<p>VS Code는 설정할수록 강력해진다. 처음엔 기본 기능으로 충분하지만, 전문적으로 쓰려면 커스터마이징이 필수다. 내 설정을 기반으로 자신의 워크플로우에 맞게 조정해서 쓰면 된다.</p>
+
+<p>8년 동안 VS Code와 함께하면서, 이보다 더 나은 에디터는 본 적이 없다. 확장성, 성능, 커뮤니티 모두 최고다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-07.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI 코딩 도구 6개월 실사용 후기 — 생산성이 정말 올랐을까?</span>
+        </a>
+        <a class="related-item" href="/posts/post-34.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI로 레거시 코드 리팩토링하기 — 실전 프롬프트 패턴</span>
+        </a>
+        <a class="related-item" href="/posts/post-78.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">LLM 프롬프트 엔지니어링 실전 — 개발자를 위한 패턴 모음</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

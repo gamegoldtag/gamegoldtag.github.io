@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="과거의 독성적인 리뷰 코멘트와 더 나은 대안들. 심리적 안전성을 고려한 피드백 방법">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-48.html">
+  <title>주니어한테 하지 말아야 할 코드 리뷰 멘트 — 시니어의 반성문 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "주니어한테 하지 말아야 할 코드 리뷰 멘트 — 시니어의 반성문",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-10-15",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-48.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발자 생활</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>주니어한테 하지 말아야 할 코드 리뷰 멘트 — 시니어의 반성문</h1>
+      <p class="meta">게시일: 2025년 10월 15일 · 12분 읽기</p>
+<h2>과거의 나한테 하고 싶은 말이 있다. '왜 이렇게 짰어?'라는 말은 최악이다</h2>
+
+<p>코드 리뷰를 하면서 한 말들을 다시 읽어보면, 내가 얼마나 무례했는지 깨닫는다. 특히 주니어 개발자에게 했던 말들이 그렇다.</p>
+
+<p>이 글은 과거의 나를 반성하고, 더 나은 리뷰 문화를 만드는 방법에 대해 쓴다.</p>
+
+<h3>절대로 하지 말아야 할 리뷰 멘트</h3>
+
+<p><strong>"왜 이렇게 짰어?"</strong></p>
+
+<p>이 말은 상대를 전면 부정하는 것이다. 주니어는 이 말을 받으면:</p>
+
+<ul>
+<li>"내 판단이 틀렸나?"</li>
+<li>"나는 능력이 부족한가?"</li>
+<li>"이 회사에서 계속 일할 수 있을까?"</li>
+</ul>
+
+<p>이 생각들이 든다. 그리고 다음번엔 더 위축된 코드를 제출한다.</p>
+
+<p><strong>대신:</strong> "이 부분은 이렇게 하면 어떨까요? <理由>" 라고 하자.</p>
+
+<p><strong>"이건 상식인데?"</strong></p>
+
+<p>상식은 배운 사람의 입장에서만 상식이다. 5년차가 상식인 것이 1년차에는 한국 교육과정에 없는 내용일 수 있다.</p>
+
+<p><strong>"너무 복잡한데?"</strong></p>
+
+<p>주니어는 기술 부채를 모르고, 확장성을 고려하지 않기 때문에 단순하게 짠다. 이를 비난하는 것은 부당하다. 대신 "여기서는 이렇게 하면 나중에 유지보수가 쉬워져"라고 설명하자.</p>
+
+<p><strong>"이 라이브러리 쓰면 5줄로 끝나는데?"</strong></p>
+
+<p>주니어가 라이브러리를 모르는 건 자신이 조사하지 않아서가 아니라, 경험이 없어서다. 이 비난은 정말 치열했다.</p>
+
+<h3>좋은 리뷰의 특징</h3>
+
+<p>내가 받았던 리뷰 중 가장 도움이 된 것:</p>
+
+<p><strong>시니어 A의 리뷰:</strong></p>
+
+<blockquote>
+<p>"좋은 접근인데, 이 부분에서 edge case를 다시 생각해보면 좋을 것 같아. 사용자가 null을 입력할 때는 어떻게 되지?"</p>
+</blockquote>
+
+<p>이 말은:</p>
+
+<ul>
+<li>전체 구조는 인정함</li>
+<li>개선할 부분을 구체적으로 지적</li>
+<li>스스로 생각하게 유도</li>
+<li>문제가 아니라 질문 형태</li>
+</ul>
+
+<p><strong>시니어 B의 나쁜 리뷰:</strong></p>
+
+<blockquote>
+<p>"이건 초급 실수야. 다시 쓰세요"</p>
+</blockquote>
+
+<p>이 말을 받으면:</p>
+
+<ul>
+<li>무엇이 잘못되었는지 모름</li>
+<li>다시 짜는 방법도 모름</li>
+<li>왜 안 되는지도 설명 없음</li>
+<li>순전히 기분만 상함</li>
+</ul>
+
+<h3>좋은 리뷰의 원칙</h3>
+
+<p><strong>1. 먼저 칭찬한다</strong></p>
+
+<pre><code>좋음: "네이밍이 명확하네요. 이 부분은 이렇게 하면 어떨까요?"
+안 좋음: "이건 왜 이렇게?"</code></pre>
+
+<p><strong>2. 이유를 설명한다</strong></p>
+
+<pre><code>좋음: "이 방식은 O(n²) 복잡도라서, 데이터가 많으면 느려져요. 이렇게 하면 O(n)이 돼요"
+안 좋음: "비효율적이네요"</code></pre>
+
+<p><strong>3. 선택지를 준다</strong></p>
+
+<pre><code>좋음: "방법 1: A를 쓰면 이런 장점이, 방법 2: B를 쓰면 이런 장점이 있어요"
+안 좋음: "무조건 이렇게 해야 해"</code></pre>
+
+<p><strong>4. 학습 기회를 만든다</strong></p>
+
+<pre><code>좋음: "이 부분에서 디자인 패턴을 적용하면 좋아요. 이전에 얘기했던 Singleton 패턴 기억하죠?"
+안 좋음: "너 Singleton 몰라?"</code></pre>
+
+<h3>리뷰에서 구분해야 할 것</h3>
+
+<p><strong>Must (강제):</strong></p>
+
+<ul>
+<li>보안 문제</li>
+<li>성능 문제 (심각할 때)</li>
+<li>버그</li>
+</ul>
+
+<p><strong>Should (권장):</strong></p>
+
+<ul>
+<li>가독성 개선</li>
+<li>일관성 유지</li>
+<li>베스트 프랙티스</li>
+</ul>
+
+<p><strong>Nice to Have (선택):</strong></p>
+
+<ul>
+<li>스타일 (따옴표 종류 등)</li>
+<li>개인의 선호도</li>
+<li>미래를 위한 개선</li>
+</ul>
+
+<p>주니어 때는 Must만 지적하고, 나머지는 피드백이 아니라 제안으로 전하자.</p>
+
+<h3>내가 바꾼 리뷰 문화</h3>
+
+<p>현재 내 팀의 리뷰 규칙:</p>
+
+<ol>
+<li><strong>칭찬 먼저:</strong> 모든 리뷰에 칭찬이 있어야 함</li>
+<li><strong>질문으로:</strong> "왜?"는 질문이지 비난이 아님</li>
+<li><strong>제한적 피드백:</strong> 한 번에 3개 이상 지적 금지</li>
+<li><strong>24시간 대기:</strong> 화난 상태로 리뷰 금지</li>
+<li><strong>1:1 대화:</strong> 복잡한 건 DM으로 토론</li>
+</ol>
+
+<p>결과: PR 머지 시간이 2배 빨라졌고, 버그는 35% 줄어들었다.</p>
+
+<h3>나에게 도움이 되었던 리뷰</h3>
+
+<p>가장 기억에 남는 리뷰:</p>
+
+<blockquote>
+<p>"좋은 코드네. 근데 이 부분, 다른 방법도 생각해볼 만할 것 같은데? 과제가 아니라 생각해볼 주제로."</p>
+</blockquote>
+
+<p>이 한 마디 때문에, 나는 그 주제를 2주간 공부했다. 그리고 지금도 그 방법을 쓴다.</p>
+
+<h3>결론: 리뷰는 폭력이 아니다</h3>
+
+<p>코드 리뷰는 코드를 개선하는 것이 아니라, 사람을 성장시키는 과정이어야 한다.</p>
+
+<p>과거의 나: "빨리 좋은 코드를 짜게 만들어야지"<br>
+지금의 나: "이 사람이 좋은 개발자가 되도록 도와야지"</p>
+
+<p>25년 경력으로 배운 것: 진짜 시니어는 코드를 잘 짜는 사람이 아니라, 주니어를 성장시키는 사람이다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-46.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">우주전자파(미립자파)가 만드는 소프트웨어 버그 — 나만의 헛소리 이론</span>
+        </a>
+        <a class="related-item" href="/posts/post-53.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">시니어 개발자의 생존 기술 — 코딩 말고 필요한 것들</span>
+        </a>
+        <a class="related-item" href="/posts/post-80.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">2025년 회고 — 28년차 개발자가 올해 배운 것들</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

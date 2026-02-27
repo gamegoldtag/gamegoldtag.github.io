@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Auth 설정, RLS, Edge Functions, 실시간 구독. Firebase 과금 폭탄을 맞고 Supabase로 넘어간 경험담">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-62.html">
+  <title>Supabase 실전 활용기 — Firebase 대안으로 쓸만한가? | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Supabase 실전 활용기 — Firebase 대안으로 쓸만한가?",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-05",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-62.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Backend &amp; DB</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Supabase 실전 활용기 — Firebase 대안으로 쓸만한가?</h1>
+      <p class="meta">게시일: 2026년 1월 5일 · 15분 읽기</p>
+<h2>Firebase 과금 폭탄과 Supabase 발견</h2>
+<p>2024년 5월, 우리 스타트업 서비스가 월 활성 사용자 수 10만을 넘으면서 문제가 터졌다. Firebase 청구서가 갑자기 $800에서 $4000으로 치솟았다. 이유는 Firestore의 read 작업이 자동으로 카운트되는 방식 때문이었다. 읽기가 쓰기보다 100배 비싸다는 걸 모르고 있었던 것이다.</p>
+
+<p>그때 팀원이 "Supabase가 있다"고 제안했다. Supabase는 Firebase의 오픈소스 대안이라고 불리는데, 실제로 쓰면서 깨달은 건 "완전 다른 철학"이라는 것이었다. Firebase는 "관리형 서비스", Supabase는 "데이터베이스 중심"이다.</p>
+
+<h3>1단계: Auth 설정 — 5분이면 끝난다</h3>
+<p>Supabase auth는 PostgreSQL 기반이다. 클라이언트 라이브러리가 매우 간단하다:</p>
+
+<pre><code>import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  'https://your-project.supabase.co',
+  'your-public-anon-key'
+)
+
+// 이메일 로그인
+const { data, error } = await supabase.auth.signUpWithPassword({
+  email: 'user@example.com',
+  password: 'secure-password'
+})
+
+// Google 로그인
+const { data, error } = await supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: {
+    redirectTo: 'https://yourapp.com/auth/callback'
+  }
+})
+
+// 세션 확인
+const { data: { session } } = await supabase.auth.getSession()
+console.log(session?.user.id) // 사용자 UUID
+</code></pre>
+
+<p>매우 깔끔하다. Firebase와 달리, JWT 토큰을 명확하게 관리할 수 있다.</p>
+
+<h3>2단계: Row Level Security (RLS) — 백엔드 없이 보안을</h3>
+<p>이 부분이 정말 혁신적이었다. 기존 Firebase를 썼을 때는 Firestore Rules로 권한을 관리했는데, Supabase는 PostgreSQL의 RLS를 사용한다.</p>
+
+<pre><code>-- 테이블 생성
+CREATE TABLE posts (
+  id bigserial primary key,
+  user_id uuid references auth.users,
+  title text,
+  content text,
+  created_at timestamp default now()
+);
+
+-- RLS 활성화
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+-- 정책 1: 자신의 글만 읽을 수 있음
+CREATE POLICY "Users can read own posts"
+  ON posts
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- 정책 2: 자신의 글만 업데이트할 수 있음
+CREATE POLICY "Users can update own posts"
+  ON posts
+  FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- 정책 3: 다른 사람의 글은 읽을 수 있음 (공개된 경우)
+CREATE POLICY "Anyone can read published posts"
+  ON posts
+  FOR SELECT
+  USING (true)
+  WITH CHECK (true);
+</code></pre>
+
+<p>이제 클라이언트에서 아무리 해킹을 시도해도, 자신의 글만 수정할 수 있다:</p>
+
+<pre><code>// 사용자 1이 사용자 2의 글을 수정하려고 시도
+const { error } = await supabase
+  .from('posts')
+  .update({ title: 'Hacked' })
+  .eq('id', 999)  // 사용자 2의 글 ID
+
+// error: "Not found or not permitted"
+// RLS 정책이 자동으로 막는다
+</code></pre>
+
+<p>Firebase Rules보다 훨씬 강력하고, SQL 지식이 있으면 정교한 권한 관리가 가능하다.</p>
+
+<h3>3단계: 데이터베이스 쿼리 — SQL의 강력함</h3>
+<p>Supabase는 PostgreSQL이므로, SQL의 모든 기능을 쓸 수 있다:</p>
+
+<pre><code>// 복잡한 조인 쿼리
+const { data, error } = await supabase
+  .from('posts')
+  .select(`
+    id,
+    title,
+    content,
+    author:user_id(id, email, full_name),
+    comments(id, content, comment_author:user_id(email))
+  `)
+  .eq('published', true)
+  .order('created_at', { ascending: false })
+  .limit(10)
+
+// Firebase에서는 이런 쿼리가 불가능함
+// 여러 번의 쿼리와 클라이언트 조인이 필요했음
+</code></pre>
+
+<p>Window 함수도 쓸 수 있다:</p>
+
+<pre><code>-- 각 사용자별로 글의 순서를 매김
+SELECT
+  id,
+  title,
+  user_id,
+  ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as post_number
+FROM posts;
+
+-- Firebase에서는 이런 게 불가능함
+-- Firestore는 단순한 document store일 뿐
+</code></pre>
+
+<h3>4단계: Storage — 파일 업로드</h3>
+<p>Supabase Storage는 S3 호환이다:</p>
+
+<pre><code>// 이미지 업로드
+const { data, error } = await supabase.storage
+  .from('avatars')
+  .upload(`${userId}/avatar.jpg`, imageFile, {
+    cacheControl: '3600',
+    upsert: true
+  })
+
+// 공개 URL 생성
+const { data: { publicUrl } } = supabase.storage
+  .from('avatars')
+  .getPublicUrl(`${userId}/avatar.jpg`)
+
+console.log(publicUrl)
+// https://your-project.supabase.co/storage/v1/object/public/avatars/user-id/avatar.jpg
+</code></pre>
+
+<p>Firebase Storage보다 직관적이고, 권한 관리도 명확하다.</p>
+
+<h3>5단계: Edge Functions — 서버리스 함수</h3>
+<p>Supabase Edge Functions는 Deno 기반이다:</p>
+
+<pre><code>// supabase/functions/send-email/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
+serve(async (req) => {
+  const { email, subject, body } = await req.json()
+
+  // 이메일 발송 (예: SendGrid API)
+  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${Deno.env.get('SENDGRID_API_KEY')}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email }] }],
+      from: { email: 'noreply@yourapp.com' },
+      subject,
+      content: [{ type: 'text/html', value: body }]
+    })
+  })
+
+  return new Response(JSON.stringify({ success: true }), {
+    headers: { 'Content-Type': 'application/json' }
+  })
+})
+</code></pre>
+
+<p>클라이언트에서 호출:</p>
+
+<pre><code>const { data, error } = await supabase.functions.invoke('send-email', {
+  body: {
+    email: 'user@example.com',
+    subject: 'Welcome!',
+    body: '&lt;h1&gt;환영합니다&lt;/h1&gt;'
+  }
+})
+</code></pre>
+
+<p>Firebase Cloud Functions보다 빠르고 가볍다.</p>
+
+<h3>6단계: 실시간 구독 — 리알타임 데이터 동기화</h3>
+<p>Supabase는 PostgreSQL의 LISTEN/NOTIFY를 사용한 실시간 기능을 제공한다:</p>
+
+<pre><code>// 사용자 온라인 상태 추적
+const subscription = supabase
+  .channel('users:online')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'user_status'
+    },
+    (payload) => {
+      console.log('User status changed:', payload)
+      // UI 업데이트
+    }
+  )
+  .subscribe()
+
+// 채팅 메시지 실시간 동기화
+const chatSubscription = supabase
+  .channel(`messages:room-${roomId}`)
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages'
+    },
+    (payload) => {
+      const newMessage = payload.new
+      addMessageToUI(newMessage)
+    }
+  )
+  .subscribe()
+
+// 정리
+chatSubscription.unsubscribe()
+</code></pre>
+
+<p>Firebase의 실시간 리스너와 비슷하지만, SQL 기반이라 더 강력하다.</p>
+
+<h3>비용 비교 — 정말로 싸나?</h3>
+<p>우리의 경험:</p>
+
+<ul>
+<li>Firebase (Firestore 중심): 월 $4000 (10만 사용자)</li>
+<li>Supabase (프로): 월 $50 (기본) + $0.125 per GB (스토리지)</li>
+<li>우리는 총 월 $80 정도 지출</li>
+</ul>
+
+<p>50배 차이다. 왜 이렇게 쌀까?</p>
+
+<ul>
+<li>Firestore는 read/write를 모두 카운트함</li>
+<li>Supabase는 데이터베이스 크기 기준임</li>
+<li>데이터 중복 저장이 없으면 훨씬 효율적</li>
+</ul>
+
+<p>하지만 주의할 점: Supabase는 자신의 서버다. 완전 관리형(fully managed)이 아니다. 백업, 스케일링, 모니터링을 고려해야 한다.</p>
+
+<h3>문제점과 제약사항</h3>
+<p>Supabase가 완벽하지는 않다:</p>
+
+<ul>
+<li>오프라인 지원 없음 (Firebase Realtime Database는 있음)</li>
+<li>SQL을 잘 모르면 쿼리가 복잡해짐</li>
+<li>자체 호스팅 필요 (Supabase Cloud 또는 self-hosted)</li>
+<li>관계형 데이터베이스이므로, 매우 비정형 데이터에는 부적합</li>
+</ul>
+
+<h3>결론</h3>
+<p>Firebase에서 Supabase로 옮기고 6개월이 지났다. 지금 느끼는 것:</p>
+
+<ul>
+<li>비용은 1/50 수준으로 줄었다</li>
+<li>SQL을 쓸 수 있으니 복잡한 쿼리도 가능하다</li>
+<li>권한 관리(RLS)가 훨씬 안전하고 명확하다</li>
+<li>PostgreSQL의 모든 기능을 쓸 수 있다</li>
+</ul>
+
+<p>단점:</p>
+
+<ul>
+<li>팀의 SQL 숙련도가 필요하다</li>
+<li>데이터베이스 관리 책임이 우리에게 있다</li>
+<li>스케일링 시 성능 튜닝이 필요하다</li>
+</ul>
+
+<p>결론: 스타트업이거나 중소 서비스라면 Supabase는 정말 좋은 선택이다. Firebase의 과금 체계가 부담스럽다면, Supabase를 한 번 고려해보자.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-09.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계</span>
+        </a>
+        <a class="related-item" href="/posts/post-64.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">SQLite가 생각보다 강력한 이유 — 개인 프로젝트에서 PostgreSQL 대신</span>
+        </a>
+        <a class="related-item" href="/posts/post-66.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

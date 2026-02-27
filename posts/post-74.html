@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GitHub Pages로 기술 블로그를 만드는 방법, SEO 최적화, 구글 서치 콘솔 설정까지 모두 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-74.html">
+  <title>개발 블로그 시작하기 — GitHub Pages 기술 블로그 구축 실전 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "개발 블로그 시작하기 — GitHub Pages 기술 블로그 구축 실전",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-09",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-74.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발 기초 &amp; 팁</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>개발 블로그 시작하기 — GitHub Pages 기술 블로그 구축 실전</h1>
+      <p class="meta">게시일: 2026년 2월 9일 · 14분 읽기</p>
+<p>블로그 시작이 어려운 건 글쓰기가 아니라 완벽주의다. 나도 2년을 고민했다. 완벽한 디자인, 완벽한 글, 완벽한 발행. 하지만 일단 공개하고 나중에 고치는 게 맞다. 이 글에서는 내가 이 블로그를 만들면서 배운 것들을 정리했다.</p>
+
+<h3>왜 블로그를 쓸까?</h3>
+
+<p>블로그를 시작하기 전에 동기를 명확히 해야 한다.</p>
+
+<p><strong>커리어 관점</strong></p>
+
+<p>기술 블로그는 포트폴리오다. 이력서에는 "Node.js 경험 3년"이라고만 쓰지만, 블로그에는 "Node.js로 어떻게 성능을 개선했는지"를 보여줄 수 있다. 채용담당자나 헤드헌터는 개발자의 진정한 실력을 알고 싶어 한다. 글로 보여주면 된다.</p>
+
+<p><strong>학습 관점</strong></p>
+
+<p>글을 쓰면서 내가 아는 것과 모르는 것이 명확해진다. 블로그에 쓰려고 정리하다 보면, 이해가 깊어진다. 이를 "학습의 최고 수준"이라고 부른다.</p>
+
+<p><strong>커뮤니티 관점</strong></p>
+
+<p>좋은 글은 사람들을 돕는다. 내가 경험한 문제를 해결한 방법을 공유하면, 같은 문제로 고민하는 사람들이 도움을 받는다. 이것이 개발자의 가장 큰 만족감이다.</p>
+
+<h3>플랫폼 선택</h3>
+
+<p>블로그 플랫폼은 여러 가지가 있다.</p>
+
+<table>
+<thead>
+<tr>
+<th>플랫폼</th>
+<th>장점</th>
+<th>단점</th>
+<th>추천</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GitHub Pages</td>
+<td>무료, Git 기반, 커스터마이징 가능</td>
+<td>빌드 필요, 학습곡선</td>
+<td>개발자</td>
+</tr>
+<tr>
+<td>Astro</td>
+<td>현대적, 빠름, 마크다운</td>
+<td>셀프호스팅 필요</td>
+<td>성능 중시</td>
+</tr>
+<tr>
+<td>Hugo</td>
+<td>매우 빠름, 간단함</td>
+<td>커스터마이징 제한</td>
+<td>빠른 시작</td>
+</tr>
+<tr>
+<td>Gatsby</td>
+<td>강력함, React 기반</td>
+<td>느림, 복잡함</td>
+<td>큰 프로젝트</td>
+</tr>
+<tr>
+<td>Notion, Medium</td>
+<td>매우 쉬움, 커뮤니티</td>
+<td>제한된 커스터마이징</td>
+<td>시작</td>
+</tr>
+</tbody>
+</table>
+
+<p>나는 GitHub Pages를 추천한다. 무료이고, Git 기반이고, 개발자에게 자연스럽기 때문이다.</p>
+
+<h3>GitHub Pages 설정</h3>
+
+<p><strong>1단계: 저장소 생성</strong></p>
+
+<pre><code class="language-bash">
+# GitHub에서 저장소 생성
+# 이름: username.github.io
+# Public으로 설정
+</code></pre>
+
+<p><strong>2단계: Jekyll 설정</strong></p>
+
+<p>GitHub Pages는 기본으로 Jekyll을 지원한다.</p>
+
+<pre><code class="language-bash">
+# 로컬에서 Jekyll 설치
+gem install bundler jekyll
+
+# 새 프로젝트 생성
+jekyll new blog
+cd blog
+
+# 로컬에서 테스트
+bundle exec jekyll serve
+
+# http://localhost:4000에서 확인
+</code></pre>
+
+<p><strong>_config.yml 설정</strong></p>
+
+<pre><code class="language-yaml">
+title: DevInsight
+description: 28년차 개발자의 기술 블로그
+author: Senior Developer
+email: contact@example.com
+
+# GitHub Pages 설정
+github_username: your_username
+twitter_username: your_twitter
+
+# URL 설정
+url: "https://username.github.io"
+baseurl: ""
+
+# SEO 설정
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-feed
+</code></pre>
+
+<h3>글쓰기 프로세스</h3>
+
+<p><strong>파일 구조</strong></p>
+
+<pre><code class="language-bash">
+blog/
+├── _posts/
+│   └── 2026-02-26-jwt-security.md
+├── _config.yml
+└── README.md
+</code></pre>
+
+<p><strong>포스트 작성</strong></p>
+
+<p>파일명은 YYYY-MM-DD-title.md 형식이어야 한다.</p>
+
+<pre><code class="language-markdown">
+---
+layout: post
+title: "JWT 인증 구현 시 놓치기 쉬운 보안 포인트"
+date: 2026-02-26
+categories: [Security]
+tags: [jwt, security, authentication]
+---
+
+# 제목
+
+본문 시작...
+</code></pre>
+
+<p><strong>글쓰기 팁</strong></p>
+
+<ol>
+<li><strong>개요부터 작성</strong>: 글의 구조를 먼저 정한다.</li>
+<li><strong>초안을 빨리</strong>: 완벽함을 기다리지 말고 먼저 쓴다.</li>
+<li><strong>코드 예제 포함</strong>: 실제 코드를 보여주면 설득력이 증가한다.</li>
+<li><strong>링크 추가</strong>: 참고 자료와 관련 글을 링크한다.</li>
+<li><strong>검토하고 발행</strong>: 최소 한 번은 읽어보고 발행한다.</li>
+</ol>
+
+<h3>SEO 최적화</h3>
+
+<p><strong>메타 태그</strong></p>
+
+<pre><code class="language-html">
+<!-- _includes/head.html -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="기술 블로그 설명">
+<meta name="keywords" content="개발, 보안, 성능">
+<meta property="og:title" content="포스트 제목">
+<meta property="og:description" content="포스트 설명">
+<meta property="og:image" content="썸네일 이미지">
+</code></pre>
+
+<p><strong>Sitemap 생성</strong></p>
+
+<pre><code class="language-yaml">
+# _config.yml에 추가
+plugins:
+  - jekyll-sitemap
+</code></pre>
+
+<p>이렇게 하면 /sitemap.xml이 자동으로 생성된다.</p>
+
+<p><strong>robots.txt</strong></p>
+
+<pre><code class="language-text">
+# robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://yourblog.com/sitemap.xml
+</code></pre>
+
+<h3>Google Search Console 설정</h3>
+
+<p><strong>1단계: 소유권 확인</strong></p>
+
+<ol>
+<li>Google Search Console에 로그인</li>
+<li>새 속성 추가 (https://yourblog.com)</li>
+<li>소유권 확인 (HTML 파일 업로드 또는 메타 태그)</li>
+</ol>
+
+<p><strong>2단계: Sitemap 제출</strong></p>
+
+<ol>
+<li>Search Console > Sitemap</li>
+<li>/sitemap.xml 제출</li>
+</ol>
+
+<p><strong>3단계: 모니터링</strong></p>
+
+<ol>
+<li>Performance 탭에서 검색 노출 확인</li>
+<li>Coverage에서 색인 상태 확인</li>
+<li>Enhancements에서 개선 사항 확인</li>
+</ol>
+
+<h3>Google AdSense 신청</h3>
+
+<p>블로그가 어느 정도 트래픽을 받으면 수익화를 생각할 수 있다.</p>
+
+<p><strong>AdSense 신청 전 체크리스트</strong></p>
+
+<ul>
+<li>블로그 글이 최소 10개 이상</li>
+<li>각 글이 최소 300단어 이상</li>
+<li>정기적인 업데이트 (최소 주 1회)</li>
+<li>Privacy Policy 페이지</li>
+<li>About 페이지</li>
+<li>Contact 페이지</li>
+</ul>
+
+<p><strong>AdSense 신청 거절 이유와 해결책</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>거절 이유</th>
+<th>해결책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>콘텐츠 부족</td>
+<td>최소 30-50개의 양질의 글 작성</td>
+</tr>
+<tr>
+<td>자동생성 콘텐츠</td>
+<td>직접 작성한 고유한 내용 보장</td>
+</tr>
+<tr>
+<td>저작권 침해</td>
+<td>다른 블로그 복사-붙여넣기 금지</td>
+</tr>
+<tr>
+<td>클릭 유도</td>
+<td>"광고 클릭하세요" 같은 표현 금지</td>
+</tr>
+<tr>
+<td>가상 통화</td>
+<td>암호화폐, NFT 홍보 금지</td>
+</tr>
+</tbody>
+</table>
+
+<h3>블로그 성장 전략</h3>
+
+<p><strong>초기 3개월</strong></p>
+
+<ul>
+<li>주 2-3회 꾸준히 발행</li>
+<li>기본을 충실히 한다</li>
+<li>검색 최적화 (키워드 연구)</li>
+</ul>
+
+<p><strong>3-6개월</strong></p>
+
+<ul>
+<li>인기 글의 패턴 분석</li>
+<li>해당 주제 심화 글 작성</li>
+<li>SNS 홍보 (LinkedIn, Twitter)</li>
+</ul>
+
+<p><strong>6개월 이후</strong></p>
+
+<ul>
+<li>트래픽 분석을 통한 최적화</li>
+<li>Internal linking 강화</li>
+<li>깊이 있는 장문의 글 작성</li>
+</ul>
+
+<h3>개발자로서의 추가 팁</h3>
+
+<p><strong>코드 하이라이팅</strong></p>
+
+<pre><code class="language-markdown">
+```javascript
+function hello() {
+  console.log('Hello, World!');
+}
+```
+</code></pre>
+
+<p><strong>이미지 최적화</strong></p>
+
+<pre><code class="language-bash">
+# 이미지 압축
+imagemin img/** --out-dir=img_optimized
+
+# WebP 변환
+cwebp input.jpg -o output.webp
+</code></pre>
+
+<p><strong>배포 자동화</strong></p>
+
+<pre><code class="language-yaml">
+# .github/workflows/deploy.yml
+name: Deploy
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0
+          bundler-cache: true
+      - run: bundle exec jekyll build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+</code></pre>
+
+<h3>정리</h3>
+
+<p>블로그는 단순한 글의 모음이 아니라, 당신의 전문성을 보여주는 플랫폼이다. 처음부터 완벽할 필요는 없다. 시작하고, 배우고, 개선하는 과정이 중요하다. 내 경험상 처음 5개의 글은 조금 어색할 수 있지만, 그 이후로는 자연스러워진다. 지금 바로 시작하자.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-11.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">E2E 테스트 flaky 줄이기 — 실패 원인을 구조적으로 제거하는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-71.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">Playwright vs Cypress — 2025년 E2E 테스트 도구 비교</span>
+        </a>
+        <a class="related-item" href="/posts/post-79.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">개발자가 알면 좋은 네트워크 기초 — DNS부터 TCP까지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

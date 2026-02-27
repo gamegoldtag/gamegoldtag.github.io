@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="계정 생성, ARM 인스턴스 설정, 방화벽, Docker, PM2 설정, 모니터링 등 무료 서버 완벽 가이드">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-43.html">
+  <title>Oracle Cloud 무료 서버 완전 활용법 — Always Free 티어의 모든 것 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Oracle Cloud 무료 서버 완전 활용법 — Always Free 티어의 모든 것",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-09-12",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-43.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">DevOps &amp; Infra</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Oracle Cloud 무료 서버 완전 활용법 — Always Free 티어의 모든 것</h1>
+      <p class="meta">게시일: 2025년 9월 12일 · 15분 읽기</p>
+<h2>AWS Free Tier는 1년 후 과금 폭탄이 온다. Oracle Cloud는 진짜 평생 무료다</h2>
+
+<p>이것은 사실이다. Oracle Cloud의 Always Free 티어는 구독을 취소하지 않는 한 절대 비용이 청구되지 않는다. 반면 AWS는 1년 후 자동으로 과금이 시작된다.</p>
+
+<p>내가 Oracle Cloud를 도입한 지 2년이 되었고, 단 한 푼도 비용을 내지 않았다. 이 글에서는 실제 경험을 바탕으로 Oracle Cloud Always Free를 완벽히 활용하는 방법을 다룬다.</p>
+
+<h3>계정 생성 시 주의사항</h3>
+
+<p>Oracle Cloud 가입은 까다롭다. 신용카드 정보가 필요하고, 유효성 검사도 엄격하다.</p>
+
+<p><strong>필요한 것:</strong></p>
+
+<ul>
+<li>유효한 신용카드 (체크카드 불가, 실제 신용카드만 가능)</li>
+<li>휴대폰 인증</li>
+<li>실제 주소 (우편번호 정확히)</li>
+</ul>
+
+<p><strong>주의:</strong> VPN을 사용하면 가입이 거절될 가능성이 높다. VPN 없이 가입하는 것을 추천한다.</p>
+
+<p>계정 생성 후 서비스를 조회할 때, "Always Free" 라벨이 있는 것만 사용하면 된다. 그 외의 서비스를 만들면 언제든 과금될 수 있다.</p>
+
+<h3>Always Free 리소스</h3>
+
+<p>영구적으로 무료인 리소스들:</p>
+
+<ul>
+<li><strong>Compute (Virtual Machines):</strong> 2개의 ARM 기반 인스턴스 (4 OCPU, 24GB 메모리)</li>
+<li><strong>Compute (Virtual Machines):</strong> 2개의 Intel 기반 인스턴스 (1/8 OCPU씩, 1GB 메모리)</li>
+<li><strong>Block Storage:</strong> 200GB (2개 인스턴스 합계)</li>
+<li><strong>Object Storage:</strong> 20GB</li>
+<li><strong>Database (MySQL):</strong> 1개 인스턴스 (20GB 저장소)</li>
+<li><strong>Database (Autonomous Database):</strong> 1개 인스턴스 (20GB 저장소)</li>
+<li><strong>Networking:</strong> 10개의 Virtual Cloud Network</li>
+<li><strong>Load Balancer:</strong> 1개 인스턴스</li>
+</ul>
+
+<p>이 정도면 중소 웹서비스를 충분히 운영할 수 있다.</p>
+
+<h3>ARM 인스턴스 생성</h3>
+
+<p>Oracle Cloud의 강점은 4개 코어 24GB 메모리를 무료로 준다는 것이다. 다른 클라우드는 상상도 할 수 없는 사양이다.</p>
+
+<p><strong>생성 단계:</strong></p>
+
+<ol>
+<li>Oracle Cloud 콘솔 -&gt; Compute -&gt; Instances</li>
+<li>Create Instance 클릭</li>
+<li>Image: "Ubuntu 22.04" (또는 최신 LTS)</li>
+<li>Shape: Ampere (ARM) A1 Compute 선택</li>
+<li>Networking: Default VCN 사용</li>
+<li>SSH Key: 공개 키 업로드 (또는 생성)</li>
+</ol>
+
+<p>인스턴스가 생성되면 공개 IP가 할당된다. SSH로 접속한다:</p>
+
+<pre><code>ssh ubuntu@INSTANCE_PUBLIC_IP</code></pre>
+
+<h3>방화벽(Security List) 설정</h3>
+
+<p>인스턴스가 생성되어도 기본적으로 대부분의 포트가 닫혀 있다. 필요한 포트만 열어야 한다.</p>
+
+<p>Oracle Cloud의 방화벽은 Security List로 관리된다:</p>
+
+<ol>
+<li>Networking -&gt; Virtual Cloud Networks</li>
+<li>Default VCN 선택</li>
+<li>Security List 선택</li>
+<li>Ingress Rules 추가</li>
+</ol>
+
+<pre><code># 웹서버에 필요한 규칙들
+HTTP (80): 0.0.0.0/0에서 허용
+HTTPS (443): 0.0.0.0/0에서 허용
+SSH (22): 나의 IP에서만 허용 (0.0.0.0/0 권장하지 않음)
+Custom TCP (3000): 내 애플리케이션 포트</code></pre>
+
+<h3>Docker 설치</h3>
+
+<p>인스턴스에 접속한 후 Docker를 설치한다:</p>
+
+<pre><code">#!/bin/bash
+# 시스템 업데이트
+sudo apt-get update
+sudo apt-get upgrade -y
+
+# Docker 설치
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# 현재 사용자를 docker 그룹에 추가
+sudo usermod -aG docker $USER
+
+# 적용을 위해 로그아웃 후 다시 로그인
+exit
+ssh ubuntu@INSTANCE_PUBLIC_IP
+
+# Docker 확인
+docker --version
+docker run hello-world</code></pre>
+
+<h3>PM2로 Node.js 애플리케이션 관리</h3>
+
+<p>Docker를 쓰지 않고 직접 Node.js를 실행하려면 PM2를 사용한다. PM2는 프로세스 관리자로, 애플리케이션이 죽으면 자동으로 재시작한다.</p>
+
+<pre><code">#!/bin/bash
+# Node.js 설치 (NVM 사용)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.bashrc
+nvm install 18
+
+# PM2 전역 설치
+npm install -g pm2
+
+# 애플리케이션 시작
+pm2 start app.js --name "myapp"
+
+# 부팅 시 자동 시작되도록 설정
+pm2 startup
+pm2 save
+
+# 상태 확인
+pm2 status
+pm2 logs myapp</code></pre>
+
+<p>PM2의 주요 명령어:</p>
+
+<pre><code"># 모든 프로세스 확인
+pm2 list
+
+# 로그 보기 (실시간)
+pm2 logs myapp
+
+# 재시작
+pm2 restart myapp
+
+# 모니터링 대시보드
+pm2 monit
+
+# 삭제
+pm2 delete myapp</code></pre>
+
+<h3>영구 저장소 (Block Storage)</h3>
+
+<p>인스턴스에는 기본 부팅 볼륨이 있지만, 데이터를 위해 추가 스토리지가 필요하다. Always Free 플랜에서는 200GB까지 무료다.</p>
+
+<pre><code">#!/bin/bash
+# 블록 스토리지 생성 (Oracle Cloud 콘솔에서)
+# -> Block Storage -> Block Volumes -> Create Block Volume
+# 크기: 100GB, 가용성 도메인: 인스턴스와 동일
+
+# 인스턴스에 연결 (콘솔에서)
+# Compute -> Instances -> 인스턴스 선택 -> Attached Block Volumes -> Attach
+
+# 인스턴스에서 마운트
+lsblk  # 새 디스크 확인 (예: /dev/sdb)
+sudo mkfs.ext4 /dev/sdb
+sudo mkdir -p /mnt/data
+sudo mount /dev/sdb /mnt/data
+sudo chown ubuntu:ubuntu /mnt/data
+
+# 부팅 시 자동 마운트
+echo '/dev/sdb /mnt/data ext4 defaults 0 2' | sudo tee -a /etc/fstab</code></pre>
+
+<h3>모니터링 설정</h3>
+
+<p>Oracle Cloud는 기본적으로 모니터링 서비스를 제공한다. Monitoring 탭에서 CPU, 메모리, 네트워크 사용량을 확인할 수 있다.</p>
+
+<p>더 상세한 모니터링을 위해 Prometheus나 Grafana를 설치할 수도 있다:</p>
+
+<pre><code"># Docker로 Prometheus + Grafana 설정
+docker run -d   --name prometheus   -p 9090:9090   -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml   prom/prometheus
+
+docker run -d   --name grafana   -p 3000:3000   grafana/grafana</code></pre>
+
+<h3>백업 전략</h3>
+
+<p>Always Free 계정이므로 백업도 신중해야 한다. 월 1-2회 수동 백업으로 충분하다:</p>
+
+<pre><code">#!/bin/bash
+# 데이터 백업 (Object Storage로)
+sudo apt-get install -y awscli
+
+# AWS CLI를 Oracle Cloud와 호환되도록 설정
+aws s3 sync /mnt/data s3://my-backup-bucket/ --endpoint-url https://your-tenancy.compat.objectstorage.your-region.oraclecloud.com</code></pre>
+
+<h3>비용 모니터링</h3>
+
+<p>Oracle Cloud 콘솔에서 Costs 탭을 열면 현재 월의 예상 비용을 볼 수 있다. Always Free 플랜을 사용하면 항상 0이어야 한다.</p>
+
+<p>만약 비용이 청구되려고 하면, 즉시 해당 리소스를 확인하고 삭제해야 한다. 보통은 실수로 유료 인스턴스를 생성했을 때 발생한다.</p>
+
+<h3>실제 경험</h3>
+
+<p>내가 Oracle Cloud를 2년 사용한 결과:</p>
+
+<ul>
+<li>4개 코어 ARM 서버 1대에서 3개의 Node.js 애플리케이션 실행</li>
+<li>MySQL 데이터베이스 1개 (20GB 사용)</li>
+<li>Block Storage 50GB 사용</li>
+<li>월 트래픽: 약 100GB (대역폭 제한 없음)</li>
+<li>총 비용: 0원</li>
+</ul>
+
+<p>유일한 단점은 인스턴스가 가끔 느릴 수 있다는 것이다. 4개 코어가 과다 공유되기 때문이다. 하지만 나의 용도(테스트 서버, 개인 프로젝트)에는 충분하다.</p>
+
+<h3>결론</h3>
+
+<p>Oracle Cloud Always Free는 평생 무료 서버가 필요한 개발자의 구세주다. AWS보다 훨씬 후한 리소스를 제공하면서도 비용은 0이다. 가입 과정이 까다로운 것이 유일한 단점이다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-06.html">
+          <span class="ri-cat">DevOps &amp; Infra</span>
+          <span class="ri-title">WSL2 개발 환경 실전 세팅 — 네이티브 Linux 성능 비교까지</span>
+        </a>
+        <a class="related-item" href="/posts/post-29.html">
+          <span class="ri-cat">DevOps &amp; Infra</span>
+          <span class="ri-title">SSH 터널링 완전 정복 — 원격 서버 개발 환경 구축</span>
+        </a>
+        <a class="related-item" href="/posts/post-67.html">
+          <span class="ri-cat">DevOps &amp; Infra</span>
+          <span class="ri-title">HTTPS 무료 인증서 자동화 — Let&#x27;s Encrypt + certbot 완전 정복</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

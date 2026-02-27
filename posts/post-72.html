@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="이메일, URL, 전화번호 등 자주 사용하는 정규표현식 패턴과 성능 최적화를 한 곳에 정리했습니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-72.html">
+  <title>정규표현식 실전 패턴 — 매번 검색하는 것들 총정리 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "정규표현식 실전 패턴 — 매번 검색하는 것들 총정리",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-05",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-72.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발 기초 &amp; 팁</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>정규표현식 실전 패턴 — 매번 검색하는 것들 총정리</h1>
+      <p class="meta">게시일: 2026년 2월 5일 · 14분 읽기</p>
+<p>정규표현식은 매번 새롭다. 이메일 검증을 할 때도, URL을 파싱할 때도 매번 검색한다. 내가 자주 쓰는 패턴만 모아서 이 글에 정리했다. 이제부터는 이 글을 북마크하고 필요할 때 찾아쓰면 된다.</p>
+
+<h3>기본 패턴</h3>
+
+<p><strong>이메일 주소</strong></p>
+
+<p>완벽한 RFC 5322 정규표현식은 너무 복잡하다. 실무에서는 대부분 이 정도면 충분하다.</p>
+
+<pre><code class="language-regex">
+^[^\s@]+@[^\s@]+\.[^\s@]+$
+</code></pre>
+
+<p>더 엄격하게 하려면:</p>
+
+<pre><code class="language-regex">
+^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+</code></pre>
+
+<p>하지만 이것도 완벽하지 않다. 실제로는 정규표현식보다 확인 이메일을 보내는 것이 더 안전하다.</p>
+
+<pre><code class="language-javascript">
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+console.log(emailRegex.test('user@example.com'));  // true
+console.log(emailRegex.test('invalid.email'));     // false
+</code></pre>
+
+<p><strong>URL</strong></p>
+
+<pre><code class="language-regex">
+^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$
+</code></pre>
+
+<p>또는 더 간단하게:</p>
+
+<pre><code class="language-regex">
+^https?:\/\/.+$
+</code></pre>
+
+<p><strong>전화번호 (한국)</strong></p>
+
+<pre><code class="language-regex">
+^01[0-9]-?\d{3,4}-?\d{4}$
+</code></pre>
+
+<p>이 패턴은 010-1234-5678, 01012345678 등을 모두 허용한다.</p>
+
+<pre><code class="language-javascript">
+const phoneRegex = /^01[0-9]-?\d{3,4}-?\d{4}$/;
+console.log(phoneRegex.test('010-1234-5678'));  // true
+console.log(phoneRegex.test('01012345678'));    // true
+</code></pre>
+
+<p><strong>IP 주소 (IPv4)</strong></p>
+
+<pre><code class="language-regex">
+^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+</code></pre>
+
+<p>이 패턴은 0-255 범위의 4개 옥텟을 검증한다.</p>
+
+<pre><code class="language-javascript">
+const ipRegex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+console.log(ipRegex.test('192.168.1.1'));  // true
+console.log(ipRegex.test('256.1.1.1'));    // false
+</code></pre>
+
+<h3>로그 파싱</h3>
+
+<p><strong>타임스탐프 파싱</strong></p>
+
+<p>흔한 로그 포맷 (2026-02-26 14:30:45):</p>
+
+<pre><code class="language-regex">
+^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}
+</code></pre>
+
+<p>또는 구조화된 파싱을 위해 그룹을 사용:</p>
+
+<pre><code class="language-regex">
+^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})
+</code></pre>
+
+<pre><code class="language-javascript">
+const logLine = '2026-02-26 14:30:45 [ERROR] Connection failed';
+const regex = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) \[(\w+)\] (.+)$/;
+const match = logLine.match(regex);
+
+if (match) {
+  const [, year, month, day, hour, minute, second, level, message] = match;
+  console.log({ year, month, day, hour, minute, second, level, message });
+}
+</code></pre>
+
+<p><strong>로그 레벨 추출</strong></p>
+
+<pre><code class="language-regex">
+\[(ERROR|WARN|INFO|DEBUG)\]
+</code></pre>
+
+<h3>고급 패턴</h3>
+
+<p><strong>Lookahead와 Lookbehind</strong></p>
+
+<p>Lookahead는 특정 문자 앞에 있는 것을 찾는다.</p>
+
+<pre><code class="language-regex">
+\w+(?=@)  // @앞의 모든 단어 문자
+</code></pre>
+
+<pre><code class="language-javascript">
+const email = 'user@example.com';
+const username = email.match(/\w+(?=@)/)[0];
+console.log(username);  // 'user'
+</code></pre>
+
+<p>Lookbehind는 특정 문자 뒤에 있는 것을 찾는다. (모던 JavaScript에서 지원)</p>
+
+<pre><code class="language-regex">
+(?<=@)\w+  // @뒤의 모든 단어 문자
+</code></pre>
+
+<pre><code class="language-javascript">
+const email = 'user@example.com';
+const domain = email.match(/(?<=@)[\w.]+/)[0];
+console.log(domain);  // 'example.com'
+</code></pre>
+
+<p><strong>Named Groups (명명된 그룹)</strong></p>
+
+<p>정규표현식이 복잡해지면 그룹을 이름으로 참조하는 것이 좋다.</p>
+
+<pre><code class="language-javascript">
+const dateRegex = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/;
+const match = '2026-02-26'.match(dateRegex);
+
+console.log(match.groups.year);   // '2026'
+console.log(match.groups.month);  // '02'
+console.log(match.groups.day);    // '26'
+</code></pre>
+
+<p><strong>Non-greedy 매칭</strong></p>
+
+<p>기본적으로 정규표현식은 greedy하다. 즉, 가능한 한 많이 매칭한다.</p>
+
+<pre><code class="language-javascript">
+const text = '<p>Hello</p><p>World</p>';
+
+// Greedy (잘못된 결과)
+const greedy = text.match(/<p>.*<\/p>/);
+console.log(greedy[0]);  // '<p>Hello</p><p>World</p>'
+
+// Non-greedy (올바른 결과)
+const nonGreedy = text.match(/<p>.*?<\/p>/g);
+console.log(nonGreedy);  // ['<p>Hello</p>', '<p>World</p>']
+</code></pre>
+
+<p><code>*?</code>, <code>+?</code>, <code>??</code> 등을 사용해서 non-greedy 매칭을 한다.</p>
+
+<h3>일반적인 실수</h3>
+
+<p><strong>Catastrophic Backtracking</strong></p>
+
+<p>복잡한 정규표현식은 매우 느릴 수 있다. 특히 텍스트가 패턴과 거의 맞지만 마지막에 실패하는 경우가 문제다.</p>
+
+<pre><code class="language-regex">
+// ❌ 위험: 백트래킹이 매우 많다
+(a+)+b
+
+// 이 텍스트는 프로세스를 한없이 계속할 것이다
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+</code></pre>
+
+<pre><code class="language-javascript">
+// 직접 테스트하지 말 것! 브라우저가 멈칠 수 있다.
+// const regex = /(a+)+b/;
+// const text = 'a'.repeat(30) + 'c';
+// regex.test(text);  // 매우 오래 걸림
+</code></pre>
+
+<p>이를 피하려면 중첩된 quantifier를 피해야 한다.</p>
+
+<pre><code class="language-regex">
+// ✅ 안전한 버전
+a+b
+</code></pre>
+
+<p><strong>성능 최적화 팁</strong></p>
+
+<ol>
+<li>Anchors를 사용하자 (^ 와 $)</li>
+<li>구체적인 패턴을 먼저 작성하자</li>
+<li>character class를 사용하자 ([a-z] vs a|b|c)</li>
+<li>불필요한 그룹을 피하자</li>
+</ol>
+
+<h3>실무 활용 팁</h3>
+
+<p><strong>입력 검증</strong></p>
+
+<pre><code class="language-javascript">
+const validators = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  phone: /^01[0-9]-?\d{3,4}-?\d{4}$/,
+  url: /^https?:\/\/.+$/,
+  ipv4: /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+  username: /^[a-zA-Z0-9_]{3,20}$/
+};
+
+function validate(field, value) {
+  return validators[field].test(value);
+}
+
+console.log(validate('email', 'user@example.com'));  // true
+console.log(validate('phone', '01012345678'));       // true
+</code></pre>
+
+<p><strong>문자열 변환</strong></p>
+
+<pre><code class="language-javascript">
+// camelCase를 snake_case로
+const camelCase = 'getUserData';
+const snakeCase = camelCase.replace(/([A-Z])/g, '_$1').toLowerCase();
+console.log(snakeCase);  // 'get_user_data'
+
+// 연속된 공백 제거
+const text = 'Hello    world';
+const cleaned = text.replace(/\s+/g, ' ');
+console.log(cleaned);  // 'Hello world'
+
+// URL에서 쿼리 파라미터 추출
+const url = 'https://example.com?name=John&age=30';
+const params = {};
+url.replace(/[?&]([^=]+)=([^&]*)/g, (match, key, value) => {
+  params[key] = value;
+});
+console.log(params);  // { name: 'John', age: '30' }
+</code></pre>
+
+<h3>정규표현식 체크리스트</h3>
+
+<table>
+<thead>
+<tr>
+<th>패턴</th>
+<th>용도</th>
+<th>정규표현식</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>이메일</td>
+<td>기본 검증</td>
+<td>^[^\s@]+@[^\s@]+\.[^\s@]+$</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>URL 검증</td>
+<td>^https?:\/\/.+$</td>
+</tr>
+<tr>
+<td>한국 전화번호</td>
+<td>전화번호</td>
+<td>^01[0-9]-?\d{3,4}-?\d{4}$</td>
+</tr>
+<tr>
+<td>IPv4</td>
+<td>IP 주소</td>
+<td>^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$</td>
+</tr>
+<tr>
+<td>타임스탐프</td>
+<td>로그 파싱</td>
+<td>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$</td>
+</tr>
+</tbody>
+</table>
+
+<p>정규표현식은 강력하지만 복잡할 수 있다. 이 글의 패턴들을 기억하고, 더 복잡한 경우에는 정규표현식 테스터(regex101.com 등)를 사용하자. 그리고 항상 성능을 고려하자.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-11.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">E2E 테스트 flaky 줄이기 — 실패 원인을 구조적으로 제거하는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-71.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">Playwright vs Cypress — 2025년 E2E 테스트 도구 비교</span>
+        </a>
+        <a class="related-item" href="/posts/post-79.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">개발자가 알면 좋은 네트워크 기초 — DNS부터 TCP까지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

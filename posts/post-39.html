@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dependency audit, native module 최적화, locale 제거, 폰트 서브셋팅">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-39.html">
+  <title>Electron 앱 용량 줄이기 — 100MB에서 30MB로 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Electron 앱 용량 줄이기 — 100MB에서 30MB로",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-08-20",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-39.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Electron</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Electron 앱 용량 줄이기 — 100MB에서 30MB로</h1>
+      <p class="meta">게시일: 2025년 8월 20일 · 13분 읽기</p>
+
+<h2>사용자가 100MB 앱을 안 깔고 싶어한다</h2>
+
+<p>초기 Electron 앱의 크기가 100MB였다. 설치 시간도 오래 걸리고, 특히 느린 인터넷 환경의 사용자들이 "좀 더 작을 수 없나요?"라고 물어봤다.</p>
+
+<p>의존성을 정리하고, 불필요한 부분을 제거했다. 이제 30MB다. 설치도 빠르고, 사용자 만족도도 올라갔다.</p>
+
+<h3>분석: 뭐가 용량을 먹나</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+npm ls --depth=0
+
+dependencies:
+electron              180MB (Electron 자체)
+node_modules/        90MB  (의존성)
+  - lodash           4MB
+  - moment          8MB
+  - uuid            2MB
+  - 기타            76MB
+
+build artifacts      20MB
+native modules       10MB
+</code></pre>
+
+<h3>최적화 1: 불필요한 의존성 제거**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// lodash 제거 → 네이티브 함수로 변경
+import _ from 'lodash'
+
+// Bad
+_.pick(obj, ['a', 'b'])
+_.omit(obj, ['c', 'd'])
+
+// Good (최신 JavaScript)
+const { a, b } = obj
+const { c, d, ...rest } = obj
+
+// moment 제거 → date-fns로 변경 (더 가벼움)
+import { format, parse } from 'date-fns'
+
+// uuid는 유지 (자체 구현은 위험)
+
+// 결과: 12MB → 2MB
+</code></pre>
+
+<h3>최적화 2: 언어 파일 제거**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// electron-builder 설정에서 불필요한 로케일 제거
+{
+  "build": {
+    "asarUnpack": [
+      "node_modules/electron/dist/resources/locales/en*",
+      "node_modules/electron/dist/resources/locales/ja*"
+    ],
+    "files": [
+      "!**/locales/**/*",
+      "!**/resources/**/*.lproj"
+    ]
+  }
+}
+
+// 또는 프로세싱으로 제거
+import * as fs from 'fs'
+import * as path from 'path'
+
+function removeUnusedLocales() {
+  const keep = ['en', 'ja', 'ko']  // 필요한 언어만
+  const localesPath = path.join(
+    __dirname,
+    'node_modules/electron/dist/resources/locales'
+  )
+
+  fs.readdirSync(localesPath).forEach(file => {
+    const lang = file.split('.')[0]
+    if (!keep.includes(lang)) {
+      fs.unlinkSync(path.join(localesPath, file))
+    }
+  })
+}
+
+// 효과: Electron 번들에서 30MB 절감
+</code></pre>
+
+<h3>최적화 3: 폰트 서브셋팅**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 전체 폰트 파일은 거대함
+// 필요한 글자만 추출
+
+npm install -D fonttools
+
+// subsetting script
+#!/bin/bash
+pyftsubset JetBrainsMono-Regular.ttf   --unicodes="U+0020-U+007E,U+00C0-U+00FF"   --output-file="JetBrainsMono-Regular-subset.ttf"
+
+// CSS에서 사용
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('./fonts/JetBrainsMono-Regular-subset.ttf') format('truetype');
+  font-display: swap;
+}
+
+// 효과: 폰트 파일 6MB → 1.5MB
+</code></pre>
+
+<h3>최적화 4: Native 모듈 최소화**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 불필요한 옵션 의존성 제거
+npm list --all | grep optional
+
+// 선택적 의존성 건너뛰기
+npm ci --no-optional
+
+// 또는 package.json에서
+{
+  "optionalDependencies": {
+    "sharp": "^0.32.0"  // 이미지 처리
+  }
+}
+
+// electron-builder에서
+{
+  "build": {
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false
+  }
+}
+
+// 효과: 불필요한 네이티브 바인딩 10MB 제거
+</code></pre>
+
+<h3>최적화 5: 빌드 아티팩트 최소화**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// .gitignore와 비슷하게
+// electron-builder의 files 설정으로 제외
+
+{
+  "build": {
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "name": "my-app"
+    }
+  },
+  "files": [
+    "!**/*.map",           // Source maps 제거
+    "!**/test/**/*",       // 테스트 파일
+    "!**/node_modules/@types/**/*",
+    "!**/*.ts",            // TypeScript 원본
+    "!**/.gitignore",
+    "!**/README.md",
+    "!**/LICENSE"
+  ]
+}
+
+// 효과: 5MB 절감
+</code></pre>
+
+<h3>최적화 6: 코드 분할 및 동적 로드**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 큰 라이브러리는 필요할 때만 로드
+async function loadPDFLibrary() {
+  // 처음엔 로드 안 함
+  const { PDFDocument } = await import('pdf-lib')
+  return PDFDocument
+}
+
+// 또는 webpack/vite 설정
+{
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'pdf': ['pdf-lib'],
+          'chart': ['chart.js']
+        }
+      }
+    }
+  }
+}
+</code></pre>
+
+<h3>체크리스트**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 체크리스트 (scripts/optimize.sh)
+#!/bin/bash
+
+echo "🔍 Analyzing app size..."
+du -sh . | sort -hr
+
+echo "📦 Checking dependencies..."
+npm ls --all | head -20
+
+echo "🗑️ Cleaning up..."
+# 불필요한 파일 제거
+rm -rf **/*.map
+rm -rf **/.test.*
+find node_modules -name "*.d.ts" -type f -delete
+
+echo "✅ Done!"
+npm run build:app
+</code></pre>
+
+<h3>최종 결과**</h3>
+
+<ul>
+<li>초기: 100MB</li>
+<li>의존성 정리: 100MB → 85MB</li>
+<li>로케일 제거: 85MB → 65MB</li>
+<li>폰트 최적화: 65MB → 60MB</li>
+<li>native 모듈: 60MB → 50MB</li>
+<li>코드 분할: 50MB → 30MB</li>
+</ul>
+
+<h3>마무리**</h3>
+
+<p>Electron 앱의 크기는 의존성 관리로 대부분 절감할 수 있다. 큰 라이브러리가 정말 필요한지, 더 작은 대안이 있는지 항상 질문해야 한다.</p>
+
+<p>100MB에서 30MB로 줄이는 것만으로도 사용자 경험이 크게 개선된다. 다운로드도 빠르고, 설치도 빠르고, 앱 자체도 빠르다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-01.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱에서 Rust로 네이티브 성능 확보하기 — N-API 바인딩 실전 가이드</span>
+        </a>
+        <a class="related-item" href="/posts/post-36.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱 빌드 시간 줄이기 — 30분에서 5분으로</span>
+        </a>
+        <a class="related-item" href="/posts/post-40.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron vs Tauri — 2025년 데스크톱 앱 프레임워크 비교</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

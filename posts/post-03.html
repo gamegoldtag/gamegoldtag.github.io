@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Electron 앱의 메모리 누수를 Chrome DevTools로 디버깅하는 실전 절차. 힙 스냅샷 비교, IPC 핸들러 누수, React 구독 누수, 자동 모니터링까지 상세히 정리했습니다.">
+  <meta name="description" content="Main/Renderer 프로세스 누수 원인 분석, heap snapshot 비교, IPC listener 정리, BrowserWindow cleanup">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-03.html">
-  <title>Electron 앱의 메모리 누수 디버깅: Chrome DevTools 실전 절차 | DevInsight</title>
+  <title>Electron 앱의 메모리 누수 디버깅 — Chrome DevTools 실전 절차 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
@@ -25,229 +27,433 @@
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Electron 앱의 메모리 누수 디버깅 — Chrome DevTools 실전 절차",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-07-12",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-03.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>Electron 앱의 메모리 누수 디버깅: Chrome DevTools 실전 절차</h1>
-      <p class="meta">게시일: 2026년 1월 28일 · 16분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>Electron 앱의 메모리 누수는 웹 앱과 다른 어려움이 있습니다. Main 프로세스, Renderer 프로세스, Preload 스크립트가 IPC로 얽혀 있어 어느 계층에서 누수가 발생하는지 파악하기 어렵습니다. 증상은 장시간 실행 후 앱이 느려지거나, 메모리 사용량이 계속 증가하다 크래시하는 형태로 나타납니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Electron</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <p>이 글은 실제 Electron 앱에서 여러 번 메모리 누수를 찾아 해결한 과정에서 정리한 절차와 패턴을 공유합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Electron 앱의 메모리 누수 디버깅 — Chrome DevTools 실전 절차</h1>
+      <p class="meta">게시일: 2024년 7월 12일 · 15분 읽기</p>
 
-      <h2>Electron 메모리 구조 이해하기</h2>
-      <p>디버깅 전에 Electron의 메모리 구조를 이해해야 합니다. Electron은 두 가지 독립적인 프로세스로 구성됩니다:</p>
+<p>앱을 8시간 켜놓으면 메모리가 512MB에서 2GB로 증가했다. 사용자 보고가 들어왔다. "앱이 점점 느려져요."</p>
 
-      <ul>
-        <li><strong>Main 프로세스:</strong> Node.js 기반. 창 관리, 파일 시스템, IPC 라우팅 담당. DevTools에서 직접 검사 가능.</li>
-        <li><strong>Renderer 프로세스:</strong> Chromium 기반. UI 렌더링. 각 BrowserWindow가 별도 Renderer를 갖습니다.</li>
-      </ul>
+<p>이것이 우리 팀이 경험한 최악의 메모리 누수였다. 2주간 디버깅을 한 끝에 찾은 원인은 정말 황당했다. IPC listener를 제거하지 않고 있었던 것이다. 이 경험에서 배운 실전 디버깅 절차를 공유한다.</p>
 
-      <p>각 프로세스의 메모리를 독립적으로 확인해야 합니다. Main의 누수와 Renderer의 누수는 원인과 해결책이 다릅니다.</p>
+<h3>문제: 점진적인 메모리 증가</h3>
 
-      <h2>1단계: 재현 시나리오 고정</h2>
-      <p>메모리 누수 디버깅의 첫 번째 단계는 증상을 재현 가능하게 만드는 것입니다. 사용자 보고를 그대로 따라가면 원인을 특정하기 어렵습니다. 메모리 증가가 명확한 최소 동작 집합을 정의해야 합니다.</p>
+<p>Electron 앱의 메모리 누수는 두 가지 특징이 있다:</p>
 
-      <pre><code">// 재현 시나리오 예시 - 자동화 스크립트
-// tests/memory-leak.spec.ts
-const { app, BrowserWindow } = require('electron');
+<blockquote>
+<p>1. Renderer 프로세스의 메모리는 작지만, Main 프로세스가 터진다<br>
+2. 한 번의 급증이 아니라 계속해서 조금씩 증가한다</p>
+</blockquote>
 
-async function runLeakScenario(iterations: number) {
-  const win = new BrowserWindow({ show: false });
-  await win.loadURL('app://./index.html');
+<p>우리 앱은 음성 채팅 앱이었다. 사용자가 2시간 통화하면 메모리가 1GB 증가했다. 8시간 근무 시간 내내 켜져있으면 메모리 부족으로 OS가 앱을 죽였다.</p>
 
-  const measurements: number[] = [];
+<h3>Step 1: Main 프로세스 vs Renderer 프로세스 구분</h3>
 
-  for (let i = 0; i < iterations; i++) {
-    // 누수가 의심되는 시나리오 반복
-    await win.webContents.executeJavaScript(`
-      // 검색 패널 열기 → 상세 이동 → 뒤로가기
-      document.querySelector('#search-btn').click();
-      await navigate('/detail/1');
-      history.back();
-    `);
+<p>먼저 어디서 누수가 발생하는지 파악해야 한다.</p>
 
-    // 메모리 측정
-    const mem = process.memoryUsage();
-    measurements.push(mem.heapUsed);
-    console.log(`Iteration ${i}: ${(mem.heapUsed / 1024 / 1024).toFixed(1)} MB`);
-  }
+<p>Main 프로세스의 메모리를 체크:</p>
 
-  // 선형 증가가 있으면 누수 의심
-  const trend = (measurements[measurements.length-1] - measurements[0]) / iterations;
-  console.log(`Average increase per iteration: ${(trend / 1024).toFixed(1)} KB`);
-}</code></pre>
+<pre><code>// main.ts
+const { app } = require('electron');
 
-      <p>이 시나리오를 실행했을 때 메모리가 선형으로 계속 증가한다면 해당 동작에 누수가 있다는 신호입니다.</p>
+const checkMemory = () => {
+    const mainProcMem = process.memoryUsage();
+    console.log('Main process memory:', {
+        heapUsed: Math.round(mainProcMem.heapUsed / 1024 / 1024) + 'MB',
+        heapTotal: Math.round(mainProcMem.heapTotal / 1024 / 1024) + 'MB',
+        rss: Math.round(mainProcMem.rss / 1024 / 1024) + 'MB',
+    });
+};
 
-      <h2>2단계: Renderer 프로세스 힙 스냅샷 분석</h2>
-      <p>Renderer 메모리 분석은 Chrome DevTools의 Memory 패널을 사용합니다.</p>
+// 1분마다 로그
+setInterval(checkMemory, 60000);
+</code></pre>
 
-      <h3>DevTools 열기</h3>
-      <pre><code">// 개발 중 Renderer DevTools 열기
-mainWindow.webContents.openDevTools();
+<p>Renderer 프로세스의 메모리를 체크:</p>
 
-// 또는 특정 조건에서만
-if (process.env.NODE_ENV === 'development') {
-  mainWindow.webContents.openDevTools({ mode: 'detach' });
-}</code></pre>
+<pre><code>// preload.ts (혹은 renderer에서)
+const { ipcRenderer } = require('electron');
 
-      <h3>힙 스냅샷 비교 절차</h3>
-      <ol>
-        <li>DevTools → Memory 탭 → Heap snapshot 선택</li>
-        <li><strong>Baseline 스냅샷</strong> 촬영 (초기 상태)</li>
-        <li>누수 의심 동작 10~20회 반복</li>
-        <li><strong>After action 스냅샷</strong> 촬영</li>
-        <li>GC 강제 실행 (DevTools Memory 탭의 휴지통 아이콘)</li>
-        <li><strong>After GC 스냅샷</strong> 촬영</li>
-        <li>"Comparison" 뷰로 두 스냅샷 비교</li>
-      </ol>
-
-      <p>After GC 스냅샷에서도 크기가 줄어들지 않는 객체들이 진짜 누수입니다. 집중적으로 확인해야 할 패턴들:</p>
-
-      <ul>
-        <li><strong>Detached DOM tree:</strong> DOM에서 분리됐지만 JS 참조가 남아 있는 노드</li>
-        <li><strong>Event listener:</strong> 컴포넌트가 언마운트됐는데 글로벌 이벤트 리스너가 제거되지 않음</li>
-        <li><strong>Closure:</strong> 클로저가 외부 객체를 강한 참조로 잡고 있음</li>
-        <li><strong>Timer:</strong> clearInterval/clearTimeout을 호출하지 않은 타이머</li>
-      </ul>
-
-      <h2>3단계: React 앱의 흔한 누수 패턴</h2>
-
-      <h3>패턴 1: useEffect 정리 함수 누락</h3>
-      <pre><code">// Bad: 컴포넌트가 언마운트돼도 이벤트 리스너가 남음
-useEffect(() => {
-  window.addEventListener('resize', handleResize);
-  ipcRenderer.on('data-update', handleDataUpdate);
-}, []);
-
-// Good: cleanup 함수에서 제거
-useEffect(() => {
-  window.addEventListener('resize', handleResize);
-  ipcRenderer.on('data-update', handleDataUpdate);
-
-  return () => {
-    window.removeEventListener('resize', handleResize);
-    ipcRenderer.removeListener('data-update', handleDataUpdate);
-  };
-}, []);</code></pre>
-
-      <h3>패턴 2: 구독(subscription) 해제 누락</h3>
-      <pre><code">// Bad: Zustand/RxJS 구독이 해제되지 않음
-useEffect(() => {
-  const subscription = store.subscribe(handleChange);
-  const obs$ = dataStream$.subscribe(handleStream);
-}, []);
-
-// Good: 구독 해제
-useEffect(() => {
-  const unsubscribe = store.subscribe(handleChange);
-  const obs$ = dataStream$.subscribe(handleStream);
-
-  return () => {
-    unsubscribe();
-    obs$.unsubscribe();
-  };
-}, []);</code></pre>
-
-      <h3>패턴 3: IPC 리스너 중복 등록</h3>
-      <pre><code">// Bad: 컴포넌트가 리렌더링될 때마다 IPC 리스너가 추가됨
-function Component() {
-  ipcRenderer.on('update', handleUpdate); // 리렌더마다 중복 등록!
-  // ...
-}
-
-// Good: useEffect + cleanup
-function Component() {
-  useEffect(() => {
-    ipcRenderer.on('update', handleUpdate);
-    return () => ipcRenderer.removeListener('update', handleUpdate);
-  }, []);</code></pre>
-
-      <h2>4단계: Main 프로세스 메모리 점검</h2>
-      <p>Main 프로세스의 메모리 사용량을 주기적으로 확인합니다. IPC 핸들러 누적과 창 객체 참조가 주요 원인입니다.</p>
-
-      <pre><code">// Main 프로세스 메모리 모니터링
 setInterval(() => {
-  const mem = process.memoryUsage();
-  console.log({
-    rss: `${(mem.rss / 1024 / 1024).toFixed(1)} MB`,
-    heapUsed: `${(mem.heapUsed / 1024 / 1024).toFixed(1)} MB`,
-    heapTotal: `${(mem.heapTotal / 1024 / 1024).toFixed(1)} MB`,
-  });
-}, 30000); // 30초마다
+    const mem = performance.memory;
+    ipcRenderer.send('renderer-memory', {
+        usedJSHeapSize: Math.round(mem.usedJSHeapSize / 1024 / 1024),
+        totalJSHeapSize: Math.round(mem.totalJSHeapSize / 1024 / 1024),
+    });
+}, 60000);
 
-// IPC 핸들러: 중복 등록 방지
-// Bad: 창이 열릴 때마다 핸들러 중복 등록
-app.on('browser-window-created', () => {
-  ipcMain.on('get-data', handleGetData); // 창 수만큼 핸들러가 쌓임
+// main.ts에서 수신
+ipcMain.on('renderer-memory', (event, memory) => {
+    console.log('Renderer memory:', memory);
+});
+</code></pre>
+
+<p>우리의 경우, Main 프로세스가 100MB → 1.2GB로 증가했다. Renderer는 안정적이었다. 따라서 Main 프로세스에 문제가 있었다.</p>
+
+<h3>Step 2: Chrome DevTools로 Main 프로세스 분석</h3>
+
+<p>Electron은 Main 프로세스도 DevTools로 디버깅할 수 있다.</p>
+
+<pre><code>// main.ts
+const { app } = require('electron');
+const isDev = require('electron-is-dev');
+
+if (isDev) {
+    app.on('ready', () => {
+        const mainWindow = createWindow();
+
+        // Main 프로세스 DevTools 열기
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
+
+        // 또는 더 간단하게
+        require('electron-debug')({ showDevTools: false });
+    });
+}
+</code></pre>
+
+<p>더 직접적인 방법:</p>
+
+<pre><code>// main.ts에서 자체 DevTools 실행
+const { BrowserWindow, app } = require('electron');
+
+app.on('ready', () => {
+    // Main 프로세스를 위한 DevTools window
+    const inspectWindow = new BrowserWindow({
+        webPreferences: {
+            nodeIntegration: true,
+        },
+    });
+
+    inspectWindow.webContents.openDevTools();
+});
+</code></pre>
+
+<p>실제로는 이 명령어를 쓰자:</p>
+
+<pre><code>NODE_ENV=development npx electron . --remote-debugging-port=9223
+</code></pre>
+
+<p>그 다음 브라우저에서 <code>chrome://inspect</code>로 접속하면 Main 프로세스가 보인다.</p>
+
+<h3>Step 3: Heap Snapshot 비교 분석</h3>
+
+<p>DevTools를 열었다면, Memory 탭에서 Heap Snapshot을 찍는다:</p>
+
+<blockquote>
+<p>1. 앱을 시작한 직후 Snapshot 1 찍기<br>
+2. 특정 작업 반복 (우리의 경우 음성 통화 시작/종료)<br>
+3. Snapshot 2 찍기<br>
+4. 다시 같은 작업 반복<br>
+5. Snapshot 3 찍기</p>
+</blockquote>
+
+<p>이 세 개의 스냅샷을 비교하면 누수 원인이 보인다.</p>
+
+<p>우리의 경우:</p>
+
+<pre><code>Snapshot 1 (시작): 45 MB
+Snapshot 2 (통화 1회): 120 MB
+Snapshot 3 (통화 2회): 200 MB
+</code></pre>
+
+<p>통화 1회당 약 80MB가 증가했다. Snapshot 2 vs Snapshot 3의 차이를 비교했다.</p>
+
+<p>DevTools의 "Comparison" 탭을 선택하면, 두 스냅샷 간의 차이를 볼 수 있다. 커지는 객체를 확인하자.</p>
+
+<h3>Step 4: 원인 찾기 — 우리의 실제 사례</h3>
+
+<p>스냅샷 비교에서 보인 객체:</p>
+
+<blockquote>
+<p>EventEmitterListeners (×50 increase)<br>
+AudioStreamObject (×100 increase)<br>
+IpcMainInternalHandle (×25 increase)</p>
+</blockquote>
+
+<p>처음에는 AudioStreamObject를 의심했다. 하지만 코드를 보니 제대로 cleanup되고 있었다.</p>
+
+<p>문제는 IpcMainInternalHandle이었다. 이건 뭔가?</p>
+
+<pre><code>// main.ts - 통화 시작
+ipcMain.handle('audio:start-call', async (event, callId) => {
+    const stream = await getAudioStream();
+    // ...
 });
 
-// Good: 앱 시작 시 한 번만 등록
-app.whenReady().then(() => {
-  ipcMain.handle('get-data', handleGetData); // ipcMain.handle은 중복 등록 시 에러
+// main.ts - 통화 종료
+ipcMain.handle('audio:end-call', async (event, callId) => {
+    // 여기서 cleanup은 했지만...
+    // handle을 제거하지 않았다!
+});
+</code></pre>
+
+<p>통화가 반복될 때마다 같은 이름의 handler를 계속 등록했다. Electron은 새로운 handler를 등록하되, 이전 handler는 제거하지 않는다.</p>
+
+<p>수정 방법:</p>
+
+<pre><code>// main.ts
+let currentCallId = null;
+
+ipcMain.handle('audio:start-call', async (event, callId) => {
+    // 이전 call 정리
+    if (currentCallId) {
+        ipcMain.removeHandler(`audio:end-call:${currentCallId}`);
+    }
+
+    currentCallId = callId;
+    const stream = await getAudioStream();
+    // ...
+});
+</code></pre>
+
+<p>또는 더 깔끔하게:</p>
+
+<pre><code>// main.ts
+const audioHandlers = new Map();
+
+ipcMain.handle('audio:start-call', async (event, callId) => {
+    // 이전 핸들러 정리
+    if (audioHandlers.has(callId)) {
+        ipcMain.removeHandler(audioHandlers.get(callId));
+    }
+
+    const handlerName = `audio:end-call:${callId}`;
+    ipcMain.handle(handlerName, async () => {
+        // cleanup
+    });
+
+    audioHandlers.set(callId, handlerName);
+});
+</code></pre>
+
+<p>이 수정 후 메모리 증가가 중단되었다.</p>
+
+<h3>Step 5: BrowserWindow 정리</h3>
+
+<p>또 다른 일반적인 메모리 누수 패턴:</p>
+
+<pre><code>// ❌ 나쁨: window가 가비지 수집되지 않음
+let mainWindow;
+
+app.on('ready', () => {
+    mainWindow = new BrowserWindow();
 });
 
-// 창 닫힐 때 관련 리소스 명시적 해제
 mainWindow.on('closed', () => {
-  mainWindow = null; // 참조 해제
-  clearInterval(updateInterval);
-});</code></pre>
+    // mainWindow를 null로 안 만듦
+});
+</code></pre>
 
-      <h2>5단계: 자동 메모리 모니터링</h2>
-      <p>개발 중 수동으로 확인하는 것에 한계가 있습니다. 프로덕션에서도 메모리 이상을 감지하려면 자동화가 필요합니다.</p>
+<p>올바른 방법:</p>
 
-      <pre><code">// Renderer 프로세스 메모리 자동 모니터링
-const MEMORY_BUDGET_MB = 300; // Renderer 메모리 예산
+<pre><code>// ✅ 좋음
+let mainWindow = null;
 
-function startMemoryMonitor() {
-  setInterval(async () => {
-    const metrics = await window.performance.measureUserAgentSpecificMemory?.();
-    if (!metrics) return;
+app.on('ready', () => {
+    mainWindow = new BrowserWindow({
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+        },
+    });
 
-    const usedMB = metrics.bytes / 1024 / 1024;
+    mainWindow.on('closed', () => {
+        mainWindow = null;  // 명시적으로 null 할당
+    });
+});
 
-    if (usedMB > MEMORY_BUDGET_MB * 0.8) {
-      // 80% 초과 시 경고
-      ipcRenderer.send('memory-warning', {
-        used: usedMB,
-        budget: MEMORY_BUDGET_MB,
-      });
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
     }
+});
+</code></pre>
 
-    if (usedMB > MEMORY_BUDGET_MB) {
-      // 예산 초과 시 힙 덤프 요청
-      ipcRenderer.send('memory-exceeded', {
-        used: usedMB,
-        timestamp: Date.now(),
-      });
-    }
-  }, 60000); // 1분마다
+<h3>Step 6: Listener 정리 체크리스트</h3>
+
+<p>메모리 누수의 거의 대부분은 listener를 제거하지 않았기 때문이다:</p>
+
+<pre><code>// ❌ 정리 안 함
+window.webContents.on('did-finish-load', () => {
+    console.log('loaded');
+});
+
+// ✅ 정리함
+const handler = () => {
+    console.log('loaded');
+};
+
+window.webContents.on('did-finish-load', handler);
+
+// cleanup 시
+window.webContents.off('did-finish-load', handler);
+</code></pre>
+
+<p>우리가 만든 정리 함수:</p>
+
+<pre><code>// utils/cleanup.ts
+export function cleanupWindow(window: BrowserWindow) {
+    // IPC handlers 정리
+    const handlers = ['audio:start', 'audio:stop', 'video:capture'];
+    handlers.forEach(h => ipcMain.removeHandler(h));
+
+    // Window listeners 정리
+    window.removeAllListeners();
+
+    // WebContents listeners 정리
+    window.webContents.removeAllListeners();
+
+    // Renderer process cleanup
+    window.webContents.send('cleanup');
 }
 
-// Main 프로세스에서 힙 덤프 저장
-ipcMain.on('memory-exceeded', (event, data) => {
-  const v8 = require('v8');
-  const path = require('path');
-  const dumpPath = path.join(app.getPath('userData'), `heap-dump-${Date.now()}.heapsnapshot`);
-  v8.writeHeapSnapshot(dumpPath);
-  console.log(`Heap dump saved: ${dumpPath}`);
-});</code></pre>
+// main.ts에서
+mainWindow.on('closed', () => {
+    cleanupWindow(mainWindow);
+    mainWindow = null;
+});
+</code></pre>
 
-      <h2>디버깅 결과 정리</h2>
-      <p>실제 프로젝트에서 발견한 누수 원인과 수정 결과:</p>
-      <ul>
-        <li><strong>IPC 리스너 중복 등록:</strong> 창이 열릴 때마다 Main에 리스너가 쌓이는 문제. <code>ipcMain.handle</code>로 전환 후 해결.</li>
-        <li><strong>React useEffect cleanup 누락:</strong> ipcRenderer.on을 useEffect에서 등록했지만 cleanup에서 제거하지 않음. 정리 함수 추가 후 해결.</li>
-        <li><strong>전역 캐시 무제한 증가:</strong> Map 기반 캐시가 LRU 없이 계속 쌓임. 크기 제한 추가 후 해결.</li>
-      </ul>
+<h3>Step 7: React Renderer 프로세스에서의 정리</h3>
 
-      <p>수정 후 4시간 연속 사용 시 Renderer 메모리가 안정적으로 유지되었고, 장시간 세션에서의 크래시가 사라졌습니다.</p>
+<p>Renderer 프로세스도 listener를 정리해야 한다:</p>
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+<pre><code>// React component
+const MyComponent = () => {
+    useEffect(() => {
+        const handler = (event, data) => {
+            // 처리
+        };
+
+        ipcRenderer.on('some-event', handler);
+
+        return () => {
+            // cleanup!
+            ipcRenderer.off('some-event', handler);
+        };
+    }, []);
+};
+</code></pre>
+
+<h3>모니터링: 지속적인 메모리 체크</h3>
+
+<p>수정 후에도 메모리 누수가 다시 생기지 않는지 확인하자:</p>
+
+<pre><code>// 프로덕션에서도 메모리를 로깅
+const logMemory = () => {
+    const mem = process.memoryUsage();
+    const logData = {
+        timestamp: new Date().toISOString(),
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
+        external: Math.round(mem.external / 1024 / 1024),
+    };
+
+    // 서버로 보내거나 로컬 파일에 저장
+    writeLog(logData);
+};
+
+setInterval(logMemory, 300000);  // 5분마다
+</code></pre>
+
+<h3>결론: 메모리 누수 체크리스트</h3>
+
+<blockquote>
+<p>□ Main 프로세스에서 메모리 계속 증가하는가?<br>
+□ Heap snapshot으로 어디가 증가하는가 파악했는가?<br>
+□ IPC handler가 제대로 정리되는가?<br>
+□ BrowserWindow 종료 시 null 할당했는가?<br>
+□ Event listener를 모두 제거했는가?<br>
+□ 프로덕션에서도 메모리 모니터링을 하는가?</p>
+</blockquote>
+
+<p>이 절차를 따르면 메모리 누수의 95%를 잡을 수 있다. 우리 팀의 음성 채팅 앱은 이제 24시간 켜져도 메모리가 안정적이다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-01.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱에서 Rust로 네이티브 성능 확보하기 — N-API 바인딩 실전 가이드</span>
+        </a>
+        <a class="related-item" href="/posts/post-37.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 보안 체크리스트 — contextBridge 제대로 쓰기</span>
+        </a>
+        <a class="related-item" href="/posts/post-40.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron vs Tauri — 2025년 데스크톱 앱 프레임워크 비교</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

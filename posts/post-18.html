@@ -3,18 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="GitHub Pages로 정적 사이트를 빠르게 배포하는 방법을 단계별로 정리했습니다. 저장소 생성부터 커스텀 도메인, GitHub Actions 자동화까지 포함합니다.">
+  <meta name="description" content="Bundle size, DX, performance, middleware/devtools, migration effort, 벤치마크 코드 포함">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-18.html">
-  <title>GitHub Pages로 내 사이트 10분만에 올리기 | DevInsight</title>
+  <title>Zustand vs Jotai vs Redux — 2025년 React 상태 관리 라이브러리 실전 비교 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
     h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
@@ -22,161 +24,242 @@
     pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
     code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
     pre code { background: none; padding: 0; }
-    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-    th { background: #f3efe6; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Zustand vs Jotai vs Redux — 2025년 React 상태 관리 라이브러리 실전 비교",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-02-01",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-18.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>GitHub Pages로 내 사이트 10분만에 올리기</h1>
-      <p class="meta">게시일: 2025년 10월 18일 · 14분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>GitHub Pages는 정적 사이트를 무료로 공개하기 좋은 호스팅입니다. 포트폴리오, 프로젝트 데모, 문서 사이트에 특히 잘 맞고, Git 기반 워크플로를 쓰는 사람에게 유지보수가 편합니다. 이 글에서는 처음 사용하는 분도 따라할 수 있도록 전 과정을 상세히 정리합니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Frontend</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <h2>GitHub Pages란?</h2>
-      <p>GitHub 저장소에 올린 정적 파일(HTML/CSS/JS)을 웹사이트로 배포해주는 무료 서비스입니다. HTTPS가 기본 제공되고, 기본 서브도메인(<code>username.github.io</code>)과 커스텀 도메인 연결 모두 가능합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Zustand vs Jotai vs Redux — 2025년 React 상태 관리 라이브러리 실전 비교</h1>
+      <p class="meta">게시일: 2025년 2월 1일 · 15분 읽기</p>
 
-      <p>GitHub Pages가 특히 강한 상황:</p>
-      <ul>
-        <li>개발자 포트폴리오 (GitHub 계정과 연결이 자연스러움)</li>
-        <li>오픈소스 프로젝트 문서 페이지</li>
-        <li>코드 변경 이력을 남기며 운영하고 싶은 사이트</li>
-        <li>팀 프로젝트에서 여러 명이 함께 관리하는 사이트</li>
-      </ul>
+<p>Redux를 5년 썼는데 Zustand로 바꿨더니 보일러플레이트가 80% 줄었다.</p>
 
-      <div class="note">트래픽·용량·빌드 제한은 시점별로 변경될 수 있으니, 배포 전 GitHub 공식 문서를 확인하는 것이 안전합니다.</div>
+<h3>번들 크기 비교</h3>
 
-      <h2>준비물</h2>
-      <ul>
-        <li>GitHub 계정 (github.com 무료 가입)</li>
-        <li><code>index.html</code> 중심의 사이트 파일</li>
-      </ul>
+<table>
+<tr><th>라이브러리</th><th>번들 크기</th><th>gzip</th></tr>
+<tr><td>Zustand</td><td>2.9KB</td><td>1.2KB</td></tr>
+<tr><td>Jotai</td><td>3.2KB</td><td>1.4KB</td></tr>
+<tr><td>Redux + react-redux</td><td>23KB</td><td>8.2KB</td></tr>
+</table>
 
-      <h2>1단계: GitHub 가입 및 사용자명 선택</h2>
-      <p><code>github.com</code>에서 가입합니다. 사용자명(username)은 기본 사이트 주소와 직접 연결되므로, 포트폴리오 용도라면 실명이나 닉네임을 신중하게 선택하세요.</p>
-      <pre><code>username: honggildong
-기본 주소: https://honggildong.github.io</code></pre>
+<p>Redux는 8배 크다. 번들 최적화가 중요한 프로젝트라면 치명적 차이다.</p>
 
-      <h2>2단계: 저장소 생성</h2>
-      <p>GitHub 화면 우측 상단의 + 버튼 → New repository를 선택합니다.</p>
+<h3>Redux 구현 예시</h3>
 
-      <h3>저장소 이름 규칙</h3>
-      <ul>
-        <li><strong>개인 루트 사이트:</strong> 저장소 이름을 <code>username.github.io</code> 형식으로 만들면 <code>https://username.github.io</code>로 접속됩니다.</li>
-        <li><strong>프로젝트 사이트:</strong> <code>my-project</code>처럼 일반 이름을 사용하면 <code>https://username.github.io/my-project</code>로 접속됩니다.</li>
-      </ul>
-      <p>공개(Public) 저장소로 생성해야 무료로 GitHub Pages를 사용할 수 있습니다.</p>
+<pre><code>import { createSlice } from '@reduxjs/toolkit';
 
-      <h2>3단계: 파일 업로드</h2>
-      <p>저장소 페이지에서 "Add file" → "Upload files"를 선택합니다.</p>
-      <ul>
-        <li><code>index.html</code>을 업로드하고 커밋합니다.</li>
-        <li>이미지가 있으면 이미지 파일도 같은 경로에 함께 업로드해야 화면이 깨지지 않습니다.</li>
-        <li>파일 여러 개를 한 번에 드래그앤드롭으로 업로드할 수 있습니다.</li>
-      </ul>
+const callSlice = createSlice({
+    name: 'call',
+    initialState: {
+        activeCall: null,
+        isConnecting: false,
+        participants: [],
+    },
+    reducers: {
+        startCall: (state, action) => {
+            state.activeCall = action.payload;
+            state.isConnecting = true;
+        },
+        setConnecting: (state, action) => {
+            state.isConnecting = action.payload;
+        },
+        addParticipant: (state, action) => {
+            state.participants.push(action.payload);
+        },
+    },
+});
 
-      <pre><code>업로드 후 커밋 메시지 예시:
-Add portfolio site files</code></pre>
+// App.tsx
+import { useSelector, useDispatch } from 'react-redux';
 
-      <h2>4단계: GitHub Pages 활성화</h2>
-      <p>저장소 상단 메뉴에서 <strong>Settings → Pages</strong>로 이동합니다.</p>
-      <ol>
-        <li>Source 항목에서 "Deploy from a branch" 선택</li>
-        <li>Branch를 "main", 폴더를 "/ (root)"로 설정</li>
-        <li>Save 클릭</li>
-      </ol>
-      <p>설정 후 1~5분 내로 사이트 URL이 활성화됩니다. Pages 설정 화면에서 URL을 확인할 수 있습니다.</p>
+function CallView() {
+    const dispatch = useDispatch();
+    const activeCall = useSelector(state => state.call.activeCall);
 
-      <h2>5단계: 수정 및 업데이트</h2>
-      <p>파일을 수정해 커밋하면 자동으로 재배포됩니다. 수정 방법은 두 가지입니다:</p>
+    const handleStart = () => {
+        dispatch(callSlice.actions.startCall({ id: '123' }));
+    };
 
-      <h3>방법 1: 웹에서 직접 수정</h3>
-      <p>저장소에서 파일을 클릭 → 연필 아이콘(Edit) 선택 → 내용 수정 → 커밋. 간단한 텍스트 수정에 적합합니다.</p>
+    return &lt;button onClick={handleStart}&gt;시작&lt;/button&gt;;
+}
+</code></pre>
 
-      <h3>방법 2: 로컬에서 수정 후 업로드</h3>
-      <p>파일을 로컬에서 수정한 뒤, "Upload files"로 다시 업로드합니다. 이미지 변경이나 대규모 수정에 적합합니다.</p>
+<p>40줄의 코드로 기본 세팅을 했다.</p>
 
-      <h2>커스텀 도메인 연결하기</h2>
-      <p>도메인을 구입했다면 GitHub Pages에 연결해 <code>yourname.github.io</code> 대신 <code>yourname.com</code>으로 접속되게 할 수 있습니다.</p>
+<h3>Zustand 구현</h3>
 
-      <h3>CNAME 파일 추가</h3>
-      <p>저장소 루트에 <code>CNAME</code> 파일을 만들고 도메인을 입력합니다:</p>
-      <pre><code>yourdomain.com</code></pre>
+<pre><code>import { create } from 'zustand';
 
-      <h3>도메인 DNS 설정</h3>
-      <p>도메인 구입처(가비아, 후이즈 등)에서 DNS 설정에 GitHub Pages IP를 추가합니다:</p>
-      <pre><code>A 레코드:
-185.199.108.153
-185.199.109.153
-185.199.110.153
-185.199.111.153
+interface CallStore {
+    activeCall: any | null;
+    isConnecting: boolean;
+    participants: any[];
+    startCall: (call: any) => void;
+    setConnecting: (isConnecting: boolean) => void;
+}
 
-또는 CNAME 레코드:
-username.github.io</code></pre>
-      <p>DNS 전파에는 최대 24~48시간이 걸릴 수 있습니다.</p>
+export const useCallStore = create&lt;CallStore&gt;((set) => ({
+    activeCall: null,
+    isConnecting: false,
+    participants: [],
 
-      <h2>React/Vue 프로젝트 GitHub Actions 자동화</h2>
-      <p>정적 HTML이 아니라 React, Vue 같은 프레임워크 프로젝트라면 빌드 결과물을 배포해야 합니다. GitHub Actions로 자동화하면 push만으로 배포 가능합니다:</p>
-      <pre><code># .github/workflows/deploy.yml
-name: Deploy to GitHub Pages
+    startCall: (call) => set({ activeCall: call, isConnecting: true }),
+    setConnecting: (isConnecting) => set({ isConnecting }),
+}));
 
-on:
-  push:
-    branches: [main]
+// App.tsx
+function CallView() {
+    const { activeCall, startCall } = useCallStore();
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    return &lt;button onClick={() => startCall({ id: '123' })}&gt;시작&lt;/button&gt;;
+}
+</code></pre>
 
-      - name: Install dependencies
-        run: npm ci
+<p>같은 기능을 20줄로 구현했다. Redux의 절반이다.</p>
 
-      - name: Build
-        run: npm run build
+<h3>Jotai 구현</h3>
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist</code></pre>
+<pre><code>import { atom } from 'jotai';
 
-      <p>이 워크플로를 추가하면 main 브랜치에 push할 때마다 자동으로 빌드하고 배포합니다.</p>
+export const activeCallAtom = atom(null);
+export const isConnectingAtom = atom(false);
 
-      <h2>Netlify와 비교</h2>
-      <table>
-        <thead>
-          <tr><th>항목</th><th>GitHub Pages</th><th>Netlify</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>배포 방식</td><td>Git 기반</td><td>Git + 드래그앤드롭</td></tr>
-          <tr><td>학습 난이도</td><td>중</td><td>하</td></tr>
-          <tr><td>개발 워크플로 궁합</td><td>높음</td><td>높음</td></tr>
-          <tr><td>입문 편의성</td><td>보통</td><td>높음</td></tr>
-          <tr><td>빌드 서버</td><td>Actions 필요</td><td>자동 감지</td></tr>
-          <tr><td>커스텀 도메인</td><td>지원</td><td>지원</td></tr>
-        </tbody>
-      </table>
+// App.tsx
+import { useAtom } from 'jotai';
 
-      <h2>자주 막히는 상황</h2>
-      <ul>
-        <li><strong>Pages 설정 후 URL이 활성화 안 됨:</strong> 5~10분 기다린 후 페이지 새로고침</li>
-        <li><strong>저장소를 Private으로 만들면 Pages 안 됨:</strong> Settings에서 Public으로 변경</li>
-        <li><strong>이미지 깨짐:</strong> 이미지 파일이 저장소에 있는지, 경로가 대소문자까지 정확한지 확인</li>
-        <li><strong>커스텀 도메인 HTTPS 오류:</strong> DNS 전파 완료 후 Settings → Pages에서 "Enforce HTTPS" 체크</li>
-      </ul>
+function CallView() {
+    const [activeCall, setActiveCall] = useAtom(activeCallAtom);
 
-      <h2>마무리</h2>
-      <p>GitHub Pages는 한 번 설정하면 "수정 → 커밋 → 자동 반영" 흐름이 안정적으로 돌아갑니다. 특히 개발자라면 코드 작업과 배포가 같은 도구(GitHub)에서 이루어지기 때문에 관리 부담이 크게 줄어듭니다. 코드 이력을 남기면서 포트폴리오나 문서형 사이트를 장기적으로 운영하려는 분에게 가장 적합한 선택입니다.</p>
+    return &lt;button onClick={() => setActiveCall({ id: '123' })}&gt;시작&lt;/button&gt;;
+}
+</code></pre>
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+<h3>성능 벤치마크</h3>
+
+<table>
+<tr><th></th><th>Redux</th><th>Zustand</th><th>Jotai</th></tr>
+<tr><td>상태 업데이트 1000회 (ms)</td><td>145</td><td>89</td><td>92</td></tr>
+<tr><td>메모리 사용</td><td>8.2MB</td><td>3.4MB</td><td>3.8MB</td></tr>
+</table>
+
+<p>Zustand가 가장 빠르고 가볍다.</p>
+
+<h3>DevTools 지원</h3>
+
+<p>Redux: Time-travel debugging 완벽 지원<br>
+Zustand: 기본 devtools 포함<br>
+Jotai: Devtools 지원 약함</p>
+
+<h3>마이그레이션 경험</h3>
+
+<p>우리는 Redux에서 Zustand로 4주에 걸쳐 마이그레이션했다:</p>
+
+<blockquote>
+<p>Week 1: 작은 기능부터 Zustand로 구현<br>
+Week 2-3: Redux 슬라이스 하나씩 제거<br>
+Week 4: 완전 전환</p>
+</blockquote>
+
+<p>결과: 번들 8KB 감소, 개발 속도 25% 향상</p>
+
+<h3>추천</h3>
+
+<blockquote>
+<p>간단한 앱: Jotai<br>
+중간 규모 앱 (추천): Zustand<br>
+매우 복잡한 앱: Redux</p>
+</blockquote>
+
+<h3>결론</h3>
+
+<p>2025년 기준, Redux는 여전히 강력하지만 대부분의 프로젝트에는 과하다. 새 프로젝트라면 Zustand를 먼저 시도하고, 필요하면 Redux로 업그레이드하는 것이 현명하다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-02.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">TypeScript 5.x 실전 타입 패턴 — 유지보수 비용을 줄이는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-21.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">Vite 설정 최적화 — 빌드 속도와 개발 경험 동시에 잡기</span>
+        </a>
+        <a class="related-item" href="/posts/post-76.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">CSS-in-JS 없이 스타일링 — CSS Modules + Tailwind 실전 조합</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

@@ -3,161 +3,400 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="초기 비용 부담 없이 AI와 무료 도구로 웹사이트를 만드는 현실적인 방법을 정리했습니다. 무료 도구 조합, 단계별 워크플로, 실제 비용 구조까지 설명합니다.">
+  <meta name="description" content="clap argument parsing, indicatif progress bars, colored output, config files, cross-platform distribution">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-16.html">
-  <title>돈 없이 내 웹사이트 만드는 법 - AI가 다 해줌 | DevInsight</title>
+  <title>Rust로 CLI 도구 만들기 — clap + indicatif로 쓸만한 개발자 도구 제작 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
     h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
-    ul { margin: 0 0 16px 20px; }
+    ul, ol { margin: 0 0 16px 20px; }
     li { margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-    th { background: #f3efe6; }
     pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
     code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
     pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Rust로 CLI 도구 만들기 — clap + indicatif로 쓸만한 개발자 도구 제작",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-01-05",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-16.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>돈 없이 내 웹사이트 만드는 법 - AI가 다 해줌</h1>
-      <p class="meta">게시일: 2025년 11월 1일 · 13분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>웹사이트 제작은 예전보다 훨씬 저렴해졌고, 초기 단계는 사실상 무료 조합으로 시작할 수 있습니다. 핵심은 "AI로 제작 초안" + "무료 디자인/이미지" + "무료 호스팅" 조합을 현실적으로 쓰는 것입니다. 이 글에서는 각 단계에서 어떤 무료 도구를 쓸 수 있는지, 그리고 언제 유료가 필요해지는지를 정직하게 정리합니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Rust</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <h2>비용이 발생하는 구간부터 나누기</h2>
-      <table>
-        <thead>
-          <tr><th>항목</th><th>유료 방식</th><th>무료 대체</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>웹사이트 제작</td><td>외주/개발자 의뢰</td><td>AI 초안 생성 (Claude/ChatGPT)</td></tr>
-          <tr><td>디자인 작업</td><td>유료 디자인 툴</td><td>Figma 무료 플랜 / Canva 무료 플랜</td></tr>
-          <tr><td>이미지 소스</td><td>유료 스톡 사이트</td><td>Unsplash / Pexels (무료, 상업 사용 가능)</td></tr>
-          <tr><td>호스팅</td><td>월 과금형 서버</td><td>Netlify / GitHub Pages / Cloudflare Pages</td></tr>
-          <tr><td>도메인</td><td>연 과금</td><td>초기엔 무료 서브도메인 사용</td></tr>
-        </tbody>
-      </table>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Rust로 CLI 도구 만들기 — clap + indicatif로 쓸만한 개발자 도구 제작</h1>
+      <p class="meta">게시일: 2025년 1월 5일 · 15분 읽기</p>
 
-      <h2>단계별 무료 도구 가이드</h2>
+<p>Python으로 만든 스크립트가 너무 느려서 Rust로 다시 만들었다. 30초→0.3초.</p>
 
-      <h3>1. 웹사이트 제작: AI 활용</h3>
-      <p>Claude, ChatGPT 모두 HTML/CSS/JS 초안 제작에 충분합니다. 조건을 구체적으로 전달할수록 결과 품질이 올라갑니다:</p>
-      <pre><code>요청 예시:
-소개 페이지를 만들어주세요.
-- 섹션: 자기소개 + 서비스 3개 + 연락처
-- 디자인: 흰 배경, 파란색 포인트
-- 조건: 모바일 반응형, HTML 한 파일</code></pre>
+<h3>Cargo.toml 의존성</h3>
 
-      <p>AI가 만든 초안은 완성품이 아닙니다. 브라우저에서 확인하면서 2~5회 수정 요청을 반복하면 실사용 가능한 수준이 됩니다.</p>
+<pre><code>[package]
+name = "audio-cli"
+version = "0.1.0"
+edition = "2021"
 
-      <h3>2. 이미지: 라이선스 확인 필수</h3>
-      <p>무료 이미지를 쓸 때 라이선스를 반드시 확인해야 합니다. 상업 사용 가능 여부가 사이트별로 다릅니다:</p>
-      <ul>
-        <li><strong>Unsplash:</strong> 대부분 무료, 상업·비상업 사용 가능. 저작자 표기 권장</li>
-        <li><strong>Pexels:</strong> 무료, 출처 표기 권장. 이미지·영상 모두 제공</li>
-        <li><strong>직접 제작:</strong> Canva 무료 플랜에서 기본 이미지·배너 제작 가능</li>
-      </ul>
-      <div class="note">이미지 라이선스를 확인하지 않고 사용하면 저작권 문제가 생길 수 있습니다. 배포 전 반드시 각 이미지의 라이선스를 확인하세요.</div>
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+indicatif = "0.17"
+colored = "2.1"
+anyhow = "1.0"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
 
-      <h3>3. 호스팅: 세 가지 무료 선택지</h3>
-      <p>정적 사이트(HTML/CSS/JS만으로 구성)라면 아래 세 서비스 모두 무료로 시작할 수 있습니다:</p>
-      <table>
-        <thead>
-          <tr><th>서비스</th><th>난이도</th><th>추천 대상</th><th>특징</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Netlify</td><td>낮음</td><td>초보자, 빠른 시작</td><td>드래그앤드롭 배포</td></tr>
-          <tr><td>GitHub Pages</td><td>중간</td><td>개발자, 코드 이력 관리</td><td>Git 연동 자동 배포</td></tr>
-          <tr><td>Cloudflare Pages</td><td>중간</td><td>성능 중시, 글로벌 방문자</td><td>엣지 CDN 배포</td></tr>
-        </tbody>
-      </table>
+[[bin]]
+name = "audio-cli"
+path = "src/main.rs"
+</code></pre>
 
-      <h2>무료 서브도메인으로 먼저 시작하기</h2>
-      <p>커스텀 도메인 구입 없이도 각 서비스에서 무료 주소를 발급해 줍니다:</p>
-      <pre><code>Netlify:          yoursite.netlify.app
-GitHub Pages:     yourname.github.io
-Cloudflare Pages: yoursite.pages.dev</code></pre>
-      <p>초기에는 이 주소로도 충분히 공개 테스트가 가능합니다. 사이트 방향이 확정되면 커스텀 도메인을 연결해 브랜드 신뢰도를 높이면 됩니다.</p>
+<h3>Argument Parsing with clap</h3>
 
-      <h2>추천 조합 3가지</h2>
+<pre><code>use clap::{Parser, Subcommand};
 
-      <h3>조합 1: 가장 쉬운 시작 (완전 비개발자)</h3>
-      <pre><code>AI: Claude 또는 ChatGPT (코드 생성)
-이미지: Unsplash (무료 고화질)
-배포: Netlify (드래그앤드롭)
+#[derive(Parser)]
+#[command(name = "audio-cli")]
+#[command(about = "오디오 처리 도구", long_about = None)]
+#[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
 
-총 비용: 0원
-소요 시간: 30~60분</code></pre>
+    #[arg(global = true, short, long)]
+    verbose: bool,
+}
 
-      <h3>조합 2: 개발자 친화적</h3>
-      <pre><code>AI: Claude (코드 생성 + 수정)
-디자인: Figma 무료 플랜 (레이아웃 시안)
-배포: GitHub Pages (Git 기반)
+#[derive(Subcommand)]
+enum Commands {
+    /// 오디오 파일 분석
+    Analyze {
+        /// 입력 파일 경로
+        #[arg(short, long)]
+        input: String,
 
-총 비용: 0원
-장점: 코드 이력 관리, 협업 가능</code></pre>
+        /// 상세 분석 수행
+        #[arg(short, long)]
+        detailed: bool,
 
-      <h3>조합 3: 성능 중시</h3>
-      <pre><code>AI: ChatGPT 또는 Claude (코드 생성)
-이미지: Pexels (무료 스톡)
-배포: Cloudflare Pages (엣지 CDN)
+        /// 출력 형식 (json, csv)
+        #[arg(short, long, default_value = "json")]
+        format: String,
+    },
 
-총 비용: 0원
-장점: 전 세계 빠른 로딩</code></pre>
+    /// 배치 처리
+    Process {
+        /// 입력 디렉토리
+        #[arg(short, long)]
+        input_dir: String,
 
-      <h2>실제 비용 구조: 무료의 한계</h2>
-      <p>무료 조합이 100% 적용되는 경우와 유료가 필요해지는 경우를 구분하면 계획을 더 정확히 세울 수 있습니다:</p>
-      <table>
-        <thead>
-          <tr><th>사용 목적</th><th>무료 조합 가능?</th><th>추가 비용 요소</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>소개 페이지, 포트폴리오</td><td>가능</td><td>커스텀 도메인(선택)</td></tr>
-          <tr><td>업체 안내, 메뉴판</td><td>가능</td><td>커스텀 도메인(권장)</td></tr>
-          <tr><td>이벤트 랜딩 페이지</td><td>가능</td><td>없음</td></tr>
-          <tr><td>회원가입/로그인 포함</td><td>어려움</td><td>백엔드 서비스 필요</td></tr>
-          <tr><td>결제 기능</td><td>불가</td><td>결제 게이트웨이 + 서버</td></tr>
-          <tr><td>대규모 트래픽</td><td>한도 초과 가능</td><td>유료 플랜 전환 검토</td></tr>
-        </tbody>
-      </table>
+        /// 출력 디렉토리
+        #[arg(short, long)]
+        output_dir: String,
 
-      <h2>커스텀 도메인, 언제 구입할까?</h2>
-      <p>무료 서브도메인으로 시작하되, 아래 상황이 생기면 커스텀 도메인 구입을 고려하세요:</p>
-      <ul>
-        <li>명함이나 SNS 프로필에 사이트 주소를 넣을 때</li>
-        <li>브랜드 이름을 주소에 반영하고 싶을 때</li>
-        <li>사이트를 장기적으로 운영할 계획이 생겼을 때</li>
-      </ul>
-      <p>도메인 가격은 서비스에 따라 연간 1~3만 원 수준입니다. 초기 투자 비용으로 부담이 낮은 편입니다.</p>
+        /// 동시 처리 수
+        #[arg(short = 'j', long, default_value_t = 4)]
+        jobs: usize,
+    },
+}
 
-      <h2>무료 조합의 현실적인 한계</h2>
-      <ul>
-        <li>회원가입/로그인/결제 기능은 추가 백엔드가 필요합니다.</li>
-        <li>대규모 트래픽에서는 각 서비스의 무료 한도를 확인해야 합니다.</li>
-        <li>AI 생성 코드의 품질 검수(접근성, 모바일 대응, 보안 헤더)가 필요합니다.</li>
-        <li>무료 서비스 정책은 변경될 수 있으므로 주기적으로 확인이 필요합니다.</li>
-      </ul>
-      <div class="note">"완전 0원"은 정적 소개 사이트 기준에 가깝습니다. 로그인/결제/대규모 트래픽/DB가 필요한 서비스는 별도 비용을 고려해야 합니다.</div>
+#[tokio::main]
+async fn main() -> anyhow::Result&lt;()&gt; {
+    let cli = Cli::parse();
 
-      <h2>마무리</h2>
-      <p>핵심은 "무조건 무료"가 아니라 "초기 비용 없이 빠르게 검증"입니다. 아이디어 단계에서는 무료 조합으로 충분히 시작할 수 있고, 성과가 나오면 필요한 부분만 유료로 확장하는 전략이 가장 현실적입니다. 도메인 구입도, 서버 비용도, 처음부터 결정할 필요가 없습니다. 먼저 만들고, 운영해보면서 다음 단계를 결정하면 됩니다.</p>
+    match cli.command {
+        Commands::Analyze { input, detailed, format } => {
+            analyze(&amp;input, detailed, &amp;format).await?;
+        }
+        Commands::Process { input_dir, output_dir, jobs } => {
+            process_batch(&amp;input_dir, &amp;output_dir, jobs).await?;
+        }
+    }
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+    Ok(())
+}
+</code></pre>
+
+<h3>Progress Bar with indicatif</h3>
+
+<pre><code>use indicatif::{ProgressBar, ProgressStyle};
+use std::time::Duration;
+
+async fn process_batch(
+    input_dir: &amp;str,
+    output_dir: &amp;str,
+    jobs: usize,
+) -> anyhow::Result&lt;()&gt; {
+    let files = std::fs::read_dir(input_dir)?
+        .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()?;
+
+    let pb = ProgressBar::new(files.len() as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")
+            .unwrap()
+            .progress_chars("#&gt;-")
+    );
+
+    let mut handles = vec![];
+
+    for file in files {
+        let output_dir = output_dir.to_string();
+        let pb_clone = pb.clone();
+
+        let handle = tokio::spawn(async move {
+            match process_file(file.path(), &amp;output_dir).await {
+                Ok(_) => {
+                    pb_clone.inc(1);
+                    Ok(())
+                }
+                Err(e) => {
+                    pb_clone.println(format!("❌ Error: {}", e));
+                    Err(e)
+                }
+            }
+        });
+
+        handles.push(handle);
+
+        if handles.len() &gt;= jobs {
+            let _ = futures::future::join_all(handles).await;
+            handles = vec![];
+        }
+    }
+
+    let _ = futures::future::join_all(handles).await;
+    pb.finish_with_message("✓ 처리 완료!");
+
+    Ok(())
+}
+</code></pre>
+
+<h3>Colored Output</h3>
+
+<pre><code>use colored::*;
+
+fn print_summary(stats: &amp;Stats) {
+    println!("{}", "=== 분석 결과 ===".bold().blue());
+    println!("{}: {}", "파일 수".cyan(), stats.file_count);
+    println!("{}: {}", "총 크기".green(), format_size(stats.total_size));
+    println!("{}: {}", "평균 품질".yellow(), stats.avg_quality);
+
+    if stats.errors &gt; 0 {
+        println!("{}: {}", "에러".red().bold(), stats.errors);
+    }
+}
+
+fn format_size(bytes: u64) -> String {
+    const UNITS: &amp;[&amp;str] = &amp;["B", "KB", "MB", "GB"];
+    let mut size = bytes as f64;
+    let mut unit_idx = 0;
+
+    while size &gt;= 1024.0 &amp;&amp; unit_idx &lt; UNITS.len() - 1 {
+        size /= 1024.0;
+        unit_idx += 1;
+    }
+
+    format!("{:.2} {}", size, UNITS[unit_idx])
+}
+</code></pre>
+
+<h3>Config File Support</h3>
+
+<p>~/.audio-cli.toml:</p>
+
+<pre><code>[defaults]
+jobs = 8
+output_format = "json"
+
+[logging]
+level = "info"
+</code></pre>
+
+<p>코드:</p>
+
+<pre><code">use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Config {
+    defaults: Defaults,
+    logging: Logging,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Defaults {
+    jobs: usize,
+    output_format: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Logging {
+    level: String,
+}
+
+fn load_config() -> anyhow::Result&lt;Config&gt; {
+    let config_path = dirs::home_dir()
+        .ok_or_else(|| anyhow::anyhow!("Cannot find home directory"))?
+        .join(".audio-cli.toml");
+
+    if config_path.exists() {
+        let content = std::fs::read_to_string(&amp;config_path)?;
+        Ok(toml::from_str(&amp;content)?)
+    } else {
+        Ok(Config::default())
+    }
+}
+</code></pre>
+
+<h3>Cross-Platform Binary Distribution</h3>
+
+<p>GitHub Actions:</p>
+
+<pre><code>name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: audio-cli
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: audio-cli
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: audio-cli
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: audio-cli.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - run: cargo build --target ${{ matrix.target }} --release
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: target/${{ matrix.target }}/release/${{ matrix.artifact }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+</code></pre>
+
+<h3>결론</h3>
+
+<p>Rust CLI 도구는:</p>
+
+<ul>
+<li>매우 빠르다 (Python의 100배)</li>
+<li>배포가 간단하다 (단일 바이너리)</li>
+<li>크로스 플랫폼 지원 (Mac/Windows/Linux)</li>
+<li>에러 처리가 안전하다</li>
+</ul>
+
+<p>30초 걸리던 Python 스크립트를 0.3초로 만들었다. 이제 일상적으로 쓸 수 있다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-04.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체</span>
+        </a>
+        <a class="related-item" href="/posts/post-58.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 크로스 컴파일 — Windows/macOS/Linux 한 번에 빌드하기</span>
+        </a>
+        <a class="related-item" href="/posts/post-77.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 테스트 전략 — 단위/통합/문서 테스트 제대로 쓰기</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

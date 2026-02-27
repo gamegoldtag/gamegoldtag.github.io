@@ -3,18 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Cloudflare Pages로 정적 사이트를 빠르게 배포하는 방법과 GitHub Pages/Netlify 비교를 정리했습니다. Direct Upload부터 Git 자동 배포, 커스텀 도메인까지 설명합니다.">
+  <meta name="description" content="useDebounce, useLocalStorage, useMediaQuery, usePrevious, useIntersectionObserver, useFetch 등">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-19.html">
-  <title>Cloudflare Pages - 빠른 무료 호스팅 가이드 | DevInsight</title>
+  <title>React Hook 커스텀 패턴 — 실무에서 자주 쓰는 10가지 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
     h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
@@ -22,134 +24,311 @@
     pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
     code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
     pre code { background: none; padding: 0; }
-    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-    th { background: #f3efe6; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "React Hook 커스텀 패턴 — 실무에서 자주 쓰는 10가지",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-02-14",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-19.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>Cloudflare Pages - GitHub Pages보다 빠른 무료 호스팅?</h1>
-      <p class="meta">게시일: 2025년 10월 10일 · 14분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>Cloudflare Pages는 전 세계 엣지 네트워크를 기반으로 정적 사이트를 배포할 수 있는 서비스입니다. 무료 플랜만으로도 시작이 가능하고, Direct Upload와 Git 연동을 모두 지원합니다. 특히 방문자가 전 세계에 분산되어 있거나, 한국 이외 지역에서 빠른 로딩이 필요한 경우 눈에 띄는 차이를 경험할 수 있습니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Frontend</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <h2>Cloudflare Pages가 주목받는 이유</h2>
-      <p>핵심은 엣지(Edge) 배포입니다. 기존 호스팅은 특정 서버 위치에서 파일을 제공하지만, Cloudflare Pages는 전 세계 200여 개 데이터센터에 콘텐츠를 분산해 방문자와 가장 가까운 위치에서 제공합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>React Hook 커스텀 패턴 — 실무에서 자주 쓰는 10가지</h1>
+      <p class="meta">게시일: 2025년 2월 14일 · 16분 읽기</p>
 
-      <p>예를 들어 서울에 있는 서버에서만 파일을 제공하면, 미국·유럽·동남아시아 방문자는 물리적 거리 때문에 로딩이 느립니다. Cloudflare는 이 문제를 자동으로 해결합니다.</p>
+<p>매번 새로 만들다가 결국 사내 hook 라이브러리를 만들었다. 이 10개 hook만 있어도 대부분의 프로젝트를 커버할 수 있다.</p>
 
-      <div class="note">트래픽/빌드 횟수/기능 한도는 시점별로 달라질 수 있으므로, 적용 전 Cloudflare 공식 플랜 안내를 확인하세요.</div>
+<h3>1. useDebounce</h3>
 
-      <h2>준비물</h2>
-      <ul>
-        <li>Cloudflare 계정 (cloudflare.com 무료 가입)</li>
-        <li>배포할 사이트 폴더 (<code>index.html</code> 포함)</li>
-        <li>선택 사항: GitHub 저장소 (자동 배포용)</li>
-      </ul>
+<pre><code>function useDebounce&lt;T&gt;(value: T, delay: number = 500): T {
+    const [debouncedValue, setDebouncedValue] = useState(value);
 
-      <h2>배포 방법 2가지</h2>
-      <p>Cloudflare Pages는 두 가지 배포 방식을 모두 지원합니다. 처음 시작할 때는 Direct Upload가 가장 빠르고, 운영 단계로 넘어가면 Git 연동으로 전환하는 것이 효율적입니다.</p>
-      <table>
-        <thead>
-          <tr><th>방식</th><th>특징</th><th>추천 상황</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Direct Upload</td><td>폴더 직접 업로드, 즉시 배포</td><td>처음 시작, 빠른 테스트</td></tr>
-          <tr><td>Git 연동</td><td>push 시 자동 빌드/배포</td><td>운영 단계, 지속 업데이트</td></tr>
-        </tbody>
-      </table>
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
 
-      <h2>방법 1: Direct Upload (초기 배포)</h2>
-      <ol>
-        <li>Cloudflare 로그인 후 <strong>Workers &amp; Pages</strong>로 이동</li>
-        <li><strong>Create</strong> 클릭 후 <strong>Pages</strong> 탭 선택</li>
-        <li><strong>Direct Upload</strong>를 선택하고 프로젝트 이름 지정</li>
-        <li>사이트 파일이 있는 폴더를 업로드 영역에 드래그앤드롭</li>
-        <li><strong>Deploy site</strong> 버튼 클릭</li>
-      </ol>
-      <p>배포 완료 후 <code>project-name.pages.dev</code> 형식의 주소가 발급됩니다.</p>
+        return () => clearTimeout(timer);
+    }, [value, delay]);
 
-      <h3>파일 업데이트 방법</h3>
-      <p>수정 후 재배포하려면 프로젝트 페이지에서 "Create new deployment"를 선택하고 새 폴더를 업로드합니다. 이전 배포 이력도 유지됩니다.</p>
+    return debouncedValue;
+}
+</code></pre>
 
-      <h2>방법 2: GitHub 연동 (자동 배포)</h2>
-      <ol>
-        <li>Workers &amp; Pages → Create → Pages → <strong>Connect to Git</strong> 선택</li>
-        <li>GitHub 계정 연결 후 저장소 선택</li>
-        <li>빌드 설정 입력:
-          <ul>
-            <li>정적 HTML: 빌드 명령 없음, 출력 디렉터리 비워두기</li>
-            <li>React (Vite): 빌드 명령 <code>npm run build</code>, 출력 <code>dist</code></li>
-            <li>Next.js: 빌드 명령 <code>npm run build</code>, 출력 <code>.next</code></li>
-          </ul>
-        </li>
-        <li><strong>Save and Deploy</strong> 클릭</li>
-      </ol>
-      <p>이후 GitHub에 push할 때마다 자동으로 빌드하고 배포합니다. 배포 상태는 Pages 대시보드에서 실시간으로 확인할 수 있습니다.</p>
+<h3>2. useLocalStorage</h3>
 
-      <h2>커스텀 도메인 연결하기</h2>
-      <p>Cloudflare Pages에서 커스텀 도메인을 연결하면 추가 SSL 설정 없이 자동으로 HTTPS가 적용됩니다. 특히 도메인이 이미 Cloudflare에서 관리되고 있다면 클릭 몇 번으로 연결됩니다.</p>
+<pre><code>function useLocalStorage&lt;T&gt;(key: string, initialValue: T) {
+    const [storedValue, setStoredValue] = useState&lt;T&gt;(() => {
+        try {
+            const item = window.localStorage.getItem(key);
+            return item ? JSON.parse(item) : initialValue;
+        } catch {
+            return initialValue;
+        }
+    });
 
-      <h3>도메인 연결 과정</h3>
-      <ol>
-        <li>Pages 프로젝트 → Custom domains → Add a custom domain</li>
-        <li>도메인 입력 후 Continue</li>
-        <li>Cloudflare 관리 도메인: 자동으로 DNS 레코드 추가</li>
-        <li>외부 도메인: CNAME 레코드를 도메인 관리 패널에서 직접 추가</li>
-      </ol>
-      <pre><code>CNAME 레코드 예시:
-이름: www (또는 @)
-값: project-name.pages.dev</code></pre>
+    const setValue = (value: T | ((val: T) => T)) => {
+        try {
+            const valueToStore = value instanceof Function ? value(storedValue) : value;
+            setStoredValue(valueToStore);
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
-      <h2>서비스 비교</h2>
-      <table>
-        <thead>
-          <tr><th>항목</th><th>GitHub Pages</th><th>Netlify</th><th>Cloudflare Pages</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>입문 난이도</td><td>중</td><td>하</td><td>하~중</td></tr>
-          <tr><td>배포 방식</td><td>Git 중심</td><td>Git + 업로드</td><td>Git + 업로드</td></tr>
-          <tr><td>엣지 CDN</td><td>제한적</td><td>지원</td><td>강점</td></tr>
-          <tr><td>글로벌 성능</td><td>보통</td><td>좋음</td><td>매우 좋음</td></tr>
-          <tr><td>무료 커스텀 도메인</td><td>지원</td><td>지원</td><td>지원</td></tr>
-          <tr><td>적합한 경우</td><td>개발자 워크플로</td><td>빠른 시작</td><td>성능/글로벌 트래픽</td></tr>
-        </tbody>
-      </table>
+    return [storedValue, setValue] as const;
+}
 
-      <h2>Cloudflare Pages 선택이 유리한 상황</h2>
-      <ul>
-        <li>사이트 방문자가 한국 이외 지역에도 분산되어 있는 경우</li>
-        <li>이미 Cloudflare에서 도메인을 관리하고 있는 경우</li>
-        <li>가능한 빠른 로딩 속도가 중요한 경우 (이커머스, 랜딩 페이지)</li>
-        <li>Direct Upload와 Git 연동을 상황에 따라 유연하게 전환하고 싶은 경우</li>
-      </ul>
+// 사용
+function App() {
+    const [theme, setTheme] = useLocalStorage('theme', 'light');
+    return &lt;button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}&gt;Toggle&lt;/button&gt;;
+}
+</code></pre>
 
-      <h2>자주 막히는 상황</h2>
-      <ul>
-        <li><strong>배포 후 "Page Not Found" 오류:</strong> <code>index.html</code>이 폴더 루트에 있는지 확인</li>
-        <li><strong>이미지 안 보임:</strong> 이미지 파일이 같은 폴더에 있고, 파일명 대소문자가 정확한지 확인</li>
-        <li><strong>React/Vue 빌드 실패:</strong> Node.js 버전을 프로젝트 요건에 맞게 Environment Variables에서 설정</li>
-        <li><strong>커스텀 도메인 SSL 오류:</strong> DNS 설정 후 최대 24시간까지 대기 필요</li>
-      </ul>
+<h3>3. useMediaQuery</h3>
 
-      <h2>무엇을 선택할까?</h2>
-      <ul>
-        <li><strong>완전 입문, 빠른 시작:</strong> Netlify</li>
-        <li><strong>Git 기반 개발 워크플로:</strong> GitHub Pages</li>
-        <li><strong>글로벌 성능, 확장성:</strong> Cloudflare Pages</li>
-        <li><strong>Next.js 프로젝트:</strong> Vercel</li>
-      </ul>
+<pre><code>function useMediaQuery(query: string): boolean {
+    const [matches, setMatches] = useState(false);
 
-      <h2>마무리</h2>
-      <p>Cloudflare Pages는 무료 시작, 빠른 배포, Git 자동화까지 균형이 좋은 선택지입니다. 특히 방문자 지역이 다양한 사이트나, 이미 Cloudflare로 도메인을 관리하는 경우라면 후보군에 반드시 넣을 만합니다. 처음 배포는 Direct Upload로 빠르게 시작하고, 운영이 안정화되면 Git 연동으로 전환하는 방식이 가장 효율적입니다.</p>
+    useEffect(() => {
+        const mediaQuery = window.matchMedia(query);
+        setMatches(mediaQuery.matches);
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+        const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+        mediaQuery.addEventListener('change', handler);
+
+        return () => mediaQuery.removeEventListener('change', handler);
+    }, [query]);
+
+    return matches;
+}
+
+// 사용
+function ResponsiveComponent() {
+    const isMobile = useMediaQuery('(max-width: 768px)');
+    return isMobile ? &lt;MobileView /&gt; : &lt;DesktopView /&gt;;
+}
+</code></pre>
+
+<h3>4. usePrevious</h3>
+
+<pre><code>function usePrevious&lt;T&gt;(value: T): T | undefined {
+    const ref = useRef&lt;T&gt;();
+
+    useEffect(() => {
+        ref.current = value;
+    }, [value]);
+
+    return ref.current;
+}
+</code></pre>
+
+<h3>5. useIntersectionObserver</h3>
+
+<pre><code>function useIntersectionObserver(
+    ref: RefObject&lt;HTMLElement&gt;,
+    options: IntersectionObserverInit = {}
+): IntersectionObserverEntry | null {
+    const [entry, setEntry] = useState&lt;IntersectionObserverEntry | null&gt;(null);
+
+    useEffect(() => {
+        if (!ref.current) return;
+
+        const observer = new IntersectionObserver(([entry]) => {
+            setEntry(entry);
+        }, options);
+
+        observer.observe(ref.current);
+
+        return () => observer.disconnect();
+    }, [ref, options]);
+
+    return entry;
+}
+
+// 사용: 이미지 lazy loading
+function LazyLoadImage() {
+    const ref = useRef&lt;HTMLImageElement&gt;(null);
+    const entry = useIntersectionObserver(ref);
+
+    return (
+        &lt;img
+            ref={ref}
+            src={entry?.isIntersecting ? 'image.jpg' : 'placeholder.jpg'}
+        /&gt;
+    );
+}
+</code></pre>
+
+<h3>6. useFetch</h3>
+
+<pre><code>interface UseFetchState&lt;T&gt; {
+    data: T | null;
+    loading: boolean;
+    error: Error | null;
+}
+
+function useFetch&lt;T&gt;(url: string): UseFetchState&lt;T&gt; {
+    const [state, setState] = useState&lt;UseFetchState&lt;T&gt;&gt;({
+        data: null,
+        loading: true,
+        error: null,
+    });
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        (async () => {
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                const data = await response.json();
+                setState({ data, loading: false, error: null });
+            } catch (error) {
+                setState({ data: null, loading: false, error: error as Error });
+            }
+        })();
+
+        return () => controller.abort();
+    }, [url]);
+
+    return state;
+}
+
+// 사용
+function UserProfile() {
+    const { data, loading, error } = useFetch('/api/user/123');
+
+    if (loading) return &lt;div&gt;Loading...&lt;/div&gt;;
+    if (error) return &lt;div&gt;Error: {error.message}&lt;/div&gt;;
+
+    return &lt;div&gt;{data?.name}&lt;/div&gt;;
+}
+</code></pre>
+
+<h3>추가 패턴</h3>
+
+<p>다른 유용한 hook들:</p>
+
+<ul>
+<li>useAsync: 비동기 작업 처리 및 캐싱</li>
+<li>useToggle: boolean 상태 토글</li>
+<li>useMounted: hydration mismatch 방지</li>
+<li>useUpdateEffect: mount 때 실행 안 함</li>
+</ul>
+
+<h3>Hook 라이브러리화</h3>
+
+<p>이 hook들을 npm 패키지로 만들어 팀이 공유할 수 있다:</p>
+
+<pre><code>// package.json
+{
+    "name": "@company/react-hooks",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+}
+
+// index.ts
+export { useDebounce } from './useDebounce';
+export { useLocalStorage } from './useLocalStorage';
+export { useMediaQuery } from './useMediaQuery';
+export { usePrevious } from './usePrevious';
+export { useIntersectionObserver } from './useIntersectionObserver';
+export { useFetch } from './useFetch';
+</code></pre>
+
+<p>모든 프로젝트에서:</p>
+
+<pre><code>import { useDebounce, useLocalStorage, useFetch } from '@company/react-hooks';
+</code></pre>
+
+<h3>결론</h3>
+
+<p>이 10개 hook만 있어도 대부분의 React 프로젝트를 커버할 수 있다. 매번 새로 만드는 대신, 라이브러리로 만들어 팀이 공유하면 개발 속도가 크게 올라간다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-02.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">TypeScript 5.x 실전 타입 패턴 — 유지보수 비용을 줄이는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-21.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">Vite 설정 최적화 — 빌드 속도와 개발 경험 동시에 잡기</span>
+        </a>
+        <a class="related-item" href="/posts/post-76.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">CSS-in-JS 없이 스타일링 — CSS Modules + Tailwind 실전 조합</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

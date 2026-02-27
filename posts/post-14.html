@@ -3,18 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="코딩을 몰라도 AI를 활용해 포트폴리오 사이트를 만들고 배포하는 방법을 단계별로 정리했습니다. 프롬프트 예시, 이미지 교체, 무료 배포까지 실전 가이드입니다.">
+  <meta name="description" content="electron-updater 설정, 코드 서명, differential updates, S3/GitHub hosting, 무한 루프 버그">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-14.html">
-  <title>코딩 몰라도 AI로 내 포트폴리오 사이트 만들기 | DevInsight</title>
+  <title>Electron 자동 업데이트 구현 삽질기 — electron-updater의 함정들 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
     h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
@@ -25,139 +27,349 @@
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Electron 자동 업데이트 구현 삽질기 — electron-updater의 함정들",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-12-06",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-14.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>코딩 몰라도 AI로 내 포트폴리오 사이트 만들기</h1>
-      <p class="meta">게시일: 2025년 11월 15일 · 14분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>취업 준비나 프리랜서 활동을 하다 보면 포트폴리오 사이트가 필요해집니다. "개발을 배워야 하나?"라는 고민이 생기지만, AI 도구를 활용하면 코딩 경험 없이도 기본형 사이트를 만들 수 있습니다. 핵심은 코드 작성 자체보다, 원하는 구조를 정확히 설명하고 반복 수정하는 과정입니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Electron</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <p>이 글은 디자이너, 사진작가, 프리랜서, 취준생 등 코딩 경험이 없는 분들을 위한 실전 가이드입니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Electron 자동 업데이트 구현 삽질기 — electron-updater의 함정들</h1>
+      <p class="meta">게시일: 2024년 12월 6일 · 16분 읽기</p>
 
-      <h2>포트폴리오 사이트에 꼭 들어가야 하는 것들</h2>
-      <p>AI에게 요청하기 전에 포함할 내용을 먼저 정해두면 결과물 품질이 크게 올라갑니다. 기본 포트폴리오에는 다음 네 섹션이 필수입니다:</p>
-      <ul>
-        <li><strong>자기소개:</strong> 이름, 직업/역할, 한 줄 슬로건 또는 강점 요약</li>
-        <li><strong>전문 분야 또는 기술 스택:</strong> 무엇을 잘하는지 구체적으로</li>
-        <li><strong>작업물/프로젝트:</strong> 대표 작업 3~6개, 각 작업 제목+간단 설명</li>
-        <li><strong>연락 채널:</strong> 이메일, SNS, 오픈 카톡 등 실제 연락 가능한 수단</li>
-      </ul>
+<p>업데이트가 무한 루프 빠진 거 인지하는 데 3일 걸렸다. 사용자 컴퓨터는 계속 재부팅을 반복하고 있었다.</p>
 
-      <h2>1단계: 내 정보 먼저 정리하기</h2>
-      <p>프롬프트를 작성하기 전에 아래 형식으로 정보를 먼저 정리하세요. 이 내용이 AI 요청의 기반이 됩니다.</p>
-      <pre><code>이름: 홍길동
-직업: 프리랜서 그래픽 디자이너
-한 줄 소개: 브랜드의 첫인상을 만드는 디자이너
-전문 분야: 로고 디자인, 브랜딩, SNS 콘텐츠 제작
-대표 작업물:
-  - A카페 로고 리브랜딩 (2024)
-  - B쇼핑몰 SNS 콘텐츠 패키지 (2024)
-  - C스타트업 명함/인쇄물 디자인 (2023)
-연락처: hong@email.com
-인스타그램: @honggildong_design</code></pre>
+<h3>Setup: electron-updater 기본</h3>
 
-      <h2>2단계: AI에게 구체적으로 요청하기</h2>
-      <p>ChatGPT 또는 Claude에 기능과 디자인 조건을 함께 지정해서 요청합니다. 막연한 요청보다 레이아웃, 색상, 섹션 구성, 기술 요건을 명시할수록 수정 횟수가 줄어듭니다.</p>
+<pre><code>npm install electron-updater
+</code></pre>
 
-      <h3>실전 프롬프트 예시 (그래픽 디자이너)</h3>
-      <pre><code>포트폴리오 웹사이트를 HTML로 만들어주세요.
+<p>main.ts:</p>
 
-[내 정보]
-이름: 홍길동
-직업: 프리랜서 그래픽 디자이너
-소개: 브랜드의 첫인상을 만드는 디자이너
+<pre><code>import { autoUpdater } from 'electron-updater';
 
-[섹션 구성]
-1) 상단 히어로: 이름 + 직업 + 짧은 소개문 + 연락하기 버튼
-2) 전문 분야: 카드 3개 (로고 디자인 / 브랜딩 / SNS 콘텐츠)
-3) 대표 작업물: 카드 3개, 각각 이미지 영역 + 제목 + 설명 1줄
-4) 연락처: 이메일 아이콘 + 인스타그램 링크
+app.on('ready', () => {
+    autoUpdater.checkForUpdatesAndNotify();
+    // ← 이 한 줄로 끝이라고 생각했다
+});
+</code></pre>
 
-[디자인 조건]
-- 배경: 흰색, 포인트 컬러: 남색(#1a237e)
-- 폰트: Pretendard (CDN)
-- 모바일 반응형 필수
-- HTML/CSS/JS 한 파일
+<p>package.json:</p>
 
-[기타]
-- 한국어
-- 이미지는 work1.jpg, work2.jpg, work3.jpg 파일명 사용</code></pre>
+<pre><code>{
+    "name": "my-app",
+    "version": "1.0.0",
+    "build": {
+        "publish": {
+            "provider": "github",  // 또는 "s3"
+            "owner": "myname",
+            "repo": "my-app"
+        }
+    }
+}
+</code></pre>
 
-      <h3>직업별 프롬프트 포인트</h3>
-      <ul>
-        <li><strong>개발자:</strong> 기술 스택 배지, GitHub 링크, 프로젝트 데모 버튼 요청</li>
-        <li><strong>사진작가:</strong> 풀스크린 그리드 갤러리, 라이트박스 효과 요청</li>
-        <li><strong>번역가/작가:</strong> 작업 유형 목록, 고객사 로고, 후기 섹션 요청</li>
-        <li><strong>강사/컨설턴트:</strong> 경력 타임라인, 수강 후기, 강의 목록 요청</li>
-      </ul>
+<h3>문제 1: Code Signing 필수</h3>
 
-      <h2>3단계: 코드 저장 후 브라우저에서 확인</h2>
-      <p>AI가 생성한 코드를 복사해 <code>index.html</code>로 저장하고 브라우저에서 직접 확인합니다.</p>
-      <ul>
-        <li><strong>Windows:</strong> 메모장 실행 → 코드 붙여넣기 → "파일 형식: 모든 파일"로 변경 → <code>index.html</code>로 저장</li>
-        <li><strong>macOS:</strong> TextEdit 실행 → 포맷 메뉴 → "일반 텍스트 만들기" → 붙여넣기 → <code>index.html</code>로 저장</li>
-        <li><strong>VS Code 추천:</strong> 설치 후 New File → <code>index.html</code> 저장 → 코드 붙여넣기 (미리보기 기능 활용 가능)</li>
-      </ul>
+<p>업데이트가 검증되지 않으면 설치되지 않는다.</p>
 
-      <h2>4단계: 작은 단위로 수정 반복하기</h2>
-      <p>초안을 확인한 뒤, 마음에 안 드는 부분을 한 번에 2~3개씩 묶어서 수정 요청합니다. 한꺼번에 너무 많이 바꾸면 코드가 뒤섞일 수 있습니다.</p>
-      <pre><code>아래 3가지만 수정해주세요:
-1) 작업물 카드의 이미지 영역 높이를 더 크게 (현재 너무 작음)
-2) 연락하기 버튼에 hover 시 색상 변화 효과 추가
-3) 모바일에서 카드가 1열로 표시되도록 수정</code></pre>
+<p>Mac에서:</p>
 
-      <h2>5단계: 실제 작업물 이미지 교체하기</h2>
-      <p>AI 초안에는 대체 이미지 URL이 들어가는 경우가 많습니다. 실제 작업물 이미지를 사용하려면:</p>
-      <ol>
-        <li>작업물 이미지를 <code>index.html</code>과 같은 폴더에 넣기</li>
-        <li>파일명을 코드에 지정한 이름과 동일하게 맞추기</li>
-        <li>이미지 크기가 너무 크면 최대 너비 1200px 이하로 줄이기 (로딩 속도 개선)</li>
-      </ol>
-      <pre><code>&lt;!-- 코드 안의 이미지 태그 --&gt;
-&lt;img src="work1.jpg" alt="A카페 로고 리브랜딩"&gt;
-&lt;img src="work2.jpg" alt="B쇼핑몰 SNS 콘텐츠"&gt;
-&lt;img src="work3.jpg" alt="C스타트업 인쇄물"&gt;</code></pre>
+<pre><code>// package.json build config
+"build": {
+    "mac": {
+        "certificateFile": "path/to/certificate.p12",
+        "certificatePassword": "password"
+    }
+}
+</code></pre>
 
-      <div class="note">작업물 이미지가 없으면 Unsplash(unsplash.com)에서 관련 이미지를 라이선스 확인 후 임시로 사용할 수 있습니다.</div>
+<p>Windows에서:</p>
 
-      <h2>6단계: 무료 호스팅으로 배포하기</h2>
-      <p>Netlify는 폴더를 드래그앤드롭하면 즉시 배포되어 입문자에게 가장 쉽습니다.</p>
+<pre><code>// package.json
+"build": {
+    "win": {
+        "certificateFile": "path/to/certificate.pfx",
+        "certificatePassword": "password"
+    }
+}
+</code></p>
 
-      <h3>Netlify 배포 순서</h3>
-      <ol>
-        <li><code>netlify.com</code> 가입 (이메일 또는 GitHub 계정 사용)</li>
-        <li>대시보드에서 "Add new site" → "Deploy manually" 클릭</li>
-        <li><code>index.html</code>과 이미지 파일이 있는 폴더를 화면에 드래그앤드롭</li>
-        <li>업로드 완료 후 <code>*.netlify.app</code> 주소 확인</li>
-        <li>주소를 SNS, 이메일 서명, 명함 등에 활용</li>
-      </ol>
+<p>없으면:</p>
 
-      <h2>완성도를 높이는 체크리스트</h2>
-      <p>공개 전 아래 항목을 확인하면 완성도가 크게 올라갑니다:</p>
-      <ul>
-        <li>데스크톱과 스마트폰에서 모두 레이아웃 확인</li>
-        <li>이름, 연락처, 이메일 주소 오기입 여부 확인</li>
-        <li>이미지 alt 텍스트가 실제 내용을 설명하는지 확인</li>
-        <li>페이지 제목(<code>&lt;title&gt;</code>)이 이름 또는 사이트 목적을 담고 있는지 확인</li>
-        <li>외부 링크(SNS, GitHub 등)가 실제로 연결되는지 확인</li>
-      </ul>
+<blockquote>
+<p>Error: Code sign failed. Signing certificate not found. Unable to find a matching code signing certificate.</p>
+</blockquote>
 
-      <h2>한계와 체크포인트</h2>
-      <ul>
-        <li>복잡한 기능(로그인/결제/예약 시스템)은 별도 백엔드가 필요합니다.</li>
-        <li>AI 코드 품질은 요청 문맥에 따라 달라집니다. 결과가 이상하면 요청을 더 구체적으로 다듬으세요.</li>
-        <li>저작권, 개인정보 노출, 연락처 오기입을 배포 전에 반드시 확인하세요.</li>
-      </ul>
-      <div class="note">무료 플랜의 기능과 한도는 시점별로 변경될 수 있으므로, 배포 전에 각 서비스 공식 안내를 확인하는 것을 권장합니다.</div>
+<p>해결: Windows에서는 자체 서명 인증서로 테스트 가능:</p>
 
-      <h2>마무리</h2>
-      <p>정리하면 "내 정보 정리 → AI 요청 → 로컬 확인 → 수정 반복 → 이미지 교체 → 배포" 순서입니다. 코드를 완벽히 이해하지 못해도, 명확한 요구와 검수 습관만 있으면 실사용 가능한 포트폴리오 사이트를 만들 수 있습니다. 첫 버전이 완벽할 필요는 없습니다. 공개 후 피드백을 받으며 점진적으로 개선해나가는 것이 가장 현실적인 방식입니다.</p>
+<pre><code>// electron-builder는 자체 서명 인증서 생성
+// 개발 중에는 코드 서명 건너뛰기
+"build": {
+    "win": {
+        "sign": false  // ← 개발 중에만
+    }
+}
+</code></pre>
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+<h3>문제 2: 무한 업데이트 루프</h3>
+
+<p>우리의 경우:</p>
+
+<blockquote>
+<p>버전 1.0.0 설치됨<br>
+자동 업데이트 체크 → 새 버전 1.0.1 있음<br>
+1.0.1 설치 및 재부팅<br>
+다시 시작된 앱이 자동 업데이트 체크 → 1.0.1이 이미 설치됨, 아무것도 안 함 (OK)<br>
+<br>
+하지만 우리 경우:<br>
+계속 1.0.1을 "새 버전"으로 인식 → 무한 루프</p>
+</blockquote>
+
+<p>원인: GitHub release가 잘못 설정됨</p>
+
+<p>electron-updater는 다음을 읽음:</p>
+
+<pre><code>https://api.github.com/repos/myname/my-app/releases/latest
+</code></pre>
+
+<p>이 응답에서 "latest" release를 찾는다.</p>
+
+<p>해결: GitHub에서 release를 "Latest Release"로 마크:</p>
+
+<pre><code>// GitHub UI
+Release tab → Edit → "Set as the latest release" 체크
+</code></pre>
+
+<h3>문제 3: Differential Updates가 안 됨</h3>
+
+<p>differential update는 변경된 부분만 다운로드하는 기능이다 (100MB → 5MB)</p>
+
+<p>작동하려면:</p>
+
+<blockquote>
+<p>1. 이전 버전의 .exe 또는 .app이 존재해야 함<br>
+2. GitHub release에 최소 2개 이상의 버전이 있어야 함<br>
+3. electron-builder가 자동으로 delta 파일 생성해야 함</p>
+</blockquote>
+
+<p>github.yml (GitHub Actions):</p>
+
+<pre><code>name: CI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - run: npm install
+      - run: npm run build:electron
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/my-app-*.exe
+            dist/my-app-*.dmg
+            dist/*.blockmap  # ← Delta 정보
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+</code></pre>
+
+<p>중요: dist/*.blockmap을 GitHub release에 업로드해야 delta update가 작동한다.</p>
+
+<h3>문제 4: S3 호스팅</h3>
+
+<p>GitHub 용량 제한 (100MB 이상 안 됨)이 있으면 S3 사용:</p>
+
+<pre><code>// package.json
+"build": {
+    "publish": {
+        "provider": "s3",
+        "bucket": "my-app-releases",
+        "region": "us-east-1"
+    }
+}
+</code></pre>
+
+<p>AWS IAM 정책:</p>
+
+<pre><code>{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::my-app-releases/*"
+        }
+    ]
+}
+</code></pre>
+
+<p>환경변수:</p>
+
+<pre><code>export AWS_ACCESS_KEY_ID=xxx
+export AWS_SECRET_ACCESS_KEY=xxx
+npm run build:electron  // ← S3에 자동 업로드
+</code></pre>
+
+<h3>문제 5: 업데이트 UI</h3>
+
+<p>단순한 자동 업데이트는 사용자가 모른다.</p>
+
+<p>좋은 UX:</p>
+
+<pre><code>import { autoUpdater } from 'electron-updater';
+
+autoUpdater.on('checking-for-update', () => {
+    mainWindow.webContents.send('update-status', '업데이트 확인 중...');
+});
+
+autoUpdater.on('update-available', () => {
+    mainWindow.webContents.send('update-status', '새 버전 다운로드 중...');
+});
+
+autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: '업데이트 준비 완료',
+        message: '앱을 다시 시작하여 업데이트를 적용합니다.',
+        buttons: ['지금 다시 시작', '나중에']
+    }).then(result => {
+        if (result.response === 0) {
+            autoUpdater.quitAndInstall();
+        }
+    });
+});
+
+autoUpdater.on('error', (error) => {
+    mainWindow.webContents.send('update-error', error.message);
+});
+
+// 1시간마다 체크
+setInterval(() => {
+    autoUpdater.checkForUpdates();
+}, 1000 * 60 * 60);
+</code></pre>
+
+<h3>배포 체크리스트</h3>
+
+<blockquote>
+<p>□ package.json 버전 업데이트 (예: 1.0.0 → 1.0.1)<br>
+□ 코드 서명 인증서 준비<br>
+□ npm run build:electron 실행<br>
+□ dist/ 폴더에 .exe/.dmg/.blockmap 생성 확인<br>
+□ GitHub release 생성 및 파일 업로드<br>
+□ "Set as latest release" 체크<br>
+□ 이전 버전 앱에서 업데이트 테스트<br>
+□ 모니터링 (업데이트 성공률)</p>
+</blockquote>
+
+<h3>결론</h3>
+
+<p>electron-updater는 강력하지만 함정이 많다. 특히 code signing과 delta update 설정이 중요하다.</p>
+
+<p>우리는 이 경험 후 모든 업데이트를 다음 버전부터 자동화했다:</p>
+
+<ul>
+<li>Git tag 푸시 → GitHub Actions 자동 빌드 및 배포</li>
+<li>release-it 도구로 버전/changelog 자동 관리</li>
+<li>모니터링: 업데이트 성공/실패율 추적</li>
+</ul>
+
+<p>이제 업데이트는 안정적이다. 그리고 사용자는 자동으로 최신 버전을 받는다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-01.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱에서 Rust로 네이티브 성능 확보하기 — N-API 바인딩 실전 가이드</span>
+        </a>
+        <a class="related-item" href="/posts/post-37.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 보안 체크리스트 — contextBridge 제대로 쓰기</span>
+        </a>
+        <a class="related-item" href="/posts/post-40.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron vs Tauri — 2025년 데스크톱 앱 프레임워크 비교</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

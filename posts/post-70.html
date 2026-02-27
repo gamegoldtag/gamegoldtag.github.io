@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JWT 토큰 저장 방식, 리프레시 토큰 회전, 알고리즘 혼동 공격, CSRF 방어, 토큰 무효화 전략을 알아봅시다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-70.html">
+  <title>JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-01",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-70.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Security</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지</h1>
+      <p class="meta">게시일: 2026년 2월 1일 · 14분 읽기</p>
+<p>나는 28년을 개발하면서 JWT 관련 보안 문제를 꽤 많이 봤다. 특히 프로덕션에서 localStorage에 토큰을 저장하는 코드를 본 적이 있는데, XSS 한 방이면 끝나는 상황이었다. JWT는 간단해 보이지만 실제로 구현할 때는 놓치기 쉬운 보안 포인트가 많다. 이 글에서는 내가 경험한 실수들과 해결책을 정리했다.</p>
+
+<h3>1. 토큰 저장 위치: httpOnly Cookie vs localStorage</h3>
+
+<p>가장 흔한 실수는 JWT를 localStorage에 저장하는 것이다. 이 경우 XSS 공격으로 토큰이 탈취될 수 있다. 반면 httpOnly 쿠키는 JavaScript에서 접근할 수 없어 더 안전하다.</p>
+
+<pre><code class="language-javascript">
+// ❌ 위험한 방식
+localStorage.setItem('token', jwtToken);
+
+// ✅ 안전한 방식
+response.cookie('token', jwtToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  maxAge: 3600000
+});
+</code></pre>
+
+<p>httpOnly 쿠키를 사용하면 자동으로 모든 요청에 포함되므로, 클라이언트에서 별도로 헤더를 설정할 필요가 없다. 하지만 CORS 환경에서는 credentials 옵션을 설정해야 한다.</p>
+
+<pre><code class="language-javascript">
+// fetch 요청에서
+fetch('https://api.example.com/data', {
+  credentials: 'include'  // 쿠키를 포함시킴
+});
+
+// axios에서
+axios.defaults.withCredentials = true;
+</code></pre>
+
+<h3>2. 리프레시 토큰 회전 (Refresh Token Rotation)</h3>
+
+<p>액세스 토큰이 짧은 수명을 가지고 있다면, 리프레시 토큰은 더 오래 유지된다. 문제는 리프레시 토큰이 탈취되었을 때 감지하기 어렵다는 것이다. 이를 해결하기 위해 리프레시 토큰 회전을 구현해야 한다.</p>
+
+<pre><code class="language-javascript">
+// Express 미들웨어 예제
+app.post('/refresh', (req, res) => {
+  const oldRefreshToken = req.cookies.refreshToken;
+
+  if (!oldRefreshToken) {
+    return res.status(401).json({ error: 'No refresh token' });
+  }
+
+  try {
+    const decoded = jwt.verify(oldRefreshToken, REFRESH_SECRET);
+
+    // 새로운 토큰 발급
+    const newAccessToken = jwt.sign(
+      { userId: decoded.userId, type: 'access' },
+      ACCESS_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { userId: decoded.userId, type: 'refresh', tokenVersion: decoded.tokenVersion + 1 },
+      REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // 쿠키에 새 토큰 저장
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict'
+    });
+
+    res.json({ accessToken: newAccessToken });
+  } catch (error) {
+    return res.status(401).json({ error: 'Invalid refresh token' });
+  }
+});
+</code></pre>
+
+<p>중요한 점은 토큰 버전을 트래킹하는 것이다. 사용자가 비밀번호를 변경하거나 로그아웃할 때 토큰 버전을 증가시키면, 이전 토큰은 자동으로 무효화된다.</p>
+
+<h3>3. 알고리즘 혼동 공격 (Algorithm Confusion)</h3>
+
+<p>JWT 헤더의 "alg" 필드를 검증하지 않으면 공격자가 알고리즘을 변경할 수 있다. 특히 HS256(대칭키)과 RS256(비대칭키)을 혼동하게 하는 공격이 있다.</p>
+
+<pre><code class="language-javascript">
+// ❌ 위험한 방식
+function verifyToken(token) {
+  return jwt.verify(token, secret);
+}
+
+// ✅ 안전한 방식
+function verifyToken(token) {
+  return jwt.verify(token, secret, {
+    algorithms: ['HS256']  // 명시적으로 허용할 알고리즘 지정
+  });
+}
+
+// RS256 사용 시
+function verifyToken(token) {
+  return jwt.verify(token, publicKey, {
+    algorithms: ['RS256']
+  });
+}
+</code></pre>
+
+<p>항상 서버가 예상하는 알고리즘을 명시적으로 지정해야 한다. 만약 HS256을 사용 중이라면 절대 RS256으로 전환하지 말고, 대신 새로운 알고리즘이 필요하면 새로운 토큰 타입을 만들어야 한다.</p>
+
+<h3>4. CSRF 방어와 JWT</h3>
+
+<p>JWT가 쿠키에 저장되면 CSRF 공격 위험이 있다. httpOnly 쿠키는 이미 자동으로 전송되므로, CSRF 토큰이 필요하다.</p>
+
+<pre><code class="language-javascript">
+// CSRF 토큰 생성 및 검증
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
+
+app.use(cookieParser());
+app.use(csrf({ cookie: false })); // 메모리 저장 방식
+
+app.get('/form', (req, res) => {
+  // 클라이언트에 CSRF 토큰 전달
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+app.post('/data', (req, res) => {
+  // 자동으로 CSRF 토큰 검증됨
+  res.json({ success: true });
+});
+</code></pre>
+
+<p>또는 커스텀 헤더를 사용하는 방법도 있다. 브라우저의 SOP 정책상 JavaScript에서 커스텀 헤더를 추가하려면 같은 출처에서만 가능하므로, 이것도 일종의 CSRF 방어가 된다.</p>
+
+<h3>5. 토큰 무효화 전략</h3>
+
+<p>JWT의 가장 큰 문제는 서버에서 토큰을 무효화할 수 없다는 것이다. 토큰이 발급된 후에는 만료될 때까지 유효하다. 이를 해결하기 위한 전략들이 있다.</p>
+
+<p><strong>블랙리스트 방식:</strong> 로그아웃한 토큰을 Redis에 저장하고, 검증할 때 확인한다.</p>
+
+<pre><code class="language-javascript">
+// 로그아웃 시
+app.post('/logout', authenticate, (req, res) => {
+  const token = req.headers.authorization.split(' ')[1];
+  const decoded = jwt.decode(token);
+  const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+
+  // Redis에 토큰을 블랙리스트에 추가
+  redis.setex(`blacklist:${token}`, ttl, '1');
+
+  res.json({ success: true });
+});
+
+// 토큰 검증 미들웨어
+async function authenticate(req, res, next) {
+  const token = req.headers.authorization.split(' ')[1];
+
+  // 블랙리스트 확인
+  const isBlacklisted = await redis.get(`blacklist:${token}`);
+  if (isBlacklisted) {
+    return res.status(401).json({ error: 'Token revoked' });
+  }
+
+  try {
+    req.user = jwt.verify(token, ACCESS_SECRET);
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+</code></pre>
+
+<p><strong>토큰 버전 방식:</strong> 사용자별 토큰 버전을 데이터베이스에 저장하고, 토큰의 버전과 비교한다.</p>
+
+<pre><code class="language-javascript">
+// 토큰 검증 시
+async function authenticate(req, res, next) {
+  const token = req.headers.authorization.split(' ')[1];
+  const decoded = jwt.verify(token, ACCESS_SECRET);
+
+  // 데이터베이스에서 사용자의 현재 토큰 버전 확인
+  const user = await User.findById(decoded.userId);
+  if (!user || user.tokenVersion !== decoded.tokenVersion) {
+    return res.status(401).json({ error: 'Token revoked' });
+  }
+
+  req.user = decoded;
+  next();
+}
+
+// 로그아웃 시 (또는 비밀번호 변경 시)
+await User.findByIdAndUpdate(userId, { $inc: { tokenVersion: 1 } });
+</code></pre>
+
+<h3>6. 비밀키 관리</h3>
+
+<p>JWT의 서명에 사용하는 비밀키는 환경변수로 관리해야 한다. 절대 코드에 하드코딩하면 안 된다.</p>
+
+<pre><code class="language-javascript">
+// .env 파일
+ACCESS_SECRET=your_very_long_random_secret_key_here
+REFRESH_SECRET=another_very_long_random_secret_key_here
+
+// 코드에서
+require('dotenv').config();
+const ACCESS_SECRET = process.env.ACCESS_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
+
+// 프로덕션 환경에서는 AWS Secrets Manager, HashiCorp Vault 등 사용
+const secretsManager = new AWS.SecretsManager();
+const secret = await secretsManager.getSecretValue({ SecretId: 'jwt-secret' }).promise();
+</code></pre>
+
+<p>또한 비밀키는 정기적으로 로테이션해야 한다. 예를 들어 RS256을 사용한다면, 새로운 키 쌍을 생성하고 기존 키로 발급한 토큰은 일정 기간 후 무효화하는 방식이다.</p>
+
+<h3>7. 페이로드 크기</h3>
+
+<p>JWT는 서명되었을 뿐 암호화되지 않은 토큰이다. Base64로 디코딩하면 누구나 내용을 볼 수 있다. 따라서 민감한 정보를 넣으면 안 된다.</p>
+
+<pre><code class="language-javascript">
+// ❌ 위험한 방식
+const token = jwt.sign({
+  userId: user.id,
+  email: user.email,
+  passwordHash: user.passwordHash,  // 절대 금지!
+  creditCard: user.creditCard        // 절대 금지!
+}, SECRET);
+
+// ✅ 안전한 방식
+const token = jwt.sign({
+  userId: user.id,
+  role: user.role,
+  iat: Math.floor(Date.now() / 1000)
+}, SECRET, { expiresIn: '15m' });
+</code></pre>
+
+<p>또한 토큰이 너무 커지면 모든 요청에 포함되기 때문에 네트워크 성능에 영향을 미친다. 필요한 최소한의 정보만 담아야 한다.</p>
+
+<h3>정리</h3>
+
+<p>JWT 보안의 핵심은 다음과 같다:</p>
+
+<ul>
+<li>토큰은 httpOnly 쿠키에 저장</li>
+<li>리프레시 토큰 회전 구현</li>
+<li>허용할 알고리즘 명시적으로 지정</li>
+<li>CSRF 토큰 추가</li>
+<li>토큰 무효화 전략 수립</li>
+<li>비밀키는 안전하게 관리</li>
+<li>민감한 정보는 토큰에 담지 않기</li>
+</ul>
+
+<p>이 7가지를 모두 적용하면 상당히 안전한 JWT 시스템을 만들 수 있다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-10.html">
+          <span class="ri-cat">Security</span>
+          <span class="ri-title">웹 보안 헤더 최소 구성 — 실무에서 먼저 적용해야 할 것들</span>
+        </a>
+        <a class="related-item" href="/posts/post-69.html">
+          <span class="ri-cat">Security</span>
+          <span class="ri-title">CORS 제대로 이해하기 — 삽질 없이 설정하는 법</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

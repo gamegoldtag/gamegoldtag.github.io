@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PR diff 파싱하고 AI 코드 리뷰 자동화. GitHub Actions 통합, 비용 최적화">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-32.html">
+  <title>Claude API로 코드 리뷰 자동화 만들기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Claude API로 코드 리뷰 자동화 만들기",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-07-12",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-32.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI &amp; 개발 도구</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Claude API로 코드 리뷰 자동화 만들기</h1>
+      <p class="meta">게시일: 2025년 7월 12일 · 16분 읽기</p>
+
+<h2>시니어 리뷰어가 부족할 때</h2>
+
+<p>우리 팀은 개발자는 많은데 시니어가 부족했다. 모든 PR을 리뷰하기 위해 누군가는 항상 리뷰 큐에 빠져 있었다. 그래서 Claude API를 활용해서 1차 자동 리뷰 시스템을 만들었다.</p>
+
+<p>시스템은 이렇게 작동한다: PR이 올라오면 AI가 먼저 코드를 리뷰하고, 문제가 있으면 피드백을 남긴다. 그 후에 시니어가 리뷰한다. 이렇게 하니까 리뷰 시간이 절반으로 줄었다.</p>
+
+<h3>시스템 아키텍처</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+GitHub Event
+    ↓
+GitHub Actions Workflow
+    ↓
+PR diff 추출
+    ↓
+Claude API 호출
+    ↓
+코드 리뷰 생성
+    ↓
+PR 댓글로 달기
+</code></pre>
+
+<h3>GitHub Actions 워크플로우</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# .github/workflows/ai-review.yml
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+          DIFF=$(git diff origin/main...pr-branch)
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run AI review
+        id: review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python scripts/ai_review.py             --diff "${{ steps.diff.outputs.diff }}"             --title "$PR_TITLE"             --body "$PR_BODY"
+
+      - name: Post review comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('ai-review.md', 'utf-8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: review
+            });
+</code></pre>
+
+<h3>Python 리뷰 스크립트</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+#!/usr/bin/env python3
+# scripts/ai_review.py
+
+import anthropic
+import sys
+from pathlib import Path
+
+def generate_review(diff: str, title: str, body: str) -> str:
+    client = anthropic.Anthropic()
+
+    prompt = f
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-07.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI 코딩 도구 6개월 실사용 후기 — 생산성이 정말 올랐을까?</span>
+        </a>
+        <a class="related-item" href="/posts/post-34.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI로 레거시 코드 리팩토링하기 — 실전 프롬프트 패턴</span>
+        </a>
+        <a class="related-item" href="/posts/post-78.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">LLM 프롬프트 엔지니어링 실전 — 개발자를 위한 패턴 모음</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

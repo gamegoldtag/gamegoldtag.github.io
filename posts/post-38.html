@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LocalStorage 5MB 제한 초과. Native SQLite vs WASM 비교, 마이그레이션 팁">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-38.html">
+  <title>Electron에서 SQLite 쓰기 — better-sqlite3 vs sql.js 비교 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Electron에서 SQLite 쓰기 — better-sqlite3 vs sql.js 비교",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-08-15",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-38.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Electron</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Electron에서 SQLite 쓰기 — better-sqlite3 vs sql.js 비교</h1>
+      <p class="meta">게시일: 2025년 8월 15일 · 13분 읽기</p>
+
+<h2>LocalStorage의 5MB 제한에 걸렸을 때</h2>
+
+<p>우리 Electron 앱은 로컬 데이터 저장소로 LocalStorage를 썼다. 처음엔 충분했지만, 사용자가 늘면서 5MB 제한에 자꾸 걸렸다. 더 이상 데이터를 저장할 수 없다는 에러가 나기 시작했다.</p>
+
+<p>SQLite로 옮겼다. 이제 GB 단위의 데이터를 저장할 수 있다.</p>
+
+<h3>better-sqlite3 (Native) vs sql.js (WASM)</h3>
+
+<p>두 가지 선택지가 있다:</p>
+
+<ul>
+<li><strong>better-sqlite3</strong>: Native 모듈, 매우 빠름, Node.js 필요</li>
+<li><strong>sql.js</strong>: WASM, 느리지만 어디서나 작동</li>
+</ul>
+
+<p>Electron은 Node.js를 포함하니까, better-sqlite3를 추천한다.</p>
+
+<h3>better-sqlite3 설정</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+$ npm install better-sqlite3
+$ npm install -D @types/better-sqlite3
+
+// db.ts (메인 프로세스)
+import Database from 'better-sqlite3'
+import path from 'path'
+import { app } from 'electron'
+
+let db: Database.Database | null = null
+
+export function initializeDatabase() {
+  const dbPath = path.join(app.getPath('userData'), 'app.db')
+
+  db = new Database(dbPath)
+
+  // 테이블 생성
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+
+    CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+
+  return db
+}
+
+export function getDatabase() {
+  if (!db) {
+    throw new Error('Database not initialized')
+  }
+  return db
+}
+</code></pre>
+
+<h3>IPC를 통한 데이터베이스 접근</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// main.ts
+import { ipcMain } from 'electron'
+import { getDatabase } from './db'
+
+// 쿼리 실행
+ipcMain.handle('db:query', async (event, sql: string, params: any[]) => {
+  const db = getDatabase()
+  const stmt = db.prepare(sql)
+  return stmt.all(...params)
+})
+
+// 단일 행 조회
+ipcMain.handle('db:get', async (event, sql: string, params: any[]) => {
+  const db = getDatabase()
+  const stmt = db.prepare(sql)
+  return stmt.get(...params)
+})
+
+// 삽입/수정
+ipcMain.handle('db:run', async (event, sql: string, params: any[]) => {
+  const db = getDatabase()
+  const stmt = db.prepare(sql)
+  const result = stmt.run(...params)
+  return { lastID: result.lastInsertRowid, changes: result.changes }
+})
+
+// 트랜잭션
+ipcMain.handle('db:transaction', async (event, callback) => {
+  const db = getDatabase()
+  const transaction = db.transaction(() => {
+    // callback 실행
+  })
+  return transaction()
+})
+</code></pre>
+
+<h3>렌더러 프로세스에서 사용</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// preload.ts
+import { contextBridge, ipcRenderer } from 'electron'
+
+contextBridge.exposeInMainWorld('database', {
+  query: (sql: string, params: any[] = []) =>
+    ipcRenderer.invoke('db:query', sql, params),
+
+  get: (sql: string, params: any[] = []) =>
+    ipcRenderer.invoke('db:get', sql, params),
+
+  run: (sql: string, params: any[] = []) =>
+    ipcRenderer.invoke('db:run', sql, params),
+})
+
+// React 컴포넌트에서
+async function loadUsers() {
+  const users = await window.database.query(
+    'SELECT * FROM users WHERE created_at > ?',
+    ['2025-01-01']
+  )
+  return users
+}
+
+async function createUser(name: string, email: string) {
+  const result = await window.database.run(
+    'INSERT INTO users (name, email) VALUES (?, ?)',
+    [name, email]
+  )
+  return result.lastID
+}
+</code></pre>
+
+<h3>성능 최적화**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// db.ts
+import Database from 'better-sqlite3'
+
+export function initializeDatabase() {
+  const db = new Database(dbPath)
+
+  // 성능 최적화
+  db.pragma('journal_mode = WAL')        // Write-Ahead Logging
+  db.pragma('synchronous = NORMAL')      // 빠른 쓰기
+  db.pragma('cache_size = 10000')        // 캐시 크기
+  db.pragma('foreign_keys = ON')         // 외래키 제약
+
+  // 인덱스 생성 (자주 조회하는 열)
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id)
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+  `)
+
+  return db
+}
+</code></pre>
+
+<h3>백업 및 마이그레이션</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 백업
+export function backupDatabase() {
+  const db = getDatabase()
+  const backupPath = path.join(
+    app.getPath('userData'),
+    `backup-${Date.now()}.db`
+  )
+
+  const backup = new Database(backupPath)
+  db.backup(backup)
+  backup.close()
+
+  return backupPath
+}
+
+// LocalStorage에서 마이그레이션
+export function migrateFromLocalStorage() {
+  const db = getDatabase()
+  const localStorage = require('electron-store')
+
+  const data = localStorage.store
+
+  const insertUser = db.prepare(
+    'INSERT INTO users (name, email) VALUES (?, ?)'
+  )
+
+  for (const key in data) {
+    const user = data[key]
+    insertUser.run(user.name, user.email)
+  }
+}
+</code></pre>
+
+<h3>트랜잭션 예제</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 복잡한 작업은 트랜잭션으로
+ipcMain.handle('db:create-post', async (event, { userId, title, content }) => {
+  const db = getDatabase()
+
+  const transaction = db.transaction(() => {
+    const postId = db.prepare(
+      'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)'
+    ).run(userId, title, content).lastInsertRowid
+
+    // 사용자의 마지막 게시 시간 업데이트
+    db.prepare(
+      'UPDATE users SET last_post_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(userId)
+
+    return postId
+  })
+
+  // 실행 (모두 성공하거나 모두 실패)
+  return transaction()
+})
+</code></pre>
+
+<h3>SQL.js로 대체 (필요시)**</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// WASM 필요한 경우
+import initSqlJs from 'sql.js'
+
+let db: any = null
+
+export async function initializeSqlJs() {
+  const SQL = await initSqlJs()
+  db = new SQL.Database()
+
+  db.run(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL
+    )
+  `)
+
+  return db
+}
+
+export function querySqlJs(sql: string, params: any[] = []) {
+  const stmt = db.prepare(sql)
+  stmt.bind(params)
+  const result = []
+  while (stmt.step()) {
+    result.push(stmt.getAsObject())
+  }
+  stmt.free()
+  return result
+}
+
+// 저장 (필요시)
+export function saveSqlJsDb(filePath: string) {
+  const data = db.export()
+  const buffer = Buffer.from(data)
+  fs.writeFileSync(filePath, buffer)
+}
+</code></pre>
+
+<h3>마무리</h3>
+
+<p>better-sqlite3는 Electron 앱의 로컬 데이터 저장에 최적화되어 있다. LocalStorage의 5MB 제한을 벗어날 수 있고, SQL로 복잡한 쿼리도 가능하다.</p>
+
+<p>설정은 간단하고, IPC를 통해 안전하게 렌더러 프로세스에서 접근할 수 있다. 지금 우리 앱은 GB 단위의 데이터를 효율적으로 다루고 있다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-01.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱에서 Rust로 네이티브 성능 확보하기 — N-API 바인딩 실전 가이드</span>
+        </a>
+        <a class="related-item" href="/posts/post-36.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱 빌드 시간 줄이기 — 30분에서 5분으로</span>
+        </a>
+        <a class="related-item" href="/posts/post-40.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron vs Tauri — 2025년 데스크톱 앱 프레임워크 비교</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

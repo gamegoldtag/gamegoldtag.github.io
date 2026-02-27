@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Performance panel, Memory snapshot, Local overrides 등 개발자들이 모르는 Chrome DevTools 기능들을 소개합니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-75.html">
+  <title>Chrome DevTools 숨겨진 기능 — 디버깅 시간 줄이는 팁 모음 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Chrome DevTools 숨겨진 기능 — 디버깅 시간 줄이는 팁 모음",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-11",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-75.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발 기초 &amp; 팁</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Chrome DevTools 숨겨진 기능 — 디버깅 시간 줄이는 팁 모음</h1>
+      <p class="meta">게시일: 2026년 2월 11일 · 14분 읽기</p>
+<p>10년 넘게 Chrome DevTools를 썼는데도 최근에야 안 기능이 있었다. 대부분의 개발자는 Elements와 Console 탭만 사용한다. 하지만 숨겨진 기능들을 알면 디버깅 시간을 대폭 줄일 수 있다.</p>
+
+<h3>Performance Panel - 성능 분석</h3>
+
+<p><strong>Flamechart 읽기</strong></p>
+
+<p>Performance 탭에서 녹음 버튼을 누르고 동작을 수행한 후 멈추면, 성능 데이터를 얻을 수 있다.</p>
+
+<p>차트를 읽는 방법:</p>
+
+<ul>
+<li><strong>Y축</strong>: 스택 높이 (깊이)를li>
+<li><strong>X축</strong>: 시간</li>
+<li><strong>색상</strong>: 다른 카테고리 (JavaScript, Rendering, Painting 등)</li>
+</ul>
+
+<p>노란색은 JavaScript, 보라색은 Rendering, 녹색은 Painting이다. 가장 오래 걸린 작업을 찾으려면, 가장 넓은 블록을 찾으면 된다.</p>
+
+<pre><code class="language-javascript">
+// 성능 이슈의 전형적인 예: 긴 Task
+function slowFunction() {
+  let sum = 0;
+  // CPU를 많이 사용하는 작업
+  for (let i = 0; i < 100000000; i++) {
+    sum += Math.sqrt(i);
+  }
+  return sum;
+}
+
+// 이를 개선하려면 작은 청크로 나눔
+function improvedFunction() {
+  return new Promise((resolve) => {
+    let sum = 0;
+    let i = 0;
+
+    function chunk() {
+      for (let end = i + 1000000; i < end && i < 100000000; i++) {
+        sum += Math.sqrt(i);
+      }
+
+      if (i < 100000000) {
+        setTimeout(chunk, 0);
+      } else {
+        resolve(sum);
+      }
+    }
+
+    chunk();
+  });
+}
+</code></pre>
+
+<p><strong>메인 스레드 블로킹 감지</strong></p>
+
+<p>Performance 탭의 차트에서 빨간 삼각형은 성능 문제를 나타낸다. 이를 클릭하면 원인을 알 수 있다.</p>
+
+<p>일반적인 문제:</p>
+
+<ul>
+<li>렌더링 블로킹 JavaScript</li>
+<li>무거운 CSS 선택자</li>
+<li>과도한 레이아웃 스래싱</li>
+</ul>
+
+<h3>Memory - 메모리 누수 추적</h3>
+
+<p><strong>Heap Snapshot 비교</strong></p>
+
+<p>메모리 누수를 찾으려면 두 개의 스냅샷을 비교한다.</p>
+
+<ol>
+<li>메모리 탭 열기</li>
+<li>Heap Snapshot 찍기 (초기 상태)</li>
+<li>어떤 작업 수행 (예: 100개 요소 추가)</li>
+<li>다시 Heap Snapshot 찍기</li>
+<li>두 스냅샷 비교</li>
+</ol>
+
+<p>정상적으로 작동하면 작업이 끝난 후 메모리가 다시 내려와야 한다. 메모리가 증가하지 않으면 정상이다.</p>
+
+<pre><code class="language-javascript">
+// ❌ 메모리 누수
+const cache = [];
+
+function addToCache(data) {
+  cache.push(data);
+  // cache를 비우지 않으므로 메모리가 계속 증가
+}
+
+// ✅ 개선
+const cache = [];
+const MAX_CACHE_SIZE = 100;
+
+function addToCache(data) {
+  cache.push(data);
+  if (cache.length > MAX_CACHE_SIZE) {
+    cache.shift();  // 가장 오래된 항목 제거
+  }
+}
+</code></pre>
+
+<p><strong>메모리 프로필링</strong></p>
+
+<pre><code class="language-javascript">
+// Chrome DevTools Console에서
+performance.memory
+// {
+//   jsHeapSizeLimit: 2262260224,
+//   totalJSHeapSize: 123456789,
+//   usedJSHeapSize: 98765432
+// }
+</code></pre>
+
+<h3>Network - 네트워크 최적화</h3>
+
+<p><strong>느린 네트워크 에뮬레이션</strong></p>
+
+<ol>
+<li>Network 탭</li>
+<li>좌상단의 "No throttling" 클릭</li>
+<li>"Slow 3G" 또는 커스텀 선택</li>
+</ol>
+
+<p>이를 통해 저속 네트워크에서 앱이 어떻게 동작하는지 확인할 수 있다.</p>
+
+<p><strong>하단의 Summary 정보</strong></p>
+
+<ul>
+<li>총 요청 수</li>
+<li>전송된 데이터 크기</li>
+<li>시간 (DOMContentLoaded, Load)</li>
+</ul>
+
+<p>이 정보를 통해 어느 리소스가 가장 큰지 확인할 수 있다.</p>
+
+<h3>Local Overrides - 프로덕션 코드 수정</h3>
+
+<p>이 기능은 진짜 마법이다. 프로덕션 JavaScript를 로컬에서 수정해서 테스트할 수 있다.</p>
+
+<p><strong>설정 방법</strong></p>
+
+<ol>
+<li>DevTools > Sources 탭</li>
+<li>좌측 Overrides 탭</li>
+<li>"Enable Local Overrides" 클릭</li>
+<li>폴더 선택 (로컬 폴더를 선택하면 그 폴더에 override 파일이 저장됨)</li>
+</ol>
+
+<p><strong>사용 방법</strong></p>
+
+<ol>
+<li>Sources 탭에서 수정하고 싶은 파일 찾기</li>
+<li>우클릭 > "Override content"</li>
+<li>파일 수정</li>
+<li>페이지 새로고침하면 수정된 내용 적용</li>
+</ol>
+
+<pre><code class="language-javascript">
+// 예: 프로덕션의 API URL을 로컬로 변경
+// 원본
+const API_URL = 'https://api.example.com';
+
+// Override
+const API_URL = 'http://localhost:3000';
+</code></pre>
+
+<p>이 기능으로 프로덕션 버그를 빠르게 검증하거나, API를 개발 서버로 바꿔 테스트할 수 있다.</p>
+
+<h3>Command Palette - Ctrl+Shift+P</h3>
+
+<p>이 기능을 사용하면 DevTools의 모든 기능에 빠르게 접근할 수 있다.</p>
+
+<p><strong>유용한 명령어</strong></p>
+
+<ul>
+<li>"Screenshot" - 전체 페이지 스크린샷 (스크롤 포함)</li>
+<li>"Show drawer" - 서든 창 열기</li>
+<li>"Disable JavaScript" - JavaScript 비활성화</li>
+<li>"Hide console drawer" - 콘솔 숨기기</li>
+<li>"Emulate CSS media feature prefers-color-scheme" - 다크모드 테스트</li>
+</ul>
+
+<h3>Snippets - 재사용 가능한 코드</h3>
+
+<p>자주 사용하는 코드를 스니펫으로 저장하면, 언제든 콘솔에서 실행할 수 있다.</p>
+
+<p><strong>설정 방법</strong></p>
+
+<ol>
+<li>Sources > Snippets</li>
+<li>+ New Snippet</li>
+<li>코드 작성</li>
+<li>Ctrl+Enter로 실행</li>
+</ol>
+
+<pre><code class="language-javascript">
+// 스니펫 예: 모든 이미지의 src 출력
+document.querySelectorAll('img').forEach(img => {
+  console.log(img.src);
+});
+
+// 스니펫 예: 콘솔의 모든 에러 확인
+window.addEventListener('error', (event) => {
+  console.error('Error:', event.error);
+});
+
+// 스니펫 예: 페이지의 성능 정보
+const perfData = window.performance.getEntriesByType('navigation')[0];
+console.log('Page Load Time:', perfData.loadEventEnd - perfData.fetchStart);
+</code></pre>
+
+<h3>Console - 숨겨진 유틸리티</h3>
+
+<p><strong>$0, $1, $2</strong></p>
+
+<p>Elements 탭에서 선택한 마지막 5개 요소에 접근한다.</p>
+
+<pre><code class="language-javascript">
+// Elements에서 <button> 선택했다면
+$0  // 그 버튼
+$0.click()  // 클릭
+$0.innerText = 'New Text'  // 텍스트 변경
+</code></pre>
+
+<p><strong>copy() - 값 복사</strong></p>
+
+<pre><code class="language-javascript">
+// 객체를 클립보드에 복사
+copy({ name: 'John', age: 30 })
+// 클립보드에 {"name":"John","age":30} 저장됨
+</code></pre>
+
+<p><strong>monitor() - 함수 호출 추적</strong></p>
+
+<pre><code class="language-javascript">
+// 함수가 호출될 때마다 매개변수를 로깅
+monitor(fetch)
+
+// 이 후 fetch가 호출되면 자동으로 로깅됨
+fetch('https://api.example.com/data')
+// console output: fetch('https://api.example.com/data')
+</code></pre>
+
+<p><strong>table() - 테이블 형식으로 출력</strong></p>
+
+<pre><code class="language-javascript">
+// 배열을 테이블로 출력
+const users = [
+  { name: 'John', age: 30 },
+  { name: 'Jane', age: 25 }
+];
+table(users)
+</code></pre>
+
+<h3>Coverage Tab - 사용하지 않는 코드 찾기</h3>
+
+<p>Performance 최적화의 첫 단계는 사용하지 않는 코드를 제거하는 것이다.</p>
+
+<p><strong>사용 방법</strong></p>
+
+<ol>
+<li>Command Palette (Ctrl+Shift+P) > "Coverage"</li>
+<li>녹음 버튼 클릭</li>
+<li>페이지 전체 사용 (모든 기능 클릭)</li>
+<li>멈추기</li>
+</ol>
+
+<p>결과에서 "Bytes / Unused Bytes"를 보면 사용되지 않은 코드의 양을 알 수 있다. 이를 토대로 코드 스플리팅이나 불필요한 라이브러리 제거를 고려할 수 있다.</p>
+
+<h3>Accessibility - 접근성 검사</h3>
+
+<p>Elements 탭의 Accessibility 패널은 접근성 문제를 찾는 데 도움이 된다.</p>
+
+<ul>
+<li>alt 텍스트 누락</li>
+<li>낮은 명도 대비</li>
+<li>누락된 label</li>
+<li>키보드 네비게이션 문제</li>
+</ul>
+
+<h3>정리</h3>
+
+<p>Chrome DevTools의 기능들:</p>
+
+<ul>
+<li><strong>Performance</strong>: 성능 분석</li>
+<li><strong>Memory</strong>: 메모리 누수 추적</li>
+<li><strong>Network</strong>: 네트워크 최적화</li>
+<li><strong>Local Overrides</strong>: 프로덕션 코드 수정 테스트</li>
+<li><strong>Command Palette</strong>: 빠른 접근</li>
+<li><strong>Snippets</strong>: 재사용 코드</li>
+<li><strong>Console Utilities</strong>: 강력한 콘솔</li>
+<li><strong>Coverage</strong>: 사용하지 않는 코드 찾기</li>
+</ul>
+
+<p>이 기능들을 마스터하면, 디버깅과 성능 최적화가 훨씬 수월해진다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-11.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">E2E 테스트 flaky 줄이기 — 실패 원인을 구조적으로 제거하는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-71.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">Playwright vs Cypress — 2025년 E2E 테스트 도구 비교</span>
+        </a>
+        <a class="related-item" href="/posts/post-79.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">개발자가 알면 좋은 네트워크 기초 — DNS부터 TCP까지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

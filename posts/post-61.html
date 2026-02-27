@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="성능, 타입 안전성, 미들웨어 생태계. Python 팀과 Node.js 팀의 프레임워크 전쟁을 중재한 28년차의 실전 비교">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-61.html">
+  <title>FastAPI vs Express — 2025년 백엔드 프레임워크 선택 기준 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "FastAPI vs Express — 2025년 백엔드 프레임워크 선택 기준",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-12-30",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-61.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Backend &amp; DB</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>FastAPI vs Express — 2025년 백엔드 프레임워크 선택 기준</h1>
+      <p class="meta">게시일: 2025년 12월 30일 · 15분 읽기</p>
+<h2>프레임워크 전쟁이 아닌 선택의 기준</h2>
+<p>2025년도 중반쯤, 우리 회사에서 새로운 마이크로서비스를 개발할 때 흥미로운 일이 일어났다. Python 팀은 FastAPI를 강력히 밀었고, Node.js 팀은 Express를 옹호했다. 단순히 "우리 언어가 낫다"는 주장이 아니라, 각각의 기술적 이점을 들고나온 것이었다. 내가 28년간 개발하면서 배운 건, 프레임워크 선택은 객관적인 성능 수치보다 "우리 팀의 운영 환경"에 맞는가가 훨씬 중요하다는 것이다.</p>
+
+<h3>성능 벤치마크 — 숫자가 말하는 것과 말하지 않는 것</h3>
+<p>먼저 성능부터 비교해보자. 많은 사람들이 TechEmpower 벤치마크를 본다. FastAPI는 대부분의 시나리오에서 Express보다 높은 처리량(requests/sec)을 보여준다. 특히 I/O 바운드 작업에서는 더욱 그렇다. 평균적으로 FastAPI가 약 20-30% 더 높은 throughput을 달성하는 걸 봤다.</p>
+
+<p>하지만 내가 경험한 바로는, 프로덕션 환경에서 이 10-20%의 성능 차이가 실제로 의미있는 경우는 드물다. 왜냐하면:</p>
+
+<ul>
+<li>대부분의 병목은 데이터베이스나 외부 API 호출에서 발생한다</li>
+<li>제대로 설정된 로드 밸런싱이 있으면 단일 인스턴스의 성능 차이는 무시할 수 있다</li>
+<li>캐싱 전략이 성능을 좌우한다</li>
+</ul>
+
+<p>내가 봤던 실제 사례: 한 회사에서 Express 서버를 Redis 캐싱으로 최적화했더니, FastAPI로 마이그레이션하지 않아도 충분했다. 반대로 다른 회사는 FastAPI로 시작했지만 운영 팀이 Python을 모르면서 운영 난제에 직면했다.</p>
+
+<h3>타입 안전성 — 개발 속도와 버그의 trade-off</h3>
+<p>이건 프레임워크 자체보다는 언어의 특성이지만, 매우 중요하다.</p>
+
+<p>FastAPI는 Python 3.7+의 타입 힌팅을 기본으로 한다:</p>
+
+<pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI()
+
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+    is_active: Optional[bool] = True
+
+@app.post(&quot;/users/&quot;)
+async def create_user(user: User) -&gt; User:
+    # 입력값 검증과 응답 생성이 자동으로 처리됨
+    # IDE 자동완성과 타입 체킹이 완벽함
+    return user
+</code></pre>
+
+<p>Express에서 같은 일을 하려면 TypeScript를 추가해야 한다:</p>
+
+<pre><code>import express, { Request, Response } from 'express';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  is_active?: boolean;
+}
+
+app.post('/users', async (req: Request, res: Response): Promise&lt;void&gt; =&gt; {
+  const user: User = req.body;
+  // TypeScript는 타입 체킹만 함, 런타임 검증은 별도 라이브러리 필요
+  // zod, joi, class-validator 등을 추가로 써야 함
+  res.json(user);
+});
+</code></pre>
+
+<p>FastAPI의 장점: Pydantic이 자동으로 입력 검증을 해준다. 잘못된 데이터가 들어오면 자동으로 400 에러가 반환된다.</p>
+
+<p>Express의 장점: JavaScript 커뮤니티가 TypeScript에 익숙하고, 수많은 검증 라이브러리가 있다.</p>
+
+<p>28년 경력으로 봐서, 타입 안전성이 버그를 줄여주는 건 확실하다. 하지만 팀의 타입스크립트 숙련도가 낮으면 오히려 개발 속도가 떨어진다.</p>
+
+<h3>미들웨어 생태계 — 얼마나 성숙한가?</h3>
+<p>Express는 2010년부터 시작된 검증된 생태계를 가지고 있다. 거의 모든 니즈를 충족하는 미들웨어가 있다:</p>
+
+<ul>
+<li>인증: passport, jsonwebtoken</li>
+<li>요청 검증: express-validator, joi</li>
+<li>로깅: morgan, winston</li>
+<li>CORS, 압축, 속도 제한 등 모두 있다</li>
+</ul>
+
+<p>FastAPI는 상대적으로 더 젊지만, 최근 몇 년간 빠르게 성장했다. 기본 기능들이 프레임워크에 내장되어 있어서 추가 미들웨어가 필요 없는 경우가 많다:</p>
+
+<pre><code>from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZIPMiddleware
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+app = FastAPI()
+
+# CORS는 내장
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[&quot;*&quot;],
+    allow_credentials=True,
+    allow_methods=[&quot;*&quot;],
+    allow_headers=[&quot;*&quot;],
+)
+
+# 압축도 내장
+app.add_middleware(GZIPMiddleware, minimum_size=1000)
+
+# 속도 제한
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+</code></pre>
+
+<p>Express의 장점: 문제가 생기면 Stack Overflow에 이미 답변이 있을 확률이 높다.</p>
+
+<p>FastAPI의 장점: 구성이 명확하고, 대부분 한 곳에서 관리할 수 있다.</p>
+
+<h3>비동기 지원 — 중요하지만 선택 기준은 아니다</h3>
+<p>Express는 기본적으로 동기식이지만, async/await를 지원한다.</p>
+
+<p>FastAPI는 비동기를 중심으로 설계되었다. ASGI 서버를 사용한다.</p>
+
+<p>그런데 여기서 중요한 건, 비동기가 항상 빠른 건 아니라는 점이다. CPU 바운드 작업(복잡한 계산, 이미지 처리 등)에서는 비동기가 도움이 안 된다. 내가 봤던 경우들:</p>
+
+<ul>
+<li>I/O 바운드 작업(DB 쿼리, API 호출): 비동기가 진짜 도움이 된다</li>
+<li>CPU 바운드 작업: 스레드나 프로세스 풀이 필요하다</li>
+</ul>
+
+<p>FastAPI 예제:</p>
+
+<pre><code>import asyncio
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get(&quot;/users/{user_id}&quot;)
+async def get_user(user_id: int):
+    # 여러 I/O 작업을 동시에 처리
+    user = await db.get_user(user_id)
+    posts = await db.get_user_posts(user_id)
+    comments = await db.get_user_comments(user_id)
+
+    # asyncio.gather를 써도 되고
+    # [user, posts, comments] = await asyncio.gather(
+    #     db.get_user(user_id),
+    #     db.get_user_posts(user_id),
+    #     db.get_user_comments(user_id)
+    # )
+
+    return {&quot;user&quot;: user, &quot;posts&quot;: posts, &quot;comments&quot;: comments}
+</code></pre>
+
+<p>Express에서 같은 일:</p>
+
+<pre><code>app.get('/users/:userId', async (req, res) => {
+  try {
+    const [user, posts, comments] = await Promise.all([
+      db.getUser(req.params.userId),
+      db.getUserPosts(req.params.userId),
+      db.getUserComments(req.params.userId)
+    ]);
+
+    res.json({ user, posts, comments });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+</code></pre>
+
+<p>Express도 충분히 비동기를 잘 처리한다. 문법이 조금 다를 뿐이다.</p>
+
+<h3>배포 패턴과 운영</h3>
+<p>내 경험상, 이 부분이 프레임워크 선택을 좌우하는 가장 큰 요소다.</p>
+
+<p>Express는 Docker에서 Node.js 런타임만 필요하다:</p>
+
+<pre><code>FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+CMD [&quot;node&quot;, &quot;server.js&quot;]
+</code></pre>
+
+<p>FastAPI는 Python이 필요하고, C 확장이 있는 라이브러리들(numpy, cryptography 등)이 컴파일되어야 한다:</p>
+
+<pre><code>FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;]
+</code></pre>
+
+<p>차이:</p>
+
+<ul>
+<li>Node.js 이미지가 더 가볍다 (alpine: ~200MB)</li>
+<li>Python 이미지가 더 크다 (~300-400MB)</li>
+<li>하지만 최신 Python 3.11 slim으로 내려오면서 격차가 줄었다</li>
+</ul>
+
+<p>운영 측면:</p>
+
+<ul>
+<li>Express: Node.js 개발자가 많고, npm 생태계가 성숙함</li>
+<li>FastAPI: 데이터 과학팀이 있으면 기존 Python 인프라와 통합하기 좋음</li>
+</ul>
+
+<h3>결론 — 우리는 둘 다 썼다</h3>
+<p>결국 우리 회사가 내린 결론:</p>
+
+<ul>
+<li>새로운 마이크로서비스는 FastAPI로 시작 (타입 안전성, 개발 속도)</li>
+<li>기존 Express 서비스는 유지보수 (팀이 익숙함, 안정성)</li>
+<li>선택 기준: "팀이 잘 알고 있는가"가 첫 번째, 성능은 두 번째</li>
+</ul>
+
+<p>28년을 개발하면서 배운 것: "최고의 기술 스택은 팀이 편하게 운영할 수 있는 것이다."</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-09.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계</span>
+        </a>
+        <a class="related-item" href="/posts/post-64.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">SQLite가 생각보다 강력한 이유 — 개인 프로젝트에서 PostgreSQL 대신</span>
+        </a>
+        <a class="related-item" href="/posts/post-66.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

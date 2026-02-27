@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="wasm-pack 설정, wasm-bindgen 타입, JS 상호작용, 브라우저 vs Node.js, 성능 비교">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-59.html">
+  <title>Rust로 WebAssembly 만들기 — wasm-pack 실전 가이드 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Rust로 WebAssembly 만들기 — wasm-pack 실전 가이드",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-12-22",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-59.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Rust</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Rust로 WebAssembly 만들기 — wasm-pack 실전 가이드</h1>
+      <p class="meta">게시일: 2025년 12월 22일 · 15분 읽기</p>
+<h2>이미지 처리를 JS에서 WASM으로 옮기니 20배 빨라졌다</h2>
+
+<p>2년 전, 우리 서비스의 이미지 처리 파이프라인이 너무 느렸다. 각 이미지마다 2-3초가 걸렸다. JavaScript로는 한계였다.</p>
+
+<p>Rust + WebAssembly로 옮겼다. 결과? 100ms로 떨어졌다.</p>
+
+<p>이 글은 Rust를 WASM으로 컴파일하고, 브라우저에서 사용하는 전 과정이다.</p>
+
+<h3>설치 및 설정</h3>
+
+<p><strong>필요한 도구:</strong></p>
+
+<pre><code"># Rust 설치 (이미 있다고 가정)
+# WebAssembly target 추가
+rustup target add wasm32-unknown-unknown
+
+# wasm-pack 설치
+curl https://rustwasm.org/wasm-pack/installer/init.sh -sSf | sh</code></pre>
+
+<p><strong>새 프로젝트 생성:</strong></p>
+
+<pre><code">cargo new --lib image-processor
+cd image-processor
+
+# Cargo.toml 수정
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+image = "0.24"
+
+[profile.release]
+opt-level = "z"     # 최소 크기
+lto = true
+</code></pre>
+
+<h3>wasm-bindgen 기본</h3>
+
+<p>wasm-bindgen은 Rust와 JavaScript 사이의 다리 역할을 한다:</p>
+
+<pre><code">use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn greet(name: &str) -> String {
+    format!("Hello, {}!", name)
+}
+
+#[wasm_bindgen]
+pub fn add(a: u32, b: u32) -> u32 {
+    a + b
+}</code></pre>
+
+<p><strong>컴파일:</strong></p>
+
+<pre><code">wasm-pack build --target web --release</code></pre>
+
+<p><strong>JavaScript에서 사용:</strong></p>
+
+<pre><code">import * as wasm from './image_processor.js';
+
+console.log(wasm.greet("World"));  // "Hello, World!"
+console.log(wasm.add(5, 3));       // 8</code></pre>
+
+<h3>실제 예제: 이미지 처리</h3>
+
+<pre><code">use wasm_bindgen::prelude::*;
+use image::{ImageBuffer, Rgba, RgbaImage};
+
+#[wasm_bindgen]
+pub struct ImageProcessor {
+    width: u32,
+    height: u32,
+    data: Vec&lt;u8&gt;,
+}
+
+#[wasm_bindgen]
+impl ImageProcessor {
+    #[wasm_bindgen(constructor)]
+    pub fn new(width: u32, height: u32) -> ImageProcessor {
+        let size = (width * height * 4) as usize;
+        ImageProcessor {
+            width,
+            height,
+            data: vec![0; size],
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn load_image(&mut self, pixels: &[u8]) {
+        self.data = pixels.to_vec();
+    }
+
+    #[wasm_bindgen]
+    pub fn grayscale(&mut self) {
+        for i in (0..self.data.len()).step_by(4) {
+            let r = self.data[i] as f32;
+            let g = self.data[i + 1] as f32;
+            let b = self.data[i + 2] as f32;
+
+            let gray = (0.299 * r + 0.587 * g + 0.114 * b) as u8;
+
+            self.data[i] = gray;
+            self.data[i + 1] = gray;
+            self.data[i + 2] = gray;
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn get_data(&self) -> Vec&lt;u8&gt; {
+        self.data.clone()
+    }
+}</code></pre>
+
+<p><strong>JavaScript 사용:</strong></p>
+
+<pre><code">import * as wasm from './image_processor.js';
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// 이미지 로드
+const img = new Image();
+img.src = 'test.jpg';
+
+img.onload = () => {
+    // Canvas에 그리기
+    ctx.drawImage(img, 0, 0);
+
+    // ImageData 추출
+    const imageData = ctx.getImageData(0, 0, img.width, img.height);
+
+    // WASM 함수 호출
+    const processor = new wasm.ImageProcessor(img.width, img.height);
+    processor.load_image(imageData.data);
+    processor.grayscale();
+
+    // 결과를 Canvas에 그리기
+    const result = processor.get_data();
+    const resultData = ctx.createImageData(img.width, img.height);
+    resultData.data.set(new Uint8Array(result));
+    ctx.putImageData(resultData, 0, 0);
+};</code></pre>
+
+<h3>성능 비교</h3>
+
+<p>1000x1000 이미지에서 grayscale 필터 적용 시간:</p>
+
+<ul>
+<li><strong>JavaScript:</strong> 250ms</li>
+<li><strong>Rust + WASM:</strong> 12ms</li>
+<li><strong>성능 향상:</strong> 20배</li>
+</ul>
+
+<p>바이너리 크기:</p>
+
+<ul>
+<li>원본 WASM: 2.3MB</li>
+<li>최적화 후: 280KB (10배 작음)</li>
+<li>gzip 압축: 85KB</li>
+</ul>
+
+<h3>WASM 파일 크기 최적화</h3>
+
+<p><strong>방법 1: 릴리스 프로필</strong></p>
+
+<pre><code">[profile.release]
+opt-level = "z"       # 크기 최적화
+lto = true           # 링크 타임 최적화
+codegen-units = 1    # 최대 최적화</code></pre>
+
+<p><strong>방법 2: wasm-opt 사용</strong></p>
+
+<pre><code">npm install -g wasm-opt
+
+wasm-opt -Oz -o output.wasm input.wasm</code></pre>
+
+<p><strong>방법 3: 필요한 기능만 빌드</strong></p>
+
+<pre><code">// cargo.toml
+[dependencies.image]
+version = "0.24"
+default-features = false
+features = ["jpeg"]  # 필요한 것만</code></pre>
+
+<h3>메모리 관리</h3>
+
+<p>WASM과 JavaScript 사이의 메모리 전달이 중요하다:</p>
+
+<pre><code">use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub struct Buffer {
+    // Vec는 자동으로 관리됨
+    data: Vec&lt;u8&gt;,
+}
+
+#[wasm_bindgen]
+impl Buffer {
+    #[wasm_bindgen(constructor)]
+    pub fn new(size: usize) -> Buffer {
+        Buffer {
+            data: vec![0; size],
+        }
+    }
+
+    // 메모리 직접 접근 (고급)
+    #[wasm_bindgen]
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data.as_ptr()
+    }
+}</code></pre>
+
+<h3>브라우저 vs Node.js</h3>
+
+<p><strong>브라우저:</strong></p>
+
+<pre><code">wasm-pack build --target web</code></pre>
+
+<p><strong>Node.js:</strong></p>
+
+<pre><code">wasm-pack build --target nodejs</code></pre>
+
+<p><strong>유니버설 (둘 다):</strong></p>
+
+<pre><code">wasm-pack build --target bundler</code></pre>
+
+<h3>실제 프로덕션 설정</h3>
+
+<pre><code">// 전체 wasm-pack.toml
+[package]
+name = "image-processor"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+image = { version = "0.24", default-features = false, features = ["jpeg", "png"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true</code></pre>
+
+<p><strong>빌드 스크립트:</strong></p>
+
+<pre><code">#!/bin/bash
+wasm-pack build --release --target web
+wasm-opt -Oz -o pkg/image_processor_bg.wasm pkg/image_processor_bg.wasm
+gzip -k pkg/*.wasm</code></pre>
+
+<h3>디버깅</h3>
+
+<p>WASM 코드를 디버깅하려면:</p>
+
+<pre><code">wasm-pack build --dev  # 디버그 정보 포함
+
+// JavaScript에서
+console.log("WASM result:", wasm.process_image(data));</code></pre>
+
+<h3>결론</h3>
+
+<p>Rust + WASM은 성능이 중요한 웹 애플리케이션에 최적이다:</p>
+
+<ul>
+<li>CPU 바운드 작업: 10-100배 빨라짐</li>
+<li>복잡한 알고리즘: 매우 빠름</li>
+<li>이미지/비디오 처리: 매우 추천</li>
+</ul>
+
+<p>하지만:</p>
+
+<ul>
+<li>I/O 바운드 작업은 JavaScript와 차이 없음</li>
+<li>작은 작업은 오버헤드가 더 클 수 있음</li>
+<li>개발 시간이 더 걸림</li>
+</ul>
+
+<p>25년 경력의 조언: WASM은 "은 탄환"이 아니다. 진짜 필요한 곳에만 쓰자.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-04.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체</span>
+        </a>
+        <a class="related-item" href="/posts/post-17.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust async/await 삽질 정리 — tokio 런타임에서 겪은 문제들</span>
+        </a>
+        <a class="related-item" href="/posts/post-77.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 테스트 전략 — 단위/통합/문서 테스트 제대로 쓰기</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

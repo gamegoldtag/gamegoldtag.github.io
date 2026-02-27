@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="dotfiles 저장소로 개발환경 자동화. Shell script, Homebrew, VS Code 설정 동기화">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-28.html">
+  <title>개발 환경 자동화 — dotfiles로 새 PC 30분 안에 셋업하기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "개발 환경 자동화 — dotfiles로 새 PC 30분 안에 셋업하기",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-06-08",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-28.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">DevOps &amp; Infra</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>개발 환경 자동화 — dotfiles로 새 PC 30분 안에 셋업하기</h1>
+      <p class="meta">게시일: 2025년 6월 8일 · 13분 읽기</p>
+
+<h2>회사 노트북이 바뀔 때마다 이틀이 걸렸던 이유</h2>
+
+<p>예전에 회사 노트북이 바뀌면 2일을 날렸다. OS 설치부터 개발 환경 구축, 설정 파일 복사... 이 모든 게 수동 작업이었다. 하드드라이브 SSD로 바뀌면서 이 문제가 더 심해졌다. 새 SSD는 깨끗하니까 처음부터 다시 해야 했다.</p>
+
+<p>3년 전부터 dotfiles로 자동화했다. 이제 새 노트북을 받으면 스크립트 하나 실행하면 끝이다. 30분이면 충분하다.</p>
+
+<h3>Dotfiles 저장소 구조</h3>
+
+<p>먼저 GitHub에 dotfiles 저장소를 만든다:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+dotfiles/
+  .gitignore
+  README.md
+  install.sh
+  bootstrap.sh
+  defaults.sh
+  symlink.sh
+  brew/
+    Brewfile
+  shell/
+    .zshrc
+    .zprofile
+    .functions
+    .aliases
+  git/
+    .gitconfig
+    .gitignore_global
+  vscode/
+    settings.json
+    keybindings.json
+    extensions.json
+  ssh/
+    config
+</code></pre>
+
+<h3>설치 스크립트</h3>
+
+<p>단일 진입점 스크립트:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+#!/bin/bash
+# install.sh
+
+set -e
+
+echo "Starting dotfiles setup..."
+
+# 1. Xcode Command Line Tools 설치
+if ! command -v xcode-select &> /dev/null; then
+  echo "Installing Xcode Command Line Tools..."
+  xcode-select --install
+  sleep 10
+fi
+
+# 2. Homebrew 설치
+if ! command -v brew &> /dev/null; then
+  echo "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+# 3. Dotfiles 저장소 클론
+DOTFILES_REPO="https://github.com/yourusername/dotfiles.git"
+DOTFILES_DIR="${HOME}/.dotfiles"
+
+if [ ! -d "$DOTFILES_DIR" ]; then
+  echo "Cloning dotfiles..."
+  git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+fi
+
+cd "$DOTFILES_DIR"
+
+# 4. 각 설정 스크립트 실행
+bash "$DOTFILES_DIR/bootstrap.sh"
+bash "$DOTFILES_DIR/defaults.sh"
+bash "$DOTFILES_DIR/brew/install.sh"
+bash "$DOTFILES_DIR/symlink.sh"
+
+echo "Setup complete!"
+</code></pre>
+
+<h3>Homebrew 번들</h3>
+
+<p>설치할 패키지들을 관리:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# brew/Brewfile
+tap "homebrew/cask"
+tap "homebrew/cask-fonts"
+
+# 개발 도구
+brew "git"
+brew "node"
+brew "pnpm"
+brew "rust"
+brew "python@3.11"
+
+# 유틸리티
+brew "tmux"
+brew "vim"
+brew "zsh"
+brew "zsh-completions"
+brew "fzf"
+brew "ripgrep"
+brew "exa"
+
+# 애플리케이션
+cask "visual-studio-code"
+cask "docker"
+cask "slack"
+cask "figma"
+cask "spotify"
+
+# 폰트
+cask "font-jetbrains-mono-nerd-font"
+cask "font-fira-code-nerd-font"
+
+# 앱 스토어
+mas "1Password 7", id: 1333542190
+mas "Keynote", id: 409183694
+
+# brew/install.sh
+#!/bin/bash
+brew bundle --file="$(dirname "$0")/Brewfile"
+</code></pre>
+
+<h3>쉘 설정 심링크</h3>
+
+<p>설정 파일들을 심링크로 연결:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+#!/bin/bash
+# symlink.sh
+
+DOTFILES_DIR="${HOME}/.dotfiles"
+
+# 쉘 설정
+ln -sf "$DOTFILES_DIR/shell/.zshrc" "$HOME/.zshrc"
+ln -sf "$DOTFILES_DIR/shell/.zprofile" "$HOME/.zprofile"
+ln -sf "$DOTFILES_DIR/shell/.functions" "$HOME/.functions"
+ln -sf "$DOTFILES_DIR/shell/.aliases" "$HOME/.aliases"
+
+# Git 설정
+ln -sf "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
+ln -sf "$DOTFILES_DIR/git/.gitignore_global" "$HOME/.gitignore_global"
+
+# SSH 설정
+mkdir -p "$HOME/.ssh"
+ln -sf "$DOTFILES_DIR/ssh/config" "$HOME/.ssh/config"
+chmod 600 "$HOME/.ssh/config"
+
+# VS Code 설정
+VS_CODE_DIR="$HOME/Library/Application Support/Code/User"
+mkdir -p "$VS_CODE_DIR"
+ln -sf "$DOTFILES_DIR/vscode/settings.json" "$VS_CODE_DIR/settings.json"
+ln -sf "$DOTFILES_DIR/vscode/keybindings.json" "$VS_CODE_DIR/keybindings.json"
+
+echo "Symlinks created"
+</code></pre>
+
+<h3>쉘 설정 파일</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# shell/.zshrc
+
+# 기본 설정
+export ZSH="${HOME}/.oh-my-zsh"
+ZSH_THEME="powerlevel10k/powerlevel10k"
+plugins=(git zsh-syntax-highlighting zsh-autosuggestions fzf)
+source $ZSH/oh-my-zsh.sh
+
+# 함수 및 별칭 로드
+source ~/.functions
+source ~/.aliases
+
+# 개발 환경
+export LANG=en_US.UTF-8
+export EDITOR=vim
+export PAGER=less
+
+# Node.js
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# 커스텀 프롬프트
+eval "$(starship init zsh)"
+</code></pre>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# shell/.aliases
+
+alias ll='exa -la'
+alias ls='exa'
+alias cat='bat'
+alias vim='nvim'
+alias cd..='cd ..'
+alias cc='clear'
+
+# Git aliases
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log'
+alias gd='git diff'
+
+# 프로젝트 네비게이션
+alias projects='cd ~/Projects'
+alias work='cd ~/Work'
+</code></pre>
+
+<h3>VS Code 설정 동기화</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// vscode/settings.json
+{
+  "editor.fontFamily": "JetBrains Mono",
+  "editor.fontSize": 13,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.next": true
+  },
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "dist": true
+  },
+
+  "extensions.ignoreRecommendations": false,
+
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
+
+// extensions.json에 필수 확장 목록
+[
+  "esbenp.prettier-vscode",
+  "dbaeumer.vscode-eslint",
+  "ms-vscode.vscode-typescript-next",
+  "GitHub.copilot",
+  "GitHub.github-vscode-theme",
+  "eamodio.gitlens"
+]
+
+// 설치 스크립트
+#!/bin/bash
+while IFS= read -r extension; do
+  code --install-extension "$extension"
+done < "$(dirname "$0")/extensions.json"
+</code></pre>
+
+<h3>Git 설정</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# git/.gitconfig
+[user]
+  name = Your Name
+  email = your.email@example.com
+
+[core]
+  editor = vim
+  excludesfile = ~/.gitignore_global
+  ignorecase = false
+
+[init]
+  defaultBranch = main
+
+[pull]
+  rebase = true
+
+[alias]
+  st = status
+  co = checkout
+  br = branch
+  cm = commit
+  unstage = reset HEAD --
+  last = log -1 HEAD
+  visual = log --graph --oneline --all
+
+[rerere]
+  enabled = true
+</code></pre>
+
+<h3>macOS 기본 설정</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+#!/bin/bash
+# defaults.sh
+
+# 트랙패드 속도
+defaults write NSGlobalDomain com.apple.trackpad.scaling -float 3.0
+
+# 감지 속도
+defaults write NSGlobalDomain InitialKeyRepeat -int 15
+defaults write NSGlobalDomain KeyRepeat -int 2
+
+# Dock 자동 숨김
+defaults write com.apple.dock autohide -bool true
+
+# Finder 기본 보기 (리스트)
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+
+# Hidden 파일 표시
+defaults write com.apple.finder AppleShowAllFiles -bool true
+
+# 변경사항 적용
+killall Finder Dock
+</code></pre>
+
+<h3>SSH 설정</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# ssh/config
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519
+
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_github
+
+Host work-server
+  HostName work.example.com
+  User ubuntu
+  IdentityFile ~/.ssh/id_work
+  Port 2222
+</code></pre>
+
+<h3>초기 실행</h3>
+
+<p>새 Mac을 받았을 때:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# 1. Safari에서 GitHub 접속
+# 2. SSH 키 생성 및 등록
+$ ssh-keygen -t ed25519 -C "your.email@example.com"
+$ cat ~/.ssh/id_ed25519.pub  # GitHub에 등록
+
+# 3. Dotfiles 클론 및 설치
+$ git clone git@github.com:yourusername/dotfiles.git ~/.dotfiles
+$ cd ~/.dotfiles
+$ bash install.sh
+
+# 4. 완료! 모든 설정이 자동으로 적용됨
+</p></code></pre>
+
+<h3>마무리</h3>
+
+<p>Dotfiles는 개발 환경을 코드로 관리한다는 아이디어다. 한 번 설정해두면, 새 컴퓨터에서도 몇 분이면 모든 게 준비된다. 팀원들과도 공유할 수 있다.</p>
+
+<p>회사 노트북 바꿀 때마다 2일을 날렸던 것을 생각하면, dotfiles는 정말 좋은 투자다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-06.html">
+          <span class="ri-cat">DevOps &amp; Infra</span>
+          <span class="ri-title">WSL2 개발 환경 실전 세팅 — 네이티브 Linux 성능 비교까지</span>
+        </a>
+        <a class="related-item" href="/posts/post-41.html">
+          <span class="ri-cat">DevOps &amp; Infra</span>
+          <span class="ri-title">무료 호스팅 완전 비교 — GitHub Pages vs Cloudflare vs Vercel vs Netlify</span>
+        </a>
+        <a class="related-item" href="/posts/post-67.html">
+          <span class="ri-cat">DevOps &amp; Infra</span>
+          <span class="ri-title">HTTPS 무료 인증서 자동화 — Let&#x27;s Encrypt + certbot 완전 정복</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

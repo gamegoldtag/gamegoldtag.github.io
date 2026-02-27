@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="구조화 로그 설계와 관측성 개선으로 장애 대응 시간을 줄이는 방법. 공통 필드 설계, 알림 품질 개선, 자동화된 회고 템플릿까지 실무 사례를 정리했습니다.">
+  <meta name="description" content="Structured logging, log levels, correlation IDs, alerting, Grafana/Loki, 장애 대응 프로세스">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-12.html">
-  <title>로그 설계와 관측성: 장애 대응 시간을 절반으로 줄인 운영 방식 | DevInsight</title>
+  <title>로그 설계와 관측성 — 장애 대응 시간을 절반으로 줄인 운영 방식 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
@@ -25,220 +27,289 @@
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "로그 설계와 관측성 — 장애 대응 시간을 절반으로 줄인 운영 방식",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-11-10",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-12.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>로그 설계와 관측성: 장애 대응 시간을 절반으로 줄인 운영 방식</h1>
-      <p class="meta">게시일: 2025년 11월 30일 · 14분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>장애가 났을 때 팀의 대응 속도를 가장 크게 좌우하는 것은 도구의 성능이 아닙니다. 로그가 질문에 답할 수 있는 구조로 되어 있는가의 차이입니다. "결제 오류가 몇 시부터 얼마나 발생했는가", "어떤 사용자가 영향을 받았는가", "어디서 처음 시작됐는가"라는 질문에 5분 이내에 답할 수 있다면 로그가 잘 설계된 것입니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발 기초 &amp; 팁</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <p>이 글은 로그 구조를 바꾼 뒤 장애 대응 시간이 평균 40분에서 18분으로 줄어든 실무 경험을 정리합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>로그 설계와 관측성 — 장애 대응 시간을 절반으로 줄인 운영 방식</h1>
+      <p class="meta">게시일: 2024년 11월 10일 · 14분 읽기</p>
 
-      <h2>문제: 로그가 많은데 정보가 없는 상태</h2>
-      <p>개선 전 로그 상태는 이런 모습이었습니다:</p>
+<p>새벽 3시에 장애 콜 받고 로그 뒤지는데 grep으로 30분 쓴 적 있다.</p>
 
-      <pre><code">// 문제 있는 로그 패턴
-console.log('결제 실패');
-console.error('Error: ' + err.message);
-logger.info('user login');
-logger.warn('Database query slow');</code></pre>
+<h3>문제: 로그의 무질서</h3>
 
-      <p>이 로그들의 공통 문제는 다음과 같습니다:</p>
-      <ul>
-        <li>어떤 사용자의 요청인지 알 수 없음</li>
-        <li>어떤 요청 흐름에서 발생했는지 추적 불가 (request_id 없음)</li>
-        <li>메시지가 자유 형식이라 집계 어려움</li>
-        <li>에러 컨텍스트(어떤 값이 들어왔는지, 어떤 상태였는지) 없음</li>
-      </ul>
+<p>처음 로깅:</p>
 
-      <h2>구조화 로그: 공통 필드 정의</h2>
-      <p>모든 로그에 공통 필드를 통일하는 것이 출발점입니다. 이 필드들이 있어야 장애 시 필터링과 집계가 가능합니다.</p>
+<pre><code>console.log('User login');
+console.log('DB error');
+console.log('API response sent');
+</code></pre>
 
-      <pre><code">// 공통 로그 필드 정의
-interface LogContext {
-  timestamp: string;      // ISO 8601
-  level: 'debug' | 'info' | 'warn' | 'error';
-  request_id: string;     // 요청 추적 ID (UUID)
-  user_id?: string;       // 요청 사용자 ID (없으면 anonymous)
-  service: string;        // 서비스/모듈 이름
-  action: string;         // 수행 중인 동작 (snake_case)
-  duration_ms?: number;   // 처리 시간
-  error_code?: string;    // 에러 코드 (표준화)
-  [key: string]: unknown; // 추가 컨텍스트
-}
+<p>문제:</p>
 
-// Winston 기반 구조화 로거
-import winston from 'winston';
+<ul>
+<li>어느 사용자가 로그인했나? 모름</li>
+<li>어떤 DB 에러? 모름</li>
+<li>시간이 안 보임</li>
+<li>grep하기 어려움</li>
+</ul>
+
+<h3>Solution 1: Structured Logging</h3>
+
+<p>JSON 형태로 로그:</p>
+
+<pre><code>// ✅ 좋음
+logger.info({
+    event: 'user_login',
+    userId: '12345',
+    email: 'user@example.com',
+    timestamp: new Date().toISOString(),
+    duration: 234,  // ms
+});
+
+// 또는
+logger.info('User login', {
+    userId: '12345',
+    email: 'user@example.com',
+});
+</code></pre>
+
+<p>로그 포맷:</p>
+
+<pre><code>{"timestamp":"2024-11-10T03:15:45Z","level":"info","event":"user_login","userId":"12345","email":"user@example.com","duration":234}
+</code></pre>
+
+<p>이제 파싱 가능하고, 검색 가능하다.</p>
+
+<h3>로그 레벨 규칙</h3>
+
+<pre><code>logger.debug('Entering function processAudio');  // 개발 중에만
+logger.info('Call started, callId=123');         // 일반 이벤트
+logger.warn('Slow query detected, 2.5s');       // 문제 신호
+logger.error('Failed to save user', error);     // 에러 (복구 가능)
+logger.fatal('Out of memory');                  // 중대 에러 (복구 불가)
+</code></pre>
+
+<h3>Correlation ID</h3>
+
+<p>한 요청의 모든 로그를 추적:</p>
+
+<pre><code>// Express middleware
+app.use((req, res, next) => {
+    req.correlationId = req.headers['x-correlation-id'] || crypto.randomUUID();
+    res.setHeader('X-Correlation-ID', req.correlationId);
+    next();
+});
+
+// 로그할 때 항상 correlationId 포함
+logger.info('Processing request', {
+    correlationId: req.correlationId,
+    userId: req.user.id,
+    path: req.path,
+});
+</code></pre>
+
+<p>이제 correlationId로 한 요청의 모든 로그를 한 번에 볼 수 있다.</p>
+
+<h3>Winston + Loki 설정</h3>
+
+<pre><code>import winston from 'winston';
+import WinstonLoki from 'winston-loki';
 
 const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json(),  // 항상 JSON 형식
-  ),
-  transports: [
-    new winston.transports.Console(),
-  ],
+    level: process.env.LOG_LEVEL || 'info',
+    format: winston.format.json(),
+    transports: [
+        // Console (개발 중)
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.simple()
+            ),
+        }),
+
+        // Loki (프로덕션)
+        new WinstonLoki({
+            host: 'http://loki:3100',
+            labels: { app: 'audio-chat' },
+            json: true,
+        }),
+    ],
 });
 
-// 사용 예시
-logger.info({
-  request_id: req.id,
-  user_id: req.user?.id,
-  service: 'payment',
-  action: 'charge_attempt',
-  amount: payload.amount,
-  currency: payload.currency,
-});</code></pre>
+export default logger;
+</code></pre>
 
-      <h2>Request ID로 요청 추적하기</h2>
-      <p>하나의 사용자 요청이 여러 서비스, 여러 함수를 거칠 때 동일한 request_id를 유지해야 전체 흐름을 추적할 수 있습니다.</p>
+<h3>Loki 쿼리 예시</h3>
 
-      <pre><code">// Express 미들웨어: 요청마다 request_id 생성 또는 수신
-import { v4 as uuidv4 } from 'uuid';
-import { AsyncLocalStorage } from 'async_hooks';
+<p>특정 사용자의 모든 로그:</p>
 
-export const requestContext = new AsyncLocalStorage<{ requestId: string }>();
+<pre><code>{app="audio-chat"} | json | userId="12345"
+</code></pre>
 
-app.use((req, res, next) => {
-  // 업스트림에서 전달된 ID 사용하거나 새로 생성
-  const requestId = req.headers['x-request-id'] as string ?? uuidv4();
-  req.id = requestId;
-  res.setHeader('X-Request-Id', requestId);
+<p>에러만 보기:</p>
 
-  // AsyncLocalStorage로 요청 컨텍스트 전파
-  requestContext.run({ requestId }, () => next());
+<pre><code>{app="audio-chat"} | json | level="error"
+</code></pre>
+
+<p>느린 요청:</p>
+
+<pre><code>{app="audio-chat"} | json | duration > 1000
+</code></pre>
+
+<h3>Grafana Alerting</h3>
+
+<p>조건:</p>
+
+<blockquote>
+<p>에러 로그가 1분 동안 5개 이상이면 alert</p>
+</blockquote>
+
+<pre><code>// Loki query
+sum(count_over_time({app="audio-chat"} | json | level="error" [1m])) > 5
+</code></pre>
+
+<h3>장애 대응 프로세스</h3>
+
+<p>Before (30분):</p>
+
+<pre><code>1. SSH 접속 (2분)
+2. 로그 파일 찾기 (3분)
+3. grep으로 검색 (10분)
+4. 원인 파악 (15분)
+</code></pre>
+
+<p>After (5분):</p>
+
+<pre><code>1. Grafana alert 보기 (30초)
+2. Loki에서 correlationId 검색 (1분)
+3. 원인 명확 (3분 30초)
+</code></pre>
+
+<h3>핵심 로그 이벤트</h3>
+
+<p>음성 채팅 앱이라면:</p>
+
+<pre><code>logger.info('call_started', {
+    callId: call.id,
+    participantIds: [user1, user2],
+    duration: 0,
 });
 
-// 어디서든 request_id를 자동으로 포함하는 로거
-function getLogger(service: string) {
-  return {
-    info: (data: object) => {
-      const ctx = requestContext.getStore();
-      logger.info({ ...data, service, request_id: ctx?.requestId });
-    },
-    error: (data: object) => {
-      const ctx = requestContext.getStore();
-      logger.error({ ...data, service, request_id: ctx?.requestId });
-    },
-  };
-}</code></pre>
+logger.info('call_message_sent', {
+    callId: call.id,
+    userId: user.id,
+    messageLength: message.length,
+});
 
-      <h2>에러 코드 표준화</h2>
-      <p>자유 형식 에러 메시지는 집계가 어렵습니다. 에러 코드를 표준화하면 "지난 1시간 동안 PAYMENT_CARD_DECLINED 에러가 몇 번 발생했는가"를 쿼리 한 줄로 확인할 수 있습니다.</p>
+logger.error('call_connection_failed', {
+    callId: call.id,
+    userId: user.id,
+    error: error.message,
+    errorCode: error.code,
+});
+</code></pre>
 
-      <pre><code">// 에러 코드 정의
-export const ErrorCodes = {
-  // 인증
-  AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
-  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+<h3>결론</h3>
 
-  // 결제
-  PAYMENT_CARD_DECLINED: 'PAYMENT_CARD_DECLINED',
-  PAYMENT_INSUFFICIENT_FUNDS: 'PAYMENT_INSUFFICIENT_FUNDS',
-  PAYMENT_GATEWAY_ERROR: 'PAYMENT_GATEWAY_ERROR',
+<p>로그는 애프리케이션의 눈이다. 구조화된 로그 없으면 장애 대응이 무질서하다.</p>
 
-  // 유효성 검사
-  VALIDATION_REQUIRED: 'VALIDATION_REQUIRED',
-  VALIDATION_FORMAT: 'VALIDATION_FORMAT',
-} as const;
+<p>투자:</p>
 
-// 에러 로그 예시
-logger.error({
-  request_id: req.id,
-  service: 'payment',
-  action: 'charge',
-  error_code: ErrorCodes.PAYMENT_CARD_DECLINED,
-  error_message: err.message,
-  user_id: req.user.id,
-  amount: payload.amount,
-  card_last_four: payload.card.last4,
-});</code></pre>
+<ul>
+<li>로깅 라이브러리 선택: 1시간</li>
+<li>모든 로그 구조화: 1일</li>
+<li>Loki/Grafana 설정: 3시간</li>
+<li>총 5시간</li>
+</ul>
 
-      <h2>알림 품질 개선: 노이즈 줄이기</h2>
-      <p>에러 개수 임계치만으로 알림을 설정하면 새벽에 불필요한 알림을 받는 상황이 생깁니다. 실제 사용자 영향 여부를 함께 평가해야 합니다.</p>
+<p>효과: 장애 대응 시간 50% 단축 (영구적)</p>
 
-      <pre><code">// 알림 조건 설계 예시 (Prometheus + AlertManager)
+<p>가장 좋은 투자다.</p>
 
-# 에러율 기반 (에러 개수가 아닌 비율)
-- alert: HighErrorRate
-  expr: |
-    rate(http_requests_total{status=~"5.."}[5m])
-    /
-    rate(http_requests_total[5m]) > 0.05
-  for: 2m
-  labels:
-    severity: critical
-  annotations:
-    summary: "5xx 에러율 5% 초과 (2분 지속)"
 
-# 지연시간 기반 (p95 기준)
-- alert: HighLatency
-  expr: |
-    histogram_quantile(0.95,
-      rate(http_request_duration_seconds_bucket[5m])
-    ) > 2
-  for: 5m
-  labels:
-    severity: warning
-  annotations:
-    summary: "API 응답 p95가 2초 초과"</code></pre>
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
 
-      <h2>성능 로그: 느린 쿼리/API 자동 감지</h2>
-      <p>장애가 아닌 성능 저하도 로그로 감지할 수 있습니다. 일정 시간을 초과하는 작업을 자동으로 경고 로그로 기록합니다.</p>
-
-      <pre><code">// 데이터베이스 쿼리 성능 로깅 (Prisma 예시)
-const prismaWithLogging = prisma.$extends({
-  query: {
-    async $allOperations({ operation, model, args, query }) {
-      const start = Date.now();
-      const result = await query(args);
-      const duration = Date.now() - start;
-
-      if (duration > 500) {  // 500ms 초과 시 경고
-        logger.warn({
-          service: 'database',
-          action: 'slow_query',
-          model,
-          operation,
-          duration_ms: duration,
-        });
-      }
-
-      return result;
-    },
-  },
-});</code></pre>
-
-      <h2>자동화된 장애 타임라인 생성</h2>
-      <p>장애 종료 후 로그를 수동으로 수집해 타임라인을 만드는 작업은 시간이 많이 걸립니다. request_id와 에러 코드가 구조화되어 있으면 이 작업을 자동화할 수 있습니다.</p>
-
-      <pre><code">// 장애 타임라인 조회 스크립트 예시 (Elasticsearch)
-GET /logs-*/_search
-{
-  "query": {
-    "bool": {
-      "must": [
-        { "range": { "timestamp": { "gte": "2025-12-01T14:00:00", "lte": "2025-12-01T15:00:00" } } },
-        { "term": { "error_code": "PAYMENT_GATEWAY_ERROR" } }
-      ]
-    }
-  },
-  "aggs": {
-    "per_minute": {
-      "date_histogram": { "field": "timestamp", "fixed_interval": "1m" }
-    }
-  },
-  "sort": [{ "timestamp": "asc" }]
-}</code></pre>
-
-      <h2>마무리</h2>
-      <p>관측성은 도구 문제가 아니라 운영 습관입니다. Elasticsearch나 DataDog이 없어도, 공통 필드와 구조화 로그 기준만 지키면 대응 속도는 즉시 개선됩니다. 가장 먼저 해야 할 것은 request_id를 모든 로그에 포함시키는 것입니다. 이 하나만 해도 장애 원인 파악 시간이 크게 줄어듭니다.</p>
-
-      <a class="back" href="/">홈으로 돌아가기</a>
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-11.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">E2E 테스트 flaky 줄이기 — 실패 원인을 구조적으로 제거하는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-72.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">정규표현식 실전 패턴 — 매번 검색하는 것들 총정리</span>
+        </a>
+        <a class="related-item" href="/posts/post-79.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">개발자가 알면 좋은 네트워크 기초 — DNS부터 TCP까지</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

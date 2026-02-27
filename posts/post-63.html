@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="파일 정렬, Excel 보고서, Slack 봇, 로그 분석, DB 백업 등. 매주 30분 반복 작업을 1분에 끝내는 법">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-63.html">
+  <title>Python 자동화 스크립트 실전 — 반복 업무 줄이는 10가지 예제 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Python 자동화 스크립트 실전 — 반복 업무 줄이는 10가지 예제",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-10",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-63.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발 기초 &amp; 팁</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Python 자동화 스크립트 실전 — 반복 업무 줄이는 10가지 예제</h1>
+      <p class="meta">게시일: 2026년 1월 10일 · 15분 읽기</p>
+<h2>매주 금요일 아침 시간낭비에서 벗어나다</h2>
+<p>매주 금요일 오전 10시가 되면, 나는 다음 일을 반복했다: 로그 폴더를 정렬하고, 주간 사용자 통계를 Excel로 정리하고, Slack에 보고하고, 데이터베이스를 백업하는 것이다. 이 모든 과정이 약 30분이 걸렸다. 이걸 3년을 반복했다. 그러다가 2024년 초에 깨달았다: "이건 자동화해야 한다."</p>
+
+<p>지난 1년, 나는 Python 스크립트로 이 모든 작업을 자동화했다. 이제는 cron job으로 매주 금요일 아침 9시에 자동으로 실행된다. 내가 할 일은 그냥 결과 메시지를 보는 것뿐이다.</p>
+
+<p>이번 글에서는 내가 실제로 구현한 10가지 자동화 패턴을 공유한다.</p>
+
+<h3>1. 파일 정렬 및 정리 — shutil과 pathlib</h3>
+<p>먼저 가장 간단한 것부터. 다운로드 폴더를 자동으로 정렬하는 스크립트다:</p>
+
+<pre><code>import os
+import shutil
+from pathlib import Path
+from datetime import datetime
+
+download_dir = Path.home() / 'Downloads'
+archive_dir = Path.home() / 'Downloads' / 'Archive'
+
+# 30일 이상 된 파일을 Archive 폴더로 이동
+archive_dir.mkdir(exist_ok=True)
+
+for file in download_dir.glob('*'):
+    if file.is_file():
+        file_age_days = (datetime.now() - datetime.fromtimestamp(file.stat().st_mtime)).days
+        if file_age_days &gt; 30:
+            shutil.move(str(file), archive_dir / file.name)
+            print(f'Moved: {file.name}')
+
+# 로그 파일 정리 (1MB 이상인 것만 압축)
+log_dir = Path('/var/log/myapp')
+for log_file in log_dir.glob('*.log'):
+    if log_file.stat().st_size &gt; 1_000_000:  # 1MB 이상
+        shutil.move(str(log_file), str(log_file) + '.bak')
+        print(f'Archived: {log_file.name}')
+</code></pre>
+
+<h3>2. Excel 보고서 자동 생성 — openpyxl</h3>
+<p>주간 통계를 Excel로 정리하는 작업이 가장 시간이 걸렸다. openpyxl을 써서 완전히 자동화했다:</p>
+
+<pre><code>from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from datetime import datetime, timedelta
+import sqlite3
+
+# 데이터베이스에서 주간 통계 조회
+conn = sqlite3.connect('app.db')
+cursor = conn.cursor()
+
+start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+cursor.execute('''
+    SELECT DATE(created_at) as date, COUNT(*) as user_count, SUM(revenue) as revenue
+    FROM transactions
+    WHERE created_at &gt;= ?
+    GROUP BY DATE(created_at)
+''', (start_date,))
+
+rows = cursor.fetchall()
+conn.close()
+
+# Excel 워크북 생성
+wb = Workbook()
+ws = wb.active
+ws.title = 'Weekly Report'
+
+# 헤더
+headers = ['Date', 'User Count', 'Revenue']
+for col, header in enumerate(headers, 1):
+    cell = ws.cell(row=1, column=col)
+    cell.value = header
+    cell.font = Font(bold=True, color='FFFFFF')
+    cell.fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    cell.alignment = Alignment(horizontal='center')
+
+# 데이터 입력
+thin_border = Border(
+    left=Side(style='thin'),
+    right=Side(style='thin'),
+    top=Side(style='thin'),
+    bottom=Side(style='thin')
+)
+
+total_revenue = 0
+for row_idx, (date, user_count, revenue) in enumerate(rows, 2):
+    ws.cell(row=row_idx, column=1).value = date
+    ws.cell(row=row_idx, column=2).value = user_count
+    ws.cell(row=row_idx, column=3).value = revenue if revenue else 0
+    total_revenue += revenue if revenue else 0
+
+    for col in range(1, 4):
+        ws.cell(row=row_idx, column=col).border = thin_border
+
+# 합계 행
+summary_row = len(rows) + 2
+ws.cell(row=summary_row, column=1).value = 'TOTAL'
+ws.cell(row=summary_row, column=1).font = Font(bold=True)
+ws.cell(row=summary_row, column=3).value = total_revenue
+ws.cell(row=summary_row, column=3).font = Font(bold=True)
+
+# 열 너비 조정
+ws.column_dimensions['A'].width = 12
+ws.column_dimensions['B'].width = 15
+ws.column_dimensions['C'].width = 15
+
+# 저장
+report_path = f'reports/weekly_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
+wb.save(report_path)
+print(f'Report saved: {report_path}')
+</code></pre>
+
+<h3>3. Slack 알림 — webhook</h3>
+<p>보고서가 생성되면 Slack에 자동으로 메시지를 보낸다:</p>
+
+<pre><code>import requests
+import json
+
+SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+def send_slack_message(channel, title, metrics):
+    payload = {
+        'channel': channel,
+        'username': 'AutoBot',
+        'icon_emoji': ':robot_face:',
+        'blocks': [
+            {
+                'type': 'header',
+                'text': {
+                    'type': 'plain_text',
+                    'text': title
+                }
+            },
+            {
+                'type': 'section',
+                'fields': [
+                    {
+                        'type': 'mrkdwn',
+                        'text': f'*Active Users:*
+{metrics["active_users"]}'
+                    },
+                    {
+                        'type': 'mrkdwn',
+                        'text': f'*Revenue:*
+${metrics["revenue"]:,.2f}'
+                    },
+                    {
+                        'type': 'mrkdwn',
+                        'text': f'*New Signups:*
+{metrics["new_users"]}'
+                    },
+                    {
+                        'type': 'mrkdwn',
+                        'text': f'*Churn Rate:*
+{metrics["churn_rate"]:.1f}%'
+                    }
+                ]
+            }
+        ]
+    }
+
+    response = requests.post(
+        SLACK_WEBHOOK_URL,
+        data=json.dumps(payload),
+        headers={'Content-Type': 'application/json'}
+    )
+
+    if response.status_code == 200:
+        print('Slack message sent successfully')
+    else:
+        print(f'Failed to send Slack message: {response.status_code}')
+
+# 사용
+metrics = {
+    'active_users': 15_420,
+    'revenue': 8_342.50,
+    'new_users': 128,
+    'churn_rate': 2.3
+}
+
+send_slack_message('#weekly-report', '📊 Weekly Business Report', metrics)
+</code></pre>
+
+<h3>4. 로그 파일 분석 — 정규표현식</h3>
+<p>에러 로그를 분석해서 가장 자주 발생하는 에러를 정리한다:</p>
+
+<pre><code>import re
+from collections import Counter
+from pathlib import Path
+
+log_file = Path('/var/log/app.log')
+error_pattern = re.compile(r'ERROR: (.+?)(?:
+|$)')
+
+errors = []
+with open(log_file, 'r') as f:
+    for line in f:
+        match = error_pattern.search(line)
+        if match:
+            errors.append(match.group(1))
+
+# 가장 많은 에러 5개
+error_counts = Counter(errors)
+print('Top 5 Errors:')
+for error, count in error_counts.most_common(5):
+    print(f'  {count}x: {error}')
+
+# 타임스탐프로 필터링
+timestamp_pattern = re.compile(r'\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]')
+errors_by_hour = {}
+
+with open(log_file, 'r') as f:
+    for line in f:
+        ts_match = timestamp_pattern.search(line)
+        if ts_match and 'ERROR' in line:
+            timestamp = ts_match.group(1)
+            hour = timestamp[:13] + ':00'  # 시간 단위로
+            errors_by_hour[hour] = errors_by_hour.get(hour, 0) + 1
+
+for hour, count in sorted(errors_by_hour.items()):
+    print(f'{hour}: {count} errors')
+</code></pre>
+
+<h3>5. 데이터베이스 자동 백업 — subprocess</h3>
+<p>매주 데이터베이스를 백업하고 오래된 백업은 삭제한다:</p>
+
+<pre><code>import subprocess
+import os
+from pathlib import Path
+from datetime import datetime, timedelta
+
+DB_NAME = 'production_db'
+DB_USER = 'postgres'
+BACKUP_DIR = Path('/backups/database')
+RETENTION_DAYS = 30
+
+BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+
+# 백업 생성
+timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+backup_file = BACKUP_DIR / f'{DB_NAME}_{timestamp}.sql.gz'
+
+try:
+    # PostgreSQL dump
+    dump_cmd = f'pg_dump -U {DB_USER} {DB_NAME} | gzip'
+    with open(backup_file, 'wb') as f:
+        subprocess.run(dump_cmd, shell=True, stdout=f, check=True)
+
+    print(f'Backup created: {backup_file}')
+    print(f'Size: {backup_file.stat().st_size / (1024**3):.2f} GB')
+
+except subprocess.CalledProcessError as e:
+    print(f'Backup failed: {e}')
+    exit(1)
+
+# 오래된 백업 삭제
+cutoff_date = datetime.now() - timedelta(days=RETENTION_DAYS)
+for backup in BACKUP_DIR.glob(f'{DB_NAME}_*.sql.gz'):
+    file_mtime = datetime.fromtimestamp(backup.stat().st_mtime)
+    if file_mtime &lt; cutoff_date:
+        backup.unlink()
+        print(f'Deleted old backup: {backup.name}')
+
+# S3에 업로드 (옵션)
+import boto3
+s3 = boto3.client('s3')
+s3.upload_file(str(backup_file), 'my-backup-bucket', backup_file.name)
+print(f'Uploaded to S3: s3://my-backup-bucket/{backup_file.name}')
+</code></pre>
+
+<h3>6. API 헬스체크 — requests</h3>
+<p>중요한 엔드포인트들을 주기적으로 체크한다:</p>
+
+<pre><code>import requests
+from datetime import datetime
+import json
+
+endpoints = [
+    ('API Health', 'https://api.example.com/health'),
+    ('User Service', 'https://user-service.example.com/status'),
+    ('Payment Service', 'https://payment.example.com/ping'),
+]
+
+failed_endpoints = []
+
+for name, url in endpoints:
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            print(f'✓ {name}: OK')
+        else:
+            print(f'✗ {name}: {response.status_code}')
+            failed_endpoints.append((name, response.status_code))
+    except requests.Timeout:
+        print(f'✗ {name}: TIMEOUT')
+        failed_endpoints.append((name, 'TIMEOUT'))
+    except requests.ConnectionError:
+        print(f'✗ {name}: CONNECTION ERROR')
+        failed_endpoints.append((name, 'CONNECTION ERROR'))
+
+# 실패한 엔드포인트 알림
+if failed_endpoints:
+    alert_message = 'Service Alert:
+'
+    for name, error in failed_endpoints:
+        alert_message += f'  - {name}: {error}
+'
+
+    # 이메일이나 Slack으로 알림
+    print(alert_message)
+</code></pre>
+
+<h3>7. 이미지 배치 처리 — Pillow</h3>
+<p>업로드된 이미지들을 자동으로 압축하고 썸네일을 생성한다:</p>
+
+<pre><code>from PIL import Image
+from pathlib import Path
+
+IMAGE_DIR = Path('uploads/images')
+THUMB_DIR = Path('uploads/thumbnails')
+MAX_WIDTH = 1920
+THUMB_WIDTH = 300
+
+THUMB_DIR.mkdir(parents=True, exist_ok=True)
+
+for image_path in IMAGE_DIR.glob('*.jpg'):
+    if image_path.stat().st_size &gt; 1_000_000:  # 1MB 이상만 처리
+        # 원본 압축
+        img = Image.open(image_path)
+
+        # EXIF 데이터 제거 및 최적화
+        img.thumbnail((MAX_WIDTH, MAX_WIDTH), Image.Resampling.LANCZOS)
+        img.save(image_path, 'JPEG', quality=85, optimize=True)
+
+        # 썸네일 생성
+        img.thumbnail((THUMB_WIDTH, THUMB_WIDTH), Image.Resampling.LANCZOS)
+        thumb_path = THUMB_DIR / image_path.name
+        img.save(thumb_path, 'JPEG', quality=80, optimize=True)
+
+        print(f'Processed: {image_path.name}')
+</code></pre>
+
+<h3>8. CSV 데이터 정제 및 변환 — pandas</h3>
+<p>외부 CSV 데이터를 받아서 DB에 넣기 전에 정제한다:</p>
+
+<pre><code>import pandas as pd
+import sqlite3
+from datetime import datetime
+
+# CSV 읽기
+df = pd.read_csv('raw_data.csv')
+
+# 데이터 정제
+df['email'] = df['email'].str.lower().str.strip()
+df['phone'] = df['phone'].str.replace('[^0-9]', '', regex=True)
+df['signup_date'] = pd.to_datetime(df['signup_date'])
+
+# 중복 제거
+df = df.drop_duplicates(subset=['email'])
+
+# 이상값 제거 (나이가 18-80 사이)
+df = df[(df['age'] &gt;= 18) &amp; (df['age'] &lt;= 80)]
+
+# 결측치 처리
+df['country'] = df['country'].fillna('Unknown')
+
+# 통계
+print(f'Total records: {len(df)}')
+print(f'Invalid emails: {df[~df["email"].str.contains("@")].shape[0]}')
+
+# 데이터베이스에 저장
+conn = sqlite3.connect('app.db')
+df.to_sql('users', conn, if_exists='append', index=False)
+conn.close()
+
+print(f'Imported {len(df)} records to database')
+</code></pre>
+
+<h3>9. 자동 이메일 리포트 — smtplib</h3>
+<p>매주 리포트를 이메일로 보낸다:</p>
+
+<pre><code>import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from pathlib import Path
+
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+SENDER_EMAIL = 'your-email@gmail.com'
+SENDER_PASSWORD = 'your-app-password'  # Gmail app password
+RECIPIENT = 'manager@company.com'
+
+# 메시지 생성
+message = MIMEMultipart('alternative')
+message['Subject'] = f'Weekly Report - {datetime.now().strftime("%Y-%m-%d")}'
+message['From'] = SENDER_EMAIL
+message['To'] = RECIPIENT
+
+# HTML 본문
+html = 
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-11.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">E2E 테스트 flaky 줄이기 — 실패 원인을 구조적으로 제거하는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-72.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">정규표현식 실전 패턴 — 매번 검색하는 것들 총정리</span>
+        </a>
+        <a class="related-item" href="/posts/post-79.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">개발자가 알면 좋은 네트워크 기초 — DNS부터 TCP까지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

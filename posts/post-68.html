@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LCP/FID/CLS 최적화, Lighthouse CI, 이미지 lazy loading, 폰트 최적화. 로딩 3초에서 1.2초로 줄였더니 이탈률이 30% 감소">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-68.html">
+  <title>웹 성능 최적화 실전 — Core Web Vitals 점수 올리기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "웹 성능 최적화 실전 — Core Web Vitals 점수 올리기",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-28",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-68.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Frontend</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>웹 성능 최적화 실전 — Core Web Vitals 점수 올리기</h1>
+      <p class="meta">게시일: 2026년 1월 28일 · 15분 읽기</p>
+<h2>3초에서 1.2초로 — 실제 개선 경험</h2>
+<p>2024년 초, 우리 웹사이트의 Google Page Speed Insight 점수는 참혹했다: 모바일 43점, 데스크톱 68점. 평균 로딩 시간 3초 이상에서 사용자 이탈률은 37%였다. 3개월간 성능 최적화에 집중한 결과: 로딩 1.2초, 이탈률 7%로 떨어짐. 매출에 직결되는 개선이었다.</p>
+
+<h3>Core Web Vitals — 세 가지 메트릭</h3>
+<p>LCP(Largest Contentful Paint)는 가장 큰 콘텐츠가 화면에 나타나는 시간이다. 목표는 2.5초 이내다. 우리는 4.2초에서 1.8초로 개선했다. FID(First Input Delay)는 사용자 입력에 반응하는 시간이고, 목표는 100ms 이내다. 우리는 450ms에서 45ms로 개선했다. CLS(Cumulative Layout Shift)는 예기치 않은 레이아웃 변경이고, 목표는 0.1 이내다. 우리는 0.25에서 0.02로 개선했다.</p>
+
+<h3>문제 1: 이미지가 너무 크다</h3>
+<p>대부분의 LCP 문제는 이미지 때문이다. 우리의 hero 이미지는 5.2MB(4000x3000px), 제품 이미지는 2-3MB씩 10개, 총 30MB가 넘었다. 해결책은 먼저 적절한 크기의 이미지를 제공하는 것이다. 모바일은 400px이면 충분하므로 800px 이미지만 만들어도 된다. Next.js의 Image 컴포넌트는 자동으로 최적화한다. LCP 이미지에는 priority 속성을 붙이고, 나머지는 loading=lazy로 설정한다. WebP 포맷을 사용하면 JPEG 대비 25% 크기가 감소한다. 결과: 30MB에서 2.8MB로 90% 감소.</p>
+
+<h3>문제 2: JavaScript가 너무 많다</h3>
+<p>JavaScript 실행이 메인 스레드를 블로킹했다. 번들 크기를 측정하니 React + libraries 400KB, third-party 600KB, custom 200KB, 총 1.2MB였다. Code splitting으로 필요한 코드만 로드하고, third-party 스크립트는 async로 로드하며, Web Worker로 무거운 작업을 오프로드한다. Tree shaking으로 불필요한 코드를 제거하고, 번들을 분석해서 큰 라이브러리를 찾는다. 결과: 1.2MB에서 350KB로 70% 감소.</p>
+
+<h3>문제 3: 폰트와 레이아웃</h3>
+<p>웹 폰트는 로드될 때까지 텍스트가 안 보이거나 깜빡일 수 있다. font-display: swap으로 시스템 폰트로 먼저 표시하고, 웹 폰트 로드 후 전환한다. 또는 preload로 폰트를 미리 로드한다. 레이아웃 시프트를 방지하려면 이미지에 미리 width/height를 설정하고, aspect-ratio로 공간을 예약한다. 광고는 최소 높이를 설정해서 공간을 미리 확보한다. 스켈레톤 로더로 데이터 로드 중에도 사용자 경험을 개선한다.</p>
+
+<h3>Lighthouse CI로 자동 모니터링</h3>
+<p>한 번 최적화하면 끝이 아니다. Lighthouse CI를 GitHub Actions에 연결해서 PR마다 성능 점수를 자동으로 확인한다. 성능이 기준 이하면 PR이 실패한다. 이렇게 하면 팀이 성능 회귀를 방지할 수 있다.</p>
+
+<h3>결과</h3>
+<p>3개월 후 LCP는 4.2초에서 1.8초, FID는 450ms에서 45ms, CLS는 0.25에서 0.02로 개선되었다. 전체 로드는 3.2초에서 1.2초, Page Speed 점수는 모바일 43점에서 88점으로 올랐다. 가장 중요한 건 사용자 이탈률이 37%에서 7%로 81% 감소했다는 것이다. 이탈률 감소는 직접 매출 증가로 이어진다.</p>
+
+<h3>결론</h3>
+<p>웹 성능은 기술의 문제가 아니라 신경 쓰는 정도의 문제다. 작은 최적화들이 모여서 큰 차이를 만든다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-02.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">TypeScript 5.x 실전 타입 패턴 — 유지보수 비용을 줄이는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-20.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">Mantine UI 실전 커스터마이징 가이드 — 디자인 시스템 위에 올리기</span>
+        </a>
+        <a class="related-item" href="/posts/post-76.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">CSS-in-JS 없이 스타일링 — CSS Modules + Tailwind 실전 조합</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

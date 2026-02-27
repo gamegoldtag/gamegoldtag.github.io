@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Same-origin 정책, preflight 요청, Access-Control 헤더, credentials 모드. CORS 에러를 매번 당하는 건 원리를 모르기 때문">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-69.html">
+  <title>CORS 제대로 이해하기 — 삽질 없이 설정하는 법 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "CORS 제대로 이해하기 — 삽질 없이 설정하는 법",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-30",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-69.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Security</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>CORS 제대로 이해하기 — 삽질 없이 설정하는 법</h1>
+      <p class="meta">게시일: 2026년 1월 30일 · 13분 읽기</p>
+<h2>CORS 에러가 반복되는 이유</h2>
+<p>많은 개발자들이 CORS 에러에 시달린다. 해결책을 구글링해서 Access-Control-Allow-Origin: *을 쓰거나, 프록시를 만든다. 하지만 근본 원인을 모르면 계속 같은 문제에 걸린다. CORS(Cross-Origin Resource Sharing)는 보안 정책이자 동시에 웹 개발의 필수 요소다. 28년 경험상 원리만 이해하면 대부분의 CORS 문제는 5분 만에 해결된다.</p>
+
+<h3>Same-Origin Policy — 왜 이 정책이 필요한가?</h3>
+<p>브라우저에는 Same-Origin Policy가 있다. 한 origin에서 로드된 웹 페이지는 다른 origin의 리소스에 접근할 수 없다는 정책이다. Origin은 protocol + domain + port의 조합이다. https://example.com과 https://api.example.com은 다른 origin이다(subdomain이 다르므로). https://example.com:3000과 https://example.com은 다른 origin이다(port가 다르므로).</p>
+
+<p>이 정책이 없으면 악의적인 웹사이트가 사용자의 은행 계좌에 접근할 수 있다. 만약 사용자가 은행 계좌에 로그인한 상태라면, 그 세션 쿠키를 이용해 계좌 이체 요청을 보낼 수 있다. 따라서 같은 origin의 요청만 가능하게 제한하는 것이 필수다.</p>
+
+<h3>Preflight Request — 브라우저가 자동으로 하는 보안 체크</h3>
+<p>특정 요청(복잡한 요청)에는 preflight 요청이 앞선다. 예를 들어 POST로 JSON을 보낼 때:</p>
+
+<pre><code>// 브라우저가 자동으로 먼저 이 요청을 보냄
+OPTIONS /api/data HTTP/1.1
+Origin: https://example.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type
+
+// 서버의 응답이 OK면 실제 요청을 보냄
+POST /api/data HTTP/1.1
+Content-Type: application/json
+Origin: https://example.com
+Body: {data...}
+</code></pre>
+
+<p>서버가 preflight 요청에 제대로 응답하지 않으면 CORS 에러가 난다.</p>
+
+<h3>Access-Control 헤더 — 어떤 origin을 허용할 것인가?</h3>
+<p>서버는 다음 헤더로 CORS를 제어한다:</p>
+
+<pre><code>// 어떤 origin이 접근 가능한가?
+Access-Control-Allow-Origin: https://example.com
+// 또는 모든 origin 허용 (권장하지 않음)
+Access-Control-Allow-Origin: *
+
+// 어떤 HTTP 메서드를 허용할 것인가?
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+
+// 어떤 헤더를 허용할 것인가?
+Access-Control-Allow-Headers: Content-Type, Authorization, X-Custom-Header
+
+// 브라우저가 응답 헤더에 접근할 수 있나?
+Access-Control-Expose-Headers: X-Total-Count, X-Page-Count
+
+// 인증 정보(쿠키, Authorization 헤더)를 포함할 것인가?
+Access-Control-Allow-Credentials: true
+
+// Preflight 요청을 캐시할 시간 (초)
+Access-Control-Max-Age: 3600
+</code></pre>
+
+<h3>Credentials 모드 — 쿠키를 보낼 것인가?</h3>
+<p>CORS 요청에서 인증 정보를 포함할지 결정하는 중요한 설정이다:</p>
+
+<pre><code>// 클라이언트 측 (JavaScript)
+fetch('/api/data', {
+  method: 'POST',
+  credentials: 'include',  // 쿠키 포함
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({...})
+})
+
+// 이 경우 서버의 응답에 반드시 포함되어야 함:
+// Access-Control-Allow-Credentials: true
+// (Access-Control-Allow-Origin: * 는 불가능, 명시적 origin 필요)
+</code></pre>
+
+<p>credentials: 'include'를 쓰면서 Allow-Origin: *를 쓰면 CORS 에러가 난다. 이 조합은 불가능하다.</p>
+
+<h3>실제 설정 예제</h3>
+<p>Express에서:</p>
+
+<pre><code>const cors = require('cors');
+
+// 단순: 모든 origin 허용 (개발용)
+app.use(cors());
+
+// 실무: 특정 origin만 허용
+const allowedOrigins = ['https://example.com', 'https://app.example.com'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {  // !origin은 curl 요청
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 3600
+}));
+
+// Preflight 요청 처리 (cors 미들웨어가 자동 처리)
+app.options('/api/:path', cors());
+</code></pre>
+
+<p>또는 FastAPI에서:</p>
+
+<pre><code>from fastapi.middleware.cors import CORSMiddleware
+
+allowed_origins = [
+    'https://example.com',
+    'https://app.example.com',
+    'http://localhost:3000'
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=['GET', 'POST', 'PUT', 'DELETE'],
+    allow_headers=['Content-Type', 'Authorization'],
+    max_age=3600
+)
+</code></pre>
+
+<h3>개발용 프록시 — 로컬에서 CORS 우회하기</h3>
+<p>로컬 개발할 때 백엔드 API가 다른 포트에 있으면 CORS 문제가 난다. 프록시를 사용해서 우회할 수 있다:</p>
+
+<pre><code>// Next.js: next.config.js
+module.exports = {
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*'
+      }
+    ]
+  }
+}
+
+// 클라이언트 코드는 /api를 그대로 사용
+fetch('/api/data')  // http://localhost:3000/api/data로 요청되지만
+                     // 서버에서 http://localhost:8000/api/data로 프록시됨
+</code></pre>
+
+<p>또는 Create React App: .env에 PROXY 설정:</p>
+
+<pre><code>REACT_APP_API_URL=http://localhost:8000
+</code></pre>
+
+<h3>CORS와 보안</h3>
+<p>CORS는 단순히 개발자의 불편함을 위한 정책이 아니다. 보안이 핵심이다. 따라서:</p>
+
+<ul>
+<li>프로덕션에서 Access-Control-Allow-Origin: *를 쓰지 말 것</li>
+<li>인증이 필요한 엔드포인트에서 credentials를 고려할 것</li>
+<li>필요한 origin만 명시적으로 허용할 것</li>
+</ul>
+
+<h3>결론</h3>
+<p>CORS 에러는 보안 정책 때문이고, 이 정책은 필요하다. 원리만 이해하면 설정은 매우 간단하다. 앞으로 CORS 에러를 만나면 먼저 origin이 다른지 확인하고, preflight 요청이 제대로 응답하는지 브라우저의 Network 탭에서 확인하자.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-10.html">
+          <span class="ri-cat">Security</span>
+          <span class="ri-title">웹 보안 헤더 최소 구성 — 실무에서 먼저 적용해야 할 것들</span>
+        </a>
+        <a class="related-item" href="/posts/post-70.html">
+          <span class="ri-cat">Security</span>
+          <span class="ri-title">JWT 인증 구현 시 놓치기 쉬운 보안 포인트 7가지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

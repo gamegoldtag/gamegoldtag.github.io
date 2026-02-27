@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="styled-components의 런타임 오버헤드를 피하고 CSS Modules와 Tailwind의 장점을 결합하는 방법을 설명합니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-76.html">
+  <title>CSS-in-JS 없이 스타일링 — CSS Modules + Tailwind 실전 조합 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "CSS-in-JS 없이 스타일링 — CSS Modules + Tailwind 실전 조합",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-13",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-76.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Frontend</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>CSS-in-JS 없이 스타일링 — CSS Modules + Tailwind 실전 조합</h1>
+      <p class="meta">게시일: 2026년 2월 13일 · 13분 읽기</p>
+<p>styled-components의 런타임 오버헤드가 눈에 보이기 시작했다. 페이지가 약간 느려지는 것을 느꼈고, 번들 크기도 너무 컸다. 그래서 CSS Modules로 돌아왔다. 하지만 CSS Modules도 문제가 있다. Tailwind와의 조합으로 양쪽의 장점을 모두 가질 수 있다.</p>
+
+<h3>CSS-in-JS의 문제</h3>
+
+<p><strong>런타임 오버헤드</strong></p>
+
+<p>CSS-in-JS는 자바스크립트가 실행되면서 CSS를 생성한다. 이는 다음을 의미한다:</p>
+
+<ul>
+<li>초기 로딩 시간 증가</li>
+<li>메인 스레드 블로킹</li>
+<li>대규모 애플리케이션에서 성능 저하</li>
+</ul>
+
+<pre><code class="language-javascript">
+// styled-components - 런타임에 실행됨
+import styled from 'styled-components';
+
+const Button = styled.button\`
+  background: #007bff;
+  padding: 10px 20px;
+  border-radius: 4px;
+\`;
+
+// 이 코드가 렌더링될 때마다 스타일이 계산되고 DOM에 주입됨
+</code></pre>
+
+<p><strong>번들 크기</strong></p>
+
+<p>styled-components는 약 15KB의 번들 크기를 차지한다. 작은 프로젝트에서는 큰 오버헤드다.</p>
+
+<p><strong>디버깅 어려움</strong></p>
+
+<p>CSS-in-JS는 generated class name을 사용하므로, DevTools에서 디버깅이 어렵다.</p>
+
+<h3>CSS Modules의 장점</h3>
+
+<p>CSS Modules는 파일 단위로 CSS 범위를 분리한다.</p>
+
+<pre><code class="language-css">
+/* Button.module.css */
+.button {
+  background: #007bff;
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: #0056b3;
+}
+
+.primary {
+  background: #28a745;
+}
+
+.danger {
+  background: #dc3545;
+}
+</code></pre>
+
+<pre><code class="language-javascript">
+import styles from './Button.module.css';
+
+export function Button({ variant = 'primary', children }) {
+  return (
+    <button className={styles[variant]}>
+      {children}
+    </button>
+  );
+}
+</code></pre>
+
+<p><strong>장점:</strong></p>
+
+<ul>
+<li>번들에 포함된다 (분리된 다운로드 없음)</li>
+<li>런타임 오버헤드 없음</li>
+<li>진정한 캡슐화</li>
+<li>DevTools에서 쉽게 찾을 수 있음</li>
+</ul>
+
+<h3>CSS Modules의 한계</h3>
+
+<p>하지만 CSS Modules는 너무 저수준이다. 반복되는 코드가 많아진다.</p>
+
+<pre><code class="language-css">
+/* 비슷한 패턴들이 계속 반복됨 */
+.box1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.box2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+}
+
+.box3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+}
+</code></pre>
+
+<h3>Tailwind CSS의 해답</h3>
+
+<p>Tailwind는 미리 정의된 유틸리티 클래스를 제공한다.</p>
+
+<pre><code class="language-jsx">
+export function Button({ variant = 'primary', children }) {
+  const baseStyles = 'px-5 py-2 rounded border-none cursor-pointer';
+  const variants = {
+    primary: 'bg-blue-500 hover:bg-blue-600',
+    danger: 'bg-red-500 hover:bg-red-600'
+  };
+
+  return (
+    <button className={`${baseStyles} ${variants[variant]}`}>
+      {children}
+    </button>
+  );
+}
+</code></pre>
+
+<p><strong>장점:</strong></p>
+
+<ul>
+<li>빠르게 프로토타입 가능</li>
+<li>일관성 있는 디자인 시스템</li>
+<li>최적화된 빌드 (사용하지 않는 클래스 제거)</li>
+<li>반응형 디자인 쉬움</li>
+</ul>
+
+<p><strong>단점:</strong></p>
+
+<ul>
+<li>HTML 속성이 길어짐</li>
+<li>컴포넌트에 스타일 로직이 섞임</li>
+<li>큰 프로젝트에서 복잡해짐</li>
+</ul>
+
+<h3>CSS Modules + Tailwind 조합</h3>
+
+<p>두 가지를 조합하면 양쪽의 장점을 얻을 수 있다.</p>
+
+<p><strong>전략: Tailwind는 아토믹 레벨에서, CSS Modules는 컴포넌트 레벨에서 사용</strong></p>
+
+<pre><code class="language-css">
+/* Button.module.css */
+.button {
+  @apply px-5 py-2 rounded border-none cursor-pointer;
+  transition: all 0.2s ease;
+}
+
+.primary {
+  @apply bg-blue-500 hover:bg-blue-600;
+}
+
+.danger {
+  @apply bg-red-500 hover:bg-red-600;
+}
+
+.size-small {
+  @apply px-3 py-1 text-sm;
+}
+
+.size-large {
+  @apply px-6 py-3 text-lg;
+}
+</code></pre>
+
+<pre><code class="language-javascript">
+import styles from './Button.module.css';
+
+export function Button({
+  variant = 'primary',
+  size = 'medium',
+  children
+}) {
+  const classNames = [
+    styles.button,
+    styles[variant],
+    size !== 'medium' && styles[`size-${size}`]
+  ].filter(Boolean).join(' ');
+
+  return (
+    <button className={classNames}>
+      {children}
+    </button>
+  );
+}
+</code></pre>
+
+<h3>Vite와의 통합</h3>
+
+<p><strong>vite.config.js</strong></p>
+
+<pre><code class="language-javascript">
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+      generateScopedName: '[name]__[local]--[hash:base64:5]'
+    }
+  }
+});
+</code></pre>
+
+<p>또는 더 간단하게, camelCase로 접근 가능하게 설정할 수 있다.</p>
+
+<pre><code class="language-javascript">
+// Button.module.css
+.primaryButton { ... }
+
+// 사용
+import styles from './Button.module.css';
+styles.primaryButton  // 가능
+</code></pre>
+
+<h3>보다 구조화된 예제</h3>
+
+<p><strong>디자인 시스템과 함께</strong></p>
+
+<pre><code class="language-css">
+/* design-tokens.css */
+:root {
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  --color-primary: #007bff;
+  --color-primary-hover: #0056b3;
+  --color-danger: #dc3545;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+}
+</code></pre>
+
+<pre><code class="language-css">
+/* Card.module.css */
+.card {
+  @apply rounded-lg p-6 shadow-md;
+  background: white;
+  border: 1px solid #e0e0e0;
+}
+
+.card--elevated {
+  @apply shadow-lg;
+  border: none;
+}
+
+.cardHeader {
+  @apply mb-4 pb-4 border-b border-gray-200;
+}
+
+.cardTitle {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.cardBody {
+  @apply text-sm text-gray-700;
+}
+
+.cardFooter {
+  @apply mt-4 pt-4 border-t border-gray-200 text-right;
+}
+</code></pre>
+
+<pre><code class="language-javascript">
+import styles from './Card.module.css';
+
+export function Card({ elevated = false, children }) {
+  return (
+    <div className={[
+      styles.card,
+      elevated && styles['card--elevated']
+    ].filter(Boolean).join(' ')}>
+      {children}
+    </div>
+  );
+}
+
+export function CardHeader({ children }) {
+  return <div className={styles.cardHeader}>{children}</div>;
+}
+
+export function CardTitle({ children }) {
+  return <h3 className={styles.cardTitle}>{children}</h3>;
+}
+
+export function CardBody({ children }) {
+  return <div className={styles.cardBody}>{children}</div>;
+}
+
+export function CardFooter({ children }) {
+  return <div className={styles.cardFooter}>{children}</div>;
+}
+</code></pre>
+
+<h3>클래스명 합치기 유틸리티</h3>
+
+<p>클래스명을 합치는 로직이 반복되므로, 유틸리티 함수를 만들자.</p>
+
+<pre><code class="language-javascript">
+// classNames.ts
+export function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(c => typeof c === 'string').join(' ');
+}
+
+// 사용
+import styles from './Button.module.css';
+import { cn } from '@/utils/classNames';
+
+export function Button({ variant, disabled, children }) {
+  return (
+    <button className={cn(
+      styles.button,
+      styles[variant],
+      disabled && styles.disabled
+    )}>
+      {children}
+    </button>
+  );
+}
+</code></pre>
+
+<p>또는 더 강력한 라이브러리를 사용할 수도 있다.</p>
+
+<pre><code class="language-javascript">
+// clsx 라이브러리 사용
+import clsx from 'clsx';
+import styles from './Button.module.css';
+
+export function Button({ variant, disabled, children }) {
+  return (
+    <button className={clsx(
+      styles.button,
+      styles[variant],
+      disabled && styles.disabled
+    )}>
+      {children}
+    </button>
+  );
+}
+</code></pre>
+
+<h3>성능 비교</h3>
+
+<table>
+<thead>
+<tr>
+<th>방식</th>
+<th>번들 크기</th>
+<th>런타임 오버헤드</th>
+<th>개발 경험</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>styled-components</td>
+<td>+15KB</td>
+<td>높음</td>
+<td>좋음</td>
+</tr>
+<tr>
+<td>CSS Modules</td>
+<td>+0KB</td>
+<td>없음</td>
+<td>보통</td>
+</tr>
+<tr>
+<td>Tailwind</td>
+<td>+50KB (최적화 후 5KB)</td>
+<td>없음</td>
+<td>빠름</td>
+</tr>
+<tr>
+<td>CSS Modules + Tailwind</td>
+<td>+30KB (최적화 후 3KB)</td>
+<td>없음</td>
+<td>매우 좋음</td>
+</tr>
+</tbody>
+</table>
+
+<h3>언제 무엇을 사용할까?</h3>
+
+<ul>
+<li><strong>매우 동적인 스타일</strong>: CSS-in-JS (그래도 성능 고려)</li>
+<li><strong>소규모 프로젝트</strong>: Tailwind</li>
+<li><strong>중대형 프로젝트</strong>: CSS Modules + Tailwind</li>
+<li><strong>성능 중시</strong>: CSS Modules</li>
+</ul>
+
+<h3>결론</h3>
+
+<p>styled-components는 강력하지만 비싸다. CSS Modules + Tailwind의 조합은 성능, 유지보수성, 개발 경험의 좋은 균형을 제공한다. 특히 중대형 프로젝트에서 강력한 선택지다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-02.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">TypeScript 5.x 실전 타입 패턴 — 유지보수 비용을 줄이는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-20.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">Mantine UI 실전 커스터마이징 가이드 — 디자인 시스템 위에 올리기</span>
+        </a>
+        <a class="related-item" href="/posts/post-68.html">
+          <span class="ri-cat">Frontend</span>
+          <span class="ri-title">웹 성능 최적화 실전 — Core Web Vitals 점수 올리기</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

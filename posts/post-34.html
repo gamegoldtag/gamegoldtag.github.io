@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="10년 된 jQuery 코드를 React로 변환. 대규모 리팩토링 프롬프트 전략">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-34.html">
+  <title>AI로 레거시 코드 리팩토링하기 — 실전 프롬프트 패턴 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "AI로 레거시 코드 리팩토링하기 — 실전 프롬프트 패턴",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-07-25",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-34.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI &amp; 개발 도구</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>AI로 레거시 코드 리팩토링하기 — 실전 프롬프트 패턴</h1>
+      <p class="meta">게시일: 2025년 7월 25일 · 15분 읽기</p>
+
+<h2>10년 된 코드와의 전쟁</h2>
+
+<p>우리 회사엔 10년 된 jQuery 코드가 있었다. 기능은 하지만, 유지보수가 어렵고 성능도 떨어진다. React로 마이그레이션하려고 했지만, 규모가 너무 컸다. 전체 리팩토링에만 6개월이 걸릴 것 같았다.</p>
+
+<p>Claude를 활용해서 2개월로 줄였다. 비결은 좋은 프롬프트다.</p>
+
+<h3>청크 단위로 분석하기</h3>
+
+<p>전체 코드를 한 번에 주면 AI가 이해하지 못한다. 청크로 나눠서 처리한다:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// 나쁜 예: 전체 코드
+"$('#header').click(function() { ... })
+$('#sidebar').toggle()
+...
+// 1000줄"
+
+// 좋은 예: 기능별로 분리
+"유저 인증 관련 코드만 React로 변환해줘
+
+현재 코드:
+&lt;script&gt;
+  $('#login-form').on('submit', function() {
+    const username = $('#username').val()
+    const password = $('#password').val()
+    $.post('/api/login', {
+      username: username,
+      password: password
+    }, function(data) {
+      localStorage.setItem('token', data.token)
+      window.location.href = '/dashboard'
+    })
+  })
+&lt;/script&gt;
+
+요구사항:
+- React Hooks 사용
+- TypeScript
+- Error handling 추가
+- Loading state 포함"
+</code></pre>
+
+<h3>컨텍스트 설정</h3>
+
+<p>AI가 팀의 규칙을 따르도록:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+"우리 팀의 코딩 스타일:
+- TypeScript strict 모드
+- React Hooks (클래스 컴포넌트 X)
+- tailwindCSS로 스타일링
+- API 호출은 /lib/api.ts의 함수 사용
+- 에러 처리는 항상 try-catch
+- 로딩 상태는 isLoading boolean 사용
+- 테스트는 vitest로 작성
+
+폴더 구조:
+src/
+  components/     # React 컴포넌트
+  pages/          # 페이지 컴포넌트
+  lib/
+    api.ts        # API 호출 함수들
+    hooks.ts      # 커스텀 훅
+  types/
+    index.ts      # TypeScript 타입
+
+이제 다음 코드를 React로 변환해줘:"
+</code></pre>
+
+<h3>마이그레이션 전략</h3>
+
+<p>큰 프로젝트의 경우 단계별 진행:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+1단계: 컴포넌트 구조 설계
+"jQuery 코드를 분석해서 React 컴포넌트 구조를 제안해줘.
+현재 HTML 구조:
+&lt;div id="app"&gt;
+  &lt;header id="main-header"&gt;
+    &lt;nav id="navbar"&gt;...&lt;/nav&gt;
+  &lt;/header&gt;
+  &lt;main&gt;
+    &lt;sidebar id="left-sidebar"&gt;...&lt;/sidebar&gt;
+    &lt;content id="main-content"&gt;...&lt;/content&gt;
+  &lt;/main&gt;
+&lt;/div&gt;
+
+컴포넌트 구조 제안 + 데이터 흐름도"
+
+2단계: 타입 정의
+"위 구조에 필요한 TypeScript 타입을 정의해줘.
+- 각 컴포넌트의 props
+- 전역 상태 타입
+- API 응답 타입"
+
+3단계: 개별 컴포넌트 변환
+"Header 컴포넌트를 React로 변환해줘.
+(이미 정의된 타입과 구조 사용)"
+
+4단계: 상태 관리
+"이 컴포넌트들의 상태 관리를 위해 필요한 hooks를 만들어줘"
+
+5단계: 통합
+"모든 컴포넌트를 통합하는 App.tsx를 작성해줘"
+</code></pre>
+
+<h3>구체적인 예제</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+// jQuery 원본
+$(document).ready(function() {
+  $('#products-list').on('click', '.product-item', function() {
+    const productId = $(this).data('id')
+    const name = $(this).find('.product-name').text()
+    const price = $(this).find('.product-price').text()
+
+    $('#product-detail').html(
+      `&lt;h2&gt;${name}&lt;/h2&gt;&lt;p&gt;$${price}&lt;/p&gt;`
+    )
+
+    $.get(`/api/products/${productId}`, function(data) {
+      $('#product-desc').html(data.description)
+      $('#add-to-cart').data('product-id', productId)
+    })
+  })
+
+  $('#add-to-cart').on('click', function() {
+    const productId = $(this).data('product-id')
+    $.post('/api/cart', { product_id: productId }, function() {
+      alert('Added to cart!')
+    })
+  })
+})
+
+// 좋은 프롬프트
+"이 jQuery 코드를 React로 변환해줘.
+
+요구사항:
+1. ProductList와 ProductDetail 두 개 컴포넌트로 분리
+2. 상태는 useProductStore (Zustand) 사용
+3. API 호출은 /lib/api/products.ts의 함수 사용
+4. TypeScript 타입 포함
+5. 에러 처리 추가
+6. Loading 상태 표시
+7. tailwindCSS로 스타일링
+
+참고: Product 타입은 이미 있음
+type Product = {
+  id: number
+  name: string
+  price: number
+  description: string
+}"
+</code></pre>
+
+<h3>QA와 검증</h3>
+
+<p>변환 후 검증 프롬프트:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+"이 React 컴포넌트를 검토해줘.
+
+체크리스트:
+- TypeScript 타입이 정확한가?
+- 메모리 누수 위험은 없는가? (useEffect cleanup)
+- 에러 핸들링이 충분한가?
+- 접근성 (a11y)은 고려했는가?
+- 성능 문제는 없는가? (불필요한 re-render)
+- 테스트하기 쉬운 구조인가?
+
+문제가 있으면 수정 코드를 제시해줘."
+</code></pre>
+
+<h3>테스트 자동 생성</h3>
+
+<p>React 컴포넌트는 테스트도 필요하다:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+"이 ProductDetail 컴포넌트에 대한 vitest 테스트를 작성해줘.
+
+테스트 항목:
+1. 컴포넌트 마운트 시 API 호출
+2. 데이터 로딩 중 로딩 표시
+3. API 에러 시 에러 메시지 표시
+4. 'Add to Cart' 버튼 클릭 시 cart API 호출
+5. API 응답 데이터 정확히 표시
+
+사용 라이브러리:
+- vitest
+- @testing-library/react
+- msw (API 모킹)"
+</code></pre>
+
+<h3>성과**</h3>
+
+<p>우리의 리팩토링 결과:</p>
+
+<ul>
+<li>기간: 10년 코드 → 2개월 (예상 6개월)</li>
+<li>코드량: jQuery 5000줄 → React 2000줄 (60% 감소)</li>
+<li>성능: 페이지 로딩 시간 5초 → 1.2초</li>
+<li>유지보수성: 코드 복잡도 50% 감소</li>
+</ul>
+
+<h3>마무리</h3>
+
+<p>AI로 레거시 코드를 리팩토링할 때의 핵심은 청크 단위 처리와 명확한 요구사항이다. 전체를 한 번에 주려고 하면 실패한다. 하지만 잘 정의된 단계별 프롬프트로 진행하면, AI는 정말 효율적인 리팩토링을 도와준다.</p>
+
+<p>특히 타입 정의와 테스트를 AI에 맡기면, 개발자는 아키텍처와 비즈니스 로직에 집중할 수 있다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-07.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI 코딩 도구 6개월 실사용 후기 — 생산성이 정말 올랐을까?</span>
+        </a>
+        <a class="related-item" href="/posts/post-33.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">로컬 LLM 돌리기 — ollama로 프라이빗 AI 코딩 어시스턴트 세팅</span>
+        </a>
+        <a class="related-item" href="/posts/post-78.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">LLM 프롬프트 엔지니어링 실전 — 개발자를 위한 패턴 모음</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

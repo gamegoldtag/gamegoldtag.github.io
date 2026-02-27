@@ -1,103 +1,79 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DevInsight 소개 페이지">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://ikakao.kr/about.html">
-    <title>소개 | DevInsight</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/400.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/index.css">
-    <style>
-        :root {
-            --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
-            --font-serif: "Gowun Batang", "Noto Serif KR", serif;
-            --font-mono: "JetBrains Mono", "Fira Code", monospace;
-            --ink: #1a1a2e;
-            --paper: #f8f6f1;
-            --border: #d4d0c8;
-            --muted: #6b6b7b;
-            --accent: #c0392b;
-        }
-        body {
-            margin: 0;
-            font-family: var(--font-sans);
-            color: var(--ink);
-            background: linear-gradient(180deg, #f6f2e8 0%, #f8f6f1 100%);
-            line-height: 1.7;
-        }
-        main {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: 48px 20px 80px;
-        }
-        h1 { font-family: var(--font-serif); font-size: 2rem; margin: 0 0 8px; }
-        h2 { font-family: var(--font-serif); margin-top: 28px; font-size: 1.2rem; }
-        .updated { color: var(--muted); margin-bottom: 24px; }
-        .card {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 28px;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 24px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DevInsight 소개 페이지. 운영자, 다루는 주제, 콘텐츠 운영 방향을 안내합니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/about.html">
+  <title>소개 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <main>
-        <div class="card">
-            <h1>소개</h1>
-            <p class="updated">최종 업데이트: <span data-current-date></span></p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html" class="active">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-            <h2>안녕하세요, ian.lab입니다</h2>
-            <p>
-                새로운 플랫폼과 언어를 꾸준히 익히고, 실제 업무에 적용하는 개발자입니다.
-                이 사이트는 특정 회사나 제품 홍보가 아닌, 실무에서 검증한 기술 선택과 구현 과정을 기록하는 기술 블로그입니다.
-            </p>
+  <main class="container-narrow" style="padding:0 20px 60px;">
+    <div class="policy-card">
+      <h1>소개</h1>
+      <p class="updated">최종 업데이트: 2026년 2월 27일</p>
 
-            <h2>경험 영역</h2>
-            <p>
-                Windows, 웹, 데스크톱, 클라우드 환경을 모두 다뤄왔고, C++, C#, Rust, TypeScript, React, Vue, PHP 등
-                여러 언어와 프레임워크를 프로젝트 상황에 맞춰 사용해 왔습니다.
-            </p>
+      <h2>운영자</h2>
+      <p>
+        안녕하세요. DevInsight를 운영하는 ian.lab입니다.
+        이 사이트는 특정 서비스 판매를 위한 페이지가 아니라, 실제 개발 실무에서 겪은 문제와 해결 과정을 기록하는 개인 기술 아카이브입니다.
+      </p>
 
-            <h2>운영 원칙</h2>
-            <p>
-                이 사이트의 글은 직접 작성한 실무 경험 기반 콘텐츠만 게시합니다.
-                단순 개념 요약보다 "왜 이 선택을 했는가", "무엇이 실패했고 어떻게 고쳤는가"를 중심으로 작성합니다.
-            </p>
+      <h2>다루는 주제</h2>
+      <p>
+        백엔드, 웹 성능, 보안, Rust, TypeScript, 개발 생산성 도구, 배포 자동화와 같은 주제를 중심으로 다룹니다.
+        단순 튜토리얼보다 선택 근거와 운영 관점의 트레이드오프를 중요하게 기록합니다.
+      </p>
 
-            <h2>다루는 주제</h2>
-            <p>
-                Electron, Rust, TypeScript, React, 프론트엔드 성능 최적화, 개발 생산성 자동화,
-                아키텍처 설계, 디버깅 방법론을 중점적으로 다룹니다.
-            </p>
+      <h2>콘텐츠 운영 방식</h2>
+      <p>
+        모든 게시물은 직접 작성하고 검토 후 발행합니다.
+        오류 제보를 반영해 기존 글을 업데이트하며, 사이트 정책은
+        <a href="/editorial-policy.html">운영 및 편집 원칙</a>,
+        <a href="/privacy.html">개인정보처리방침</a>,
+        <a href="/terms.html">이용약관</a>에서 확인할 수 있습니다.
+      </p>
 
-            <a class="back-link" href="index.html">홈으로 돌아가기</a>
-        </div>
-    </main>
+      <h2>연락</h2>
+      <p>
+        문의 또는 정정 요청은 <a href="mailto:goldtagworks@gmail.com">goldtagworks@gmail.com</a>로 보내주세요.
+        자세한 연락 채널은 <a href="/contact.html">연락처 페이지</a>에 있습니다.
+      </p>
+    </div>
+  </main>
 
-    <script>
-        const today = new Date();
-        const todayText = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
-        const experienceYears = today.getFullYear() - 1998;
-
-        document.querySelectorAll('[data-exp-years]').forEach((el) => {
-            el.textContent = String(experienceYears);
-        });
-
-        document.querySelectorAll('[data-current-date]').forEach((el) => {
-            el.textContent = todayText;
-        });
-    </script>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

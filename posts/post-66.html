@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="REST 성숙도 모델, GraphQL 장단점, 버전 관리, 에러 처리. GraphQL 도입 팀과 REST 유지 팀, 결국 둘 다 쓰고 있다">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-66.html">
+  <title>API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-22",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-66.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Backend &amp; DB</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준</h1>
+      <p class="meta">게시일: 2026년 1월 22일 · 14분 읽기</p>
+<h2>두 진영의 대립에서 찾은 균형</h2>
+<p>2023년 말, 우리 회사의 백엔드 팀 회의는 치열했다. 새로운 API를 설계할 때 REST를 써야 한다는 팀과 GraphQL을 써야 한다는 팀이 대립했다. 결론: REST는 공개 API에, GraphQL은 내부 API에 사용하기로 결정했다. 28년 경험으로 봤을 때 이게 최고의 결정이었다. 프레임워크 선택과 마찬가지로, API 설계도 "팀이 효율적으로 관리할 수 있는 것"이 첫 번째 조건이다. REST의 간단함이 필요한가, 아니면 GraphQL의 유연함이 필요한가. 두 가지를 동시에 지원할 수도 있다는 게 핵심이다.</p>
+
+<h3>REST의 진정한 가치</h3>
+<p>REST는 성숙도가 있다. Richardson Maturity Model에 따르면 4단계가 있다. 0단계에서는 HTTP를 단순 전송으로만 사용하고, 1단계에서 리소스 개념을 도입한다. 2단계에서는 HTTP 메서드를 제대로 사용하며, 3단계는 HATEOAS를 구현한다. 대부분의 실무 API는 2-3단계 초반에 있다. 완전한 HATEOAS는 복잡도가 높아 실제로는 드물다. 우리가 성공한 REST API들의 공통점은 리소스 중심 설계, 일관된 에러 응답, 체계적인 페이지네이션, 명확한 버전 관리였다. REST는 캐싱이 간단하고 디버깅도 쉽다. curl로 바로 테스트할 수 있으니까.</p>
+
+<h3>GraphQL의 진정한 가치</h3>
+<p>GraphQL은 REST와 완전히 다른 철학이다. 클라이언트가 필요한 데이터를 명시적으로 지정해서 요청한다. 이렇게 하면 over-fetching(불필요한 데이터 수신)과 under-fetching(여러 API 호출 필요)을 모두 방지할 수 있다. 특히 모바일 앱에서는 네트워크 효율이 중요하니 GraphQL이 유리하다. 또한 강력한 타입 시스템이 있어서 TypeScript와 자동으로 타입을 동기화할 수 있다. 하지만 GraphQL도 단점이 있다. 학습 곡선이 가파르고, 캐싱이 복잡하며, N+1 쿼리 문제가 발생하기 쉽다. 관리 부담이 높다는 게 가장 큰 문제다.</p>
+
+<h3>우리의 결정</h3>
+<p>공개 API는 REST로, 내부 API는 GraphQL로. 이게 우리의 최종 선택이었다. 공개 API는 외부 개발자들이 사용하므로 캐싱이 중요하고, curl로 바로 테스트 가능해야 한다. 내부 API는 우리 프론트엔드가 주로 사용하므로 타입 안전성과 개발 효율이 더 중요하다. 두 가지를 병행함으로써 각각의 장점을 취할 수 있다.</p>
+
+<h3>버전 관리와 에러 처리</h3>
+<p>REST에서는 URL 경로에 버전을 명시하는 방식이 가장 명확하다. /api/v1/, /api/v2/ 이런 식이다. 3-6개월마다 새 버전을 출시하고, 구 버전은 12개월 뒤 종료하는 정책이 일반적이다. GraphQL은 버전 숫자가 필요 없다. 필드를 추가하고 deprecated 마크를 하면 된다. 에러 처리는 REST가 HTTP 상태 코드를 활용하고, GraphQL은 항상 200으로 응답하고 errors 필드에 상세 정보를 담는다. 두 방식 모두 명확한 에러 코드와 메시지, 추적용 request ID를 포함하는 게 중요하다.</p>
+
+<h3>결론</h3>
+<p>REST vs GraphQL은 "어느 것이 더 나은가"가 아니라 "언제 어디에 쓸 것인가"의 문제다. 우리는 둘 다 쓰고 있고, 이게 최고의 선택이었다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-09.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계</span>
+        </a>
+        <a class="related-item" href="/posts/post-62.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">Supabase 실전 활용기 — Firebase 대안으로 쓸만한가?</span>
+        </a>
+        <a class="related-item" href="/posts/post-65.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">Redis 캐시 전략 실전 — 단순 TTL을 넘어서</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

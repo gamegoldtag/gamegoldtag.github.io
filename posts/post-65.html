@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cache-aside/through/behind 패턴, pub/sub, sorted sets, Lua 스크립트. Redis를 단순 캐시로만 쓰는 건 아깝다">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-65.html">
+  <title>Redis 캐시 전략 실전 — 단순 TTL을 넘어서 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Redis 캐시 전략 실전 — 단순 TTL을 넘어서",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-18",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-65.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Backend &amp; DB</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Redis 캐시 전략 실전 — 단순 TTL을 넘어서</h1>
+      <p class="meta">게시일: 2026년 1월 18일 · 14분 읽기</p>
+<h2>Redis를 단순 캐시로만 쓰는 건 진짜 아깝다</h2>
+<p>많은 개발자들이 Redis를 써본다. 하지만 대부분은 이렇게 쓴다: "데이터를 Redis에 넣고 5분 후 자동으로 삭제한다." 이게 캐싱의 전부는 아니다.</p>
+
+<p>내가 28년간 지켜본 Redis는 훨씬 더 강력한 도구다. 세션 관리, 실시간 순위판, 속도 제한, 메시지 큐, 분산 락 등 많은 것들을 할 수 있다. 하지만 패턴을 모르면 그냥 "빠른 저장소" 정도일 뿐이다.</p>
+
+<h3>캐싱 패턴 1: Cache-Aside (Lazy Loading)</h3>
+<p>가장 흔한 패턴이다. 데이터가 필요할 때 캐시를 확인하고, 없으면 DB에서 가져온다:</p>
+
+<pre><code>import redis
+import json
+import time
+
+r = redis.Redis(host='localhost', port=6379)
+
+def get_user(user_id: int) -> dict:
+    # 1. 캐시에서 확인
+    cache_key = f'user:{user_id}'
+    cached_data = r.get(cache_key)
+
+    if cached_data:
+        print(f'Cache HIT for user {user_id}')
+        return json.loads(cached_data)
+
+    # 2. 캐시 미스: DB에서 가져오기
+    print(f'Cache MISS for user {user_id}')
+    user = fetch_from_database(user_id)  # 느린 DB 쿼리
+
+    # 3. 캐시에 저장 (1시간 TTL)
+    r.setex(cache_key, 3600, json.dumps(user))
+
+    return user
+
+# 데이터베이스에서 가져오는 시뮬레이션
+def fetch_from_database(user_id: int) -> dict:
+    time.sleep(0.1)  # DB 쿼리 지연 시뮬레이션
+    return {
+        'id': user_id,
+        'name': f'User {user_id}',
+        'email': f'user{user_id}@example.com'
+    }
+
+# 첫 번째 호출: 캐시 미스 (느림)
+user = get_user(1)  # 약 100ms
+
+# 두 번째 호출: 캐시 히트 (빠름)
+user = get_user(1)  # 약 1ms
+</code></pre>
+
+<p>장점: 간단하고, 필요한 것만 캐시한다</p>
+
+<p>단점: 첫 요청은 느리고, 데이터 동기화가 복잡할 수 있다</p>
+
+<h3>캐싱 패턴 2: Cache-Through (Write-Through)</h3>
+<p>데이터를 쓸 때 캐시도 함께 업데이트한다:</p>
+
+<pre><code>def update_user(user_id: int, data: dict) -> None:
+    # 1. DB 업데이트
+    update_in_database(user_id, data)
+
+    # 2. 캐시 업데이트
+    cache_key = f'user:{user_id}'
+    r.setex(cache_key, 3600, json.dumps(data))
+
+def delete_user(user_id: int) -> None:
+    # 1. DB 삭제
+    delete_from_database(user_id)
+
+    # 2. 캐시 삭제
+    cache_key = f'user:{user_id}'
+    r.delete(cache_key)
+</code></pre>
+
+<p>장점: 데이터 일관성이 높다</p>
+
+<p>단점: 모든 쓰기에서 캐시도 업데이트해야 함</p>
+
+<h3>캐싱 패턴 3: Cache-Behind (Write-Behind)</h3>
+<p>데이터를 캐시에만 먼저 저장하고, 나중에 배치로 DB에 반영한다. 매우 높은 처리량이 필요할 때 유용하다:</p>
+
+<pre><code>from datetime import datetime, timedelta
+
+def increment_user_score(user_id: int, points: int) -> None:
+    # 1. 캐시에만 저장 (비동기)
+    cache_key = f'user:score:{user_id}'
+    r.incrby(cache_key, points)
+
+    # 2. "쓰기 대기" 리스트에 추가
+    r.sadd('pending_writes', user_id)
+
+    # 3. 나중에 배치로 처리
+    # 별도 워커 프로세스에서 1분마다 실행
+    # flush_to_database()
+
+def flush_to_database():
+    # 대기 중인 모든 사용자 처리
+    pending_users = r.smembers('pending_writes')
+
+    for user_id in pending_users:
+        cache_key = f'user:score:{user_id}'
+        new_score = r.get(cache_key)
+
+        if new_score:
+            # DB에 반영
+            update_user_score_in_database(int(user_id), int(new_score))
+
+            # 캐시 정리
+            r.delete(cache_key)
+            r.srem('pending_writes', user_id)
+
+# 백그라운드 워커에서 주기적으로 실행
+import threading
+import time
+
+def background_flush_worker():
+    while True:
+        time.sleep(60)  # 1분마다
+        flush_to_database()
+
+# 시작
+worker_thread = threading.Thread(target=background_flush_worker, daemon=True)
+worker_thread.start()
+</code></pre>
+
+<p>장점: 매우 빠른 쓰기 성능</p>
+
+<p>단점: 일시적 데이터 손실 위험, 복잡함</p>
+
+<h3>Redis Pub/Sub — 실시간 메시징</h3>
+<p>Redis의 Pub/Sub은 간단하지만 강력한 메시징 시스템이다:</p>
+
+<pre><code>import redis
+import threading
+
+r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+# 퍼블리셔
+def publish_notification():
+    r.publish('notifications', json.dumps({
+        'type': 'user_registered',
+        'user_id': 123,
+        'email': 'newuser@example.com',
+        'timestamp': datetime.now().isoformat()
+    }))
+
+# 구독자
+def subscribe_notifications():
+    pubsub = r.pubsub()
+    pubsub.subscribe('notifications')
+
+    print('Waiting for notifications...')
+    for message in pubsub.listen():
+        if message['type'] == 'message':
+            data = json.loads(message['data'])
+            print(f'Received: {data}')
+
+            # 새 사용자 등록 이메일 발송
+            if data['type'] == 'user_registered':
+                send_welcome_email(data['email'])
+
+# 백그라운드에서 구독 시작
+subscriber_thread = threading.Thread(target=subscribe_notifications, daemon=True)
+subscriber_thread.start()
+
+# 메인 스레드에서 이벤트 발행
+time.sleep(1)
+publish_notification()
+</code></pre>
+
+<p>실제 사용 사례: 사용자가 실시간으로 알림을 받을 수 있다.</p>
+
+<h3>Redis Sorted Sets — 실시간 순위판</h3>
+<p>게임, 리더보드, 최신 데이터 추적에 완벽하다:</p>
+
+<pre><code>def record_game_score(player_id: str, score: int):
+    # Sorted set에 플레이어 추가 (스코어가 정렬 기준)
+    r.zadd('game_leaderboard', {player_id: score})
+
+def get_leaderboard(limit: int = 10) -> list:
+    # 상위 10명 조회 (스코어 내림차순)
+    return r.zrange('game_leaderboard', 0, limit - 1, rev=True, withscores=True)
+
+def get_player_rank(player_id: str) -> int:
+    # 플레이어의 순위 (0이 1위)
+    rank = r.zrevrank('game_leaderboard', player_id)
+    return rank + 1 if rank is not None else 0
+
+# 예제
+record_game_score('alice', 1500)
+record_game_score('bob', 1200)
+record_game_score('charlie', 1800)
+
+# 상위 3명
+leaderboard = get_leaderboard(3)
+print(leaderboard)
+# [('charlie', 1800.0), ('alice', 1500.0), ('bob', 1200.0)]
+
+# Alice의 순위
+print(f"Alice's rank: {get_player_rank('alice')}")
+# Alice's rank: 2
+
+# 특정 범위의 스코어
+top_scorers = r.zrangebyscore('game_leaderboard', 1500, float('inf'), withscores=True)
+print(top_scorers)
+# [('charlie', 1800.0), ('alice', 1500.0)]
+</code></pre>
+
+<h3>Redis Lua 스크립트 — 원자성 보장</h3>
+<p>여러 명령을 하나의 원자적(atomic) 작업으로 실행한다:</p>
+
+<pre><code># 자동차 충돌: 포인트 인출 (존재하는 경우만)
+withdraw_script = r.register_script(
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-09.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계</span>
+        </a>
+        <a class="related-item" href="/posts/post-62.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">Supabase 실전 활용기 — Firebase 대안으로 쓸만한가?</span>
+        </a>
+        <a class="related-item" href="/posts/post-66.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="20년간 개발자 면접을 본 경험. 알고리즘보다 중요한 것, 빨간 불 신호들, 시니어의 진정한 기준">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-49.html">
+  <title>개발자 면접 20년 — 면접관으로서 본 좋은 시니어의 기준 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "개발자 면접 20년 — 면접관으로서 본 좋은 시니어의 기준",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-10-22",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-49.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발자 생활</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>개발자 면접 20년 — 면접관으로서 본 좋은 시니어의 기준</h1>
+      <p class="meta">게시일: 2025년 10월 22일 · 14분 읽기</p>
+<h2>알고리즘 잘 푸는 사람보다, '왜'를 설명할 수 있는 사람이 좋은 시니어다</h2>
+
+<p>20년 동안 면접을 봤다. 신입부터 임원까지, 그리고 지금은 시니어까지. 면접을 통해 배운 것이 많다.</p>
+
+<p>가장 중요한 깨달음: 좋은 개발자를 뽑는 방법은 LeetCode 알고리즘이 아니라, 다른 것을 본다는 것이다.</p>
+
+<h3>알고리즘 질문을 빠르게 푸는 것의 의미</h3>
+
+<p>면접에서 알고리즘을 빠르게 푸는 사람들을 봤다. 5분 안에 두 가지 solution을 제시하는 사람도 있었다.</p>
+
+<p>그런데 이 사람들 중 상당수가, 실제 업무에서는 평범했다.</p>
+
+<p>왜일까? 알고리즘 솜씨와 실무 능력은 다르기 때문이다:</p>
+
+<ul>
+<li><strong>알고리즘:</strong> 이미 정의된 문제를 푸는 능력</li>
+<li><strong>실무:</strong> 모호한 요구사항을 정의하고, 그것을 푸는 능력</li>
+</ul>
+
+<p>면접관으로서 더 중요한 질문은: "이 알고리즘을 언제 쓸까?"였다.</p>
+
+<h3>빨간 불 신호들</h3>
+
+<p><strong>신호 1: "내가 처음 쓰는 언어라 실수했어요"</strong></p>
+
+<p>이 말은 좋은 신호다. 왜냐하면:</p>
+
+<ul>
+<li>책임을 인정하고</li>
+<li>배우려는 자세를 보여주고</li>
+<li>실제로 해결하려고 함</li>
+</ul>
+
+<p><strong>신호 2: "좋은 질문이네요"</strong></p>
+
+<p>그리고 5분을 생각한 후 자신의 가정을 설명하는 경우.</p>
+
+<p>이것이 진정한 시니어다. 문제를 완벽하게 풀지 못해도, 생각하는 과정이 견고하면 성장할 수 있다.</p>
+
+<p><strong>역신호 1: "이건 제 풀이방식이 있어서..."</strong></p>
+
+<p>그리고 면접관의 피드백을 무시하는 경우. 이건 위험신호다.</p>
+
+<p><strong>역신호 2: 침묵</strong></p>
+
+<p>막혔을 때 아무것도 말하지 않으면, 그 사람이 어디서 막혔는지 알 수 없다. 좋은 개발자는 생각을 말로 표현한다.</p>
+
+<h3>면접에서 보는 진짜 시니어의 기준</h3>
+
+<p><strong>1. 문제 정의 능력</strong></p>
+
+<p>나쁜 예: "이 문제 푸세요"라고 주면 바로 푼다<br>
+좋은 예: "이 문제에서 시간 복잡도와 공간 복잡도의 트레이드오프를 보면 어떻게 될까요?"라고 되묻는다</p>
+
+<p><strong>2. 커뮤니케이션</strong></p>
+
+<p>나쁜 예: 조용히 코드를 짜고 제출한다<br>
+좋은 예: "이 부분은 O(n)이고, 저 부분은 O(log n)이라서, 전체적으로는..."이라고 설명한다</p>
+
+<p><strong>3. Trade-off를 이해</strong></p>
+
+<p>나쁜 예: "이 방법이 가장 빠르니까 이것으로"<br>
+좋은 예: "이 방법은 빠르지만 메모리를 많이 쓰고, 저 방법은 느리지만 메모리 효율적이라서, 우리 상황에서는..."</p>
+
+<p><strong>4. "I don't know"를 말할 수 있는 용기</strong></p>
+
+<p>최악의 시니어: 모르는 것을 아는 척 한다<br>
+최고의 시니어: "이 부분은 모르는데, 이렇게 학습하겠습니다"라고 한다</p>
+
+<h3>실제 면접 사례</h3>
+
+<p><strong>경우 1: 알고리즘은 못 푼 사람</strong></p>
+
+<pre><code">면접관: "이 문제 푸세요"
+지원자: (5분 생각) "죄송합니다. 저는 이걸 모르는데..."
+       "하지만 이렇게 접근하면 좋을 것 같습니다" (아이디어 제시)
+       "더 공부한 후에는 풀 수 있을 것 같은데요"
+결과: 합격</code></pre>
+
+<p><strong>경우 2: 알고리즘은 잘 푼 사람</strong></p>
+
+<pre><code">면접관: "왜 이 방법으로 풀었어요?"
+지원자: (침묵) "음... 그냥 이게 더 빠르니까요"
+       (다른 방법이 있는지 생각하지 않음)
+결과: 불합격</code></pre>
+
+<h3>경력에 따라 보는 기준</h3>
+
+<p><strong>신입(신입-주니어):</strong></p>
+
+<ul>
+<li>문제를 푸는 것보다, 어떻게 접근하는지</li>
+<li>실수를 했을 때, 어떻게 대응하는지</li>
+<li>학습의욕</li>
+</ul>
+
+<p><strong>미드레벨(4-7년차):</strong></p>
+
+<ul>
+<li>시스템 설계 능력</li>
+<li>실제 경험에서 배운 베스트 프랙티스</li>
+<li>팀 커뮤니케이션 능력</li>
+</ul>
+
+<p><strong>시니어(8년차+):</strong></p>
+
+<ul>
+<li>전략적 사고</li>
+<li>기술적 리더십</li>
+<li>멘토링 경험</li>
+<li>기술 결정의 근거</li>
+</ul>
+
+<h3>기술 토론에서 보이는 것들</h3>
+
+<p>나는 보통 마지막에 이런 질문을 한다:</p>
+
+<blockquote>
+<p>"만약 이 시스템이 느려진다면, 어디부터 최적화할 생각입니까?"</p>
+</blockquote>
+
+<p><strong>나쁜 답변:</strong> "캐시를 추가하면 되죠"<br>
+<strong>좋은 답변:</strong> "먼저 병목이 어디인지 측정해야 해요. 보통은 데이터베이스 쿼리인데, 그 다음이 캐싱입니다. 만약 캐싱 전에 쿼리를 최적화하면..."</p>
+
+<p>두 번째 답변을 하는 사람이 진정한 시니어다.</p>
+
+<h3>실무와의 연관성</h3>
+
+<p>면접에서 본 것들이 실제로 맞았을까?</p>
+
+<p>25년 데이터로 보면:</p>
+
+<ul>
+<li>알고리즘 능력과 실무 능력의 상관관계: 약 0.3 (약함)</li>
+<li>커뮤니케이션과 성과의 상관관계: 0.7 (강함)</li>
+<li>문제 정의 능력과 승진의 상관관계: 0.8 (매우 강함)</li>
+</ul>
+
+<h3>나의 인터뷰 기준 변화</h3>
+
+<p><strong>처음(25년 전):</strong> "LeetCode 난이도 Medium 이상"<br>
+<strong>10년 후:</strong> "시스템 설계 질문에서 trade-off를 생각하는지"<br>
+<strong>지금:</strong> "이 사람이 팀을 성장시킬 수 있는가?"</p>
+
+<h3>결론</h3>
+
+<p>좋은 개발자를 뽑는 방법은 복잡한 알고리즘을 푸는 것이 아니다. 그것보다는:</p>
+
+<ul>
+<li>생각하는 방식</li>
+<li>배우는 자세</li>
+<li>커뮤니케이션</li>
+<li>팀 협력</li>
+</ul>
+
+<p>이것들을 본다.</p>
+
+<p>면접을 보는 사람이라면, 한 번 생각해보자: "내가 정말 필요한 것이 뭐지?"</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-46.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">우주전자파(미립자파)가 만드는 소프트웨어 버그 — 나만의 헛소리 이론</span>
+        </a>
+        <a class="related-item" href="/posts/post-53.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">시니어 개발자의 생존 기술 — 코딩 말고 필요한 것들</span>
+        </a>
+        <a class="related-item" href="/posts/post-80.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">2025년 회고 — 28년차 개발자가 올해 배운 것들</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

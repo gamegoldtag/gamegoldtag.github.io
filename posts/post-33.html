@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="회사 코드를 외부 API에 보내지 않기. ollama, codellama, deepseek-coder 설정">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-33.html">
+  <title>로컬 LLM 돌리기 — ollama로 프라이빗 AI 코딩 어시스턴트 세팅 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "로컬 LLM 돌리기 — ollama로 프라이빗 AI 코딩 어시스턴트 세팅",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-07-18",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-33.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">AI &amp; 개발 도구</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>로컬 LLM 돌리기 — ollama로 프라이빗 AI 코딩 어시스턴트 세팅</h1>
+      <p class="meta">게시일: 2025년 7월 18일 · 14분 읽기</p>
+
+<h2>회사 코드를 외부에 보낼 수 없을 때</h2>
+
+<p>회사에서 Claude API나 GitHub Copilot을 쓰려고 했지만, 보안팀이 거절했다. "회사 코드를 외부 서버에 보낼 수 없다"고. 이해가 가는 정책이지만, 개발자로서는 답답했다.</p>
+
+<p>그래서 로컬 LLM을 알아봤고, ollama를 설정했다. 이제 회사 코드를 건드리지 않으면서도 AI 도움을 받을 수 있다.</p>
+
+<h3>Ollama 설치 및 기본 설정</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# Mac 설치
+brew install ollama
+
+# ollama 서비스 시작
+ollama serve
+
+# 다른 터미널에서 모델 다운로드
+ollama pull codellama
+ollama pull deepseek-coder
+ollama pull mistral
+
+# 대화형 사용
+ollama run codellama
+
+# API 서버는 localhost:11434에서 실행됨
+</code></pre>
+
+<h3>VS Code 통합</h3>
+
+<p>Continue.dev는 VS Code에서 로컬 LLM을 사용할 수 있게 해준다:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# VS Code Extension 설치
+# "Continue" 검색 후 설치
+
+// ~/.continue/config.json
+{
+  "models": [
+    {
+      "title": "Ollama Local",
+      "provider": "ollama",
+      "model": "codellama",
+      "apiBase": "http://localhost:11434"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Ollama Autocomplete",
+    "provider": "ollama",
+    "model": "deepseek-coder",
+    "apiBase": "http://localhost:11434"
+  },
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit code"
+    },
+    {
+      "name": "comment",
+      "description": "Add comments"
+    }
+  ]
+}
+</code></pre>
+
+<h3>모델 비교</h3>
+
+<p>각 모델의 특징:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# Codellama (Meta)
+# - 코딩 특화
+# - 파라미터: 7B, 13B, 34B
+# - 7B 추천 (빠름, 4GB RAM)
+ollama pull codellama:7b
+
+# Deepseek-coder (Deepseek)
+# - 최신, 성능 좋음
+# - 6.7B 버전이 작고 빠름
+ollama pull deepseek-coder:6.7b
+
+# Mistral (Mistral AI)
+# - 일반 목적
+# - 빠르고 효율적
+ollama pull mistral
+
+# 선택 팁:
+# - 빠른 응답 원하면: deepseek-coder:6.7b
+# - 정확도 원하면: codellama:34b (13GB RAM 필요)
+# - 균형: codellama:13b (6GB RAM)
+</code></pre>
+
+<h3>Git Diff를 이용한 코드 분석</h3>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+#!/usr/bin/env python3
+# 로컬 LLM으로 커밋 분석
+
+import subprocess
+import json
+import requests
+
+def get_diff():
+    return subprocess.check_output(
+        ['git', 'diff', 'HEAD~1'],
+        text=True
+    )
+
+def analyze_with_ollama(diff):
+    response = requests.post(
+        'http://localhost:11434/api/generate',
+        json={
+            'model': 'codellama:7b',
+            'prompt': f'이 git diff를 분석하고 문제점과 개선안을 찾아줘:
+
+{diff}',
+            'stream': False
+        }
+    )
+    return response.json()['response']
+
+if __name__ == '__main__':
+    diff = get_diff()
+    analysis = analyze_with_ollama(diff)
+    print(analysis)
+</code></pre>
+
+<h3>성능 최적화</h3>
+
+<p>로컬 LLM은 속도가 느릴 수 있다. 최적화 방법:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+# 1. GPU 활용 (훨씬 빠름)
+# Mac Silicon: 자동 사용
+# NVIDIA: CUDA 지원
+#   ollama run codellama  # CUDA 자동 감지
+
+# 2. 작은 모델 사용
+ollama pull codellama:7b  # 빠름
+# vs
+ollama pull codellama:34b  # 느림 (더 좋은 답)
+
+# 3. Quantization (더 작은 모델)
+# ollama는 이미 quantized 모델 제공
+
+# 4. 컨텍스트 크기 줄이기
+# max_tokens를 줄이면 빨라짐
+</code></pre>
+
+<h3>보안 고려사항</h3>
+
+<p>로컬 LLM도 주의해야 할 점들:</p>
+
+<ul>
+<li>민감한 데이터 (API 키, 비밀번호)를 프롬프트에 포함하지 말 것</li>
+<li>로컬 LLM도 학습 데이터가 있으니, 정말 민감한 코드는 제거하고 물어볼 것</li>
+<li>네트워크 제한이 있으면 localhost만 접근 가능하게 설정</li>
+</ul>
+
+<h3>마무리</h3>
+
+<p>로컬 LLM은 완벽하지 않지만, 회사 보안 정책을 지키면서 AI의 도움을 받을 수 있는 좋은 방법이다. 속도가 느린 게 유일한 단점이지만, 기다릴 가치가 있다.</p>
+
+<p>특히 보안이 중요한 환경이나 인터넷이 제한된 환경에서는 올마가 최고의 선택이다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-07.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI 코딩 도구 6개월 실사용 후기 — 생산성이 정말 올랐을까?</span>
+        </a>
+        <a class="related-item" href="/posts/post-34.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">AI로 레거시 코드 리팩토링하기 — 실전 프롬프트 패턴</span>
+        </a>
+        <a class="related-item" href="/posts/post-78.html">
+          <span class="ri-cat">AI &amp; 개발 도구</span>
+          <span class="ri-title">LLM 프롬프트 엔지니어링 실전 — 개발자를 위한 패턴 모음</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

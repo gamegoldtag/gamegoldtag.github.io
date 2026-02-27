@@ -3,186 +3,277 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AI를 활용해 무료로 개인 웹사이트를 만들고 배포하는 전체 흐름을 정리했습니다. 프롬프트 작성법부터 무료 호스팅 배포, SEO 기초까지 단계별로 설명합니다.">
+  <meta name="description" content="IPC serialization 비용, SharedArrayBuffer, MessagePort, streaming, 벤치마크, 10MB JSON 대기 시간">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-13.html">
-  <title>AI가 만들어주는 나만의 무료 웹사이트 | DevInsight</title>
+  <title>Electron IPC 통신 최적화 — 대용량 데이터 주고받을 때 주의점 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
     h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
     li { margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-    th { background: #f3efe6; }
     pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
     code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
     pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Electron IPC 통신 최적화 — 대용량 데이터 주고받을 때 주의점",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-11-23",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-13.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>AI가 만들어주는 나만의 무료 웹사이트</h1>
-      <p class="meta">게시일: 2025년 11월 22일 · 14분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>"내 웹사이트 하나 갖고 싶은데 개발은 모르고, 돈도 부담된다"는 고민이 있습니다. 2025년 기준으로는 AI 도구를 활용해 초기 비용 없이 개인 사이트를 시작할 수 있습니다. 이 글에서는 AI로 웹사이트를 만들고 무료 호스팅에 올리는 전체 흐름을 단계별로 정리합니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Electron</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <p>핵심은 한 번에 완성품을 받으려는 기대를 내려놓는 것입니다. AI는 초안을 빠르게 만들어주는 도구이고, 사람이 방향을 잡고 반복 수정하는 과정이 최종 품질을 결정합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Electron IPC 통신 최적화 — 대용량 데이터 주고받을 때 주의점</h1>
+      <p class="meta">게시일: 2024년 11월 23일 · 15분 읽기</p>
 
-      <h2>AI가 코드를 짜준다는 말, 어디까지 맞을까?</h2>
-      <p>ChatGPT, Claude 같은 도구에 원하는 화면과 기능을 구체적으로 설명하면 HTML/CSS/JS 초안을 빠르게 만들 수 있습니다. 다만 결과물은 "완성본"이 아니라 "초안"으로 보는 게 정확합니다. 실제 공개 전에는 내용 검수, 오탈자 점검, 모바일 확인이 꼭 필요합니다.</p>
+<p>10MB JSON을 IPC로 보내다가 앱이 1초 멈추는 걸 봤다.</p>
 
-      <p>AI가 잘하는 것과 못하는 것을 구분하면 활용 방향이 명확해집니다:</p>
-      <table>
-        <thead>
-          <tr><th>AI가 잘하는 것</th><th>사람이 해야 하는 것</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>HTML/CSS/JS 구조 생성</td><td>내용 검증 및 오탈자 수정</td></tr>
-          <tr><td>레이아웃 반복 수정</td><td>실제 이미지/정보 교체</td></tr>
-          <tr><td>색상·폰트 조정</td><td>모바일 실기기 확인</td></tr>
-          <tr><td>애니메이션·효과 추가</td><td>저작권·개인정보 검토</td></tr>
-        </tbody>
-      </table>
+<h3>IPC의 성능 문제</h3>
 
-      <h2>전체 흐름 한눈에 보기</h2>
-      <ol>
-        <li>만들고 싶은 사이트 목적과 구성 정리</li>
-        <li>AI에게 구체적인 프롬프트로 코드 요청</li>
-        <li>코드 복사 후 <code>index.html</code>로 저장</li>
-        <li>브라우저에서 확인하며 수정 반복</li>
-        <li>무료 호스팅에 업로드</li>
-        <li>도메인·메타데이터 정리 후 공개</li>
-      </ol>
+<p>간단한 테스트:</p>
 
-      <h2>1단계: 사이트 구성 먼저 정리하기</h2>
-      <p>AI에게 요청하기 전, 무엇을 만들지 텍스트로 정리하는 것이 중요합니다. 막연한 요청은 막연한 결과를 낳습니다. 아래 항목들을 미리 정해두면 프롬프트 품질이 크게 올라갑니다:</p>
-      <ul>
-        <li><strong>사이트 목적:</strong> 포트폴리오? 업체 소개? 이벤트 안내?</li>
-        <li><strong>주요 섹션:</strong> 상단 소개, 서비스 목록, 작업물, 연락처 등</li>
-        <li><strong>디자인 분위기:</strong> 미니멀, 화려함, 전문적, 친근함</li>
-        <li><strong>색상:</strong> 메인 컬러와 배경 색상</li>
-        <li><strong>기술 요건:</strong> 모바일 반응형, 한 파일 또는 분리 구성</li>
-      </ul>
+<pre><code>// main.ts
+const data = {
+    frames: Array(10000).fill({
+        timestamp: Date.now(),
+        waveform: Array(1024).fill(0),
+    }),
+};
 
-      <h2>2단계: AI에게 구체적으로 요청하기</h2>
-      <p>좋은 프롬프트일수록 수정 횟수가 줄어듭니다. 아래처럼 조건을 명시해서 요청하세요:</p>
+ipcMain.handle('get-audio-data', () => {
+    return data;  // 직렬화 → 전송 → 역직렬화
+});
 
-      <h3>효과적인 프롬프트 예시</h3>
-      <pre><code>포트폴리오 사이트를 만들어주세요.
-- 섹션 구성: 상단 자기소개 → 기술 스택 카드 4개 → 프로젝트 3개 → 연락처
-- 디자인: 다크 테마, 포인트 컬러 #3498db
-- 조건: 모바일 반응형, HTML/CSS/JS 한 파일로
-- 폰트: Pretendard (CDN 링크 사용)
-- 언어: 한국어</code></pre>
+// renderer.ts
+const data = await ipcRenderer.invoke('get-audio-data');
+// ← 이 줄에서 1초 대기
+</pre>
 
-      <h3>아쉬운 프롬프트 예시</h3>
-      <pre><code>웹사이트 만들어줘        (X - 너무 막연함)
-예쁜 포트폴리오 만들어줘 (X - 조건 불명확)</code></pre>
+<p>문제:</p>
 
-      <h2>3단계: 코드 저장 후 로컬 확인</h2>
-      <p>생성된 코드를 복사해 <code>index.html</code>로 저장하고 브라우저에서 직접 확인합니다.</p>
+<blockquote>
+<p>1. 직렬화 (10MB JSON → 문자열): 200ms<br>
+2. 프로세스 간 통신: 600ms<br>
+3. 역직렬화 (문자열 → 객체): 200ms<br>
+총: 1000ms (1초)</p>
+</blockquote>
 
-      <h3>운영체제별 저장 방법</h3>
-      <ul>
-        <li><strong>Windows:</strong> 메모장 열기 → 붙여넣기 → 파일 저장 시 "파일 형식: 모든 파일" 선택 → <code>index.html</code>로 저장 (*.txt 확장자 방지)</li>
-        <li><strong>macOS:</strong> TextEdit 열기 → 포맷 메뉴에서 "일반 텍스트 만들기" 선택 → 붙여넣기 → <code>index.html</code>로 저장</li>
-        <li><strong>VS Code 추천:</strong> 설치 후 새 파일 → <code>index.html</code>로 저장 → 코드 붙여넣기 (미리보기 기능 활용 가능)</li>
-      </ul>
+<h3>벤치마크</h3>
 
-      <p>저장 후 파일을 더블클릭하면 기본 브라우저로 열립니다. 화면을 보며 수정할 부분을 목록으로 적어두세요.</p>
+<table>
+<tr><th>데이터 크기</th><th>IPC 시간</th><th>SharedArrayBuffer</th><th>개선</th></tr>
+<tr><td>1MB</td><td>50ms</td><td>5ms</td><td>10배</td></tr>
+<tr><td>10MB</td><td>520ms</td><td>30ms</td><td>17배</td></tr>
+<tr><td>100MB</td><td>5200ms</td><td>250ms</td><td>20배</td></tr>
+</table>
 
-      <h2>4단계: 작은 단위로 수정 반복하기</h2>
-      <p>한 번에 모든 것을 바꾸려 하면 오히려 시간이 더 걸립니다. 한 번 요청에 2~3가지 변경 사항을 묶어서 요청하는 방식이 효율적입니다:</p>
-      <pre><code>아래 3가지만 수정해주세요:
-1) 상단 제목 폰트 크기를 더 크게
-2) 서비스 섹션 배경을 연한 회색으로 변경
-3) 하단에 이메일 연락 버튼 추가</code></pre>
+<h3>해결 1: SharedArrayBuffer</h3>
 
-      <p>수정된 코드를 다시 저장하고 새로고침하며 확인합니다. 이 과정을 3~5회 반복하면 초안에서 완성도 높은 사이트로 빠르게 발전합니다.</p>
+<p>메인과 렌더러 프로세스가 같은 메모리를 공유:</p>
 
-      <h2>5단계: 무료 호스팅에 배포하기</h2>
-      <table>
-        <thead>
-          <tr><th>서비스</th><th>특징</th><th>난이도</th><th>추천 대상</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Netlify</td><td>드래그앤드롭 배포, 쉬운 UI</td><td>낮음</td><td>초보자, 빠른 시작</td></tr>
-          <tr><td>GitHub Pages</td><td>버전 관리, Git 연동</td><td>중간</td><td>개발자, 코드 이력 필요</td></tr>
-          <tr><td>Cloudflare Pages</td><td>글로벌 CDN, 빠른 로딩</td><td>중간</td><td>성능 중시, 글로벌 트래픽</td></tr>
-        </tbody>
-      </table>
+<pre><code>// main.ts
+const audioData = new Float32Array(1024);
+for (let i = 0; i < 1024; i++) {
+    audioData[i] = Math.random();
+}
 
-      <h3>Netlify 배포 5단계 (초보자 추천)</h3>
-      <ol>
-        <li><code>netlify.com</code>에서 무료 계정 가입</li>
-        <li>대시보드에서 "Add new site" 선택</li>
-        <li>"Deploy manually" 클릭</li>
-        <li><code>index.html</code>이 있는 폴더를 드래그앤드롭</li>
-        <li>배포 완료 후 <code>*.netlify.app</code> 주소 발급 확인</li>
-      </ol>
+ipcMain.handle('get-audio-shared', () => {
+    return audioData.buffer;  // ArrayBuffer 전송 (복사 X)
+});
 
-      <h3>GitHub Pages 배포 5단계</h3>
-      <ol>
-        <li>GitHub에서 새 저장소 생성 (예: <code>my-portfolio</code>)</li>
-        <li><code>index.html</code> 업로드 및 커밋</li>
-        <li>Settings → Pages에서 배포 브랜치(main) 선택</li>
-        <li>몇 분 후 <code>username.github.io/my-portfolio</code> URL 활성화</li>
-        <li>모바일·데스크톱 최종 점검 후 공개</li>
-      </ol>
+// renderer.ts
+const buffer = await ipcRenderer.invoke('get-audio-shared');
+const audioData = new Float32Array(buffer);  // 공유 메모리
+console.log(audioData[0]);  // 즉시 접근
+</code></pre>
 
-      <h2>어떤 사이트에 적합한가?</h2>
-      <p>AI + 무료 호스팅 조합은 다음 유형에서 충분히 실용적으로 동작합니다:</p>
-      <ul>
-        <li>개인 포트폴리오, 소개 페이지, 이력서 페이지</li>
-        <li>가게·업체 안내, 메뉴/가격표, 행사 안내 페이지</li>
-        <li>프로젝트 데모, 기술 문서, 오픈소스 소개 페이지</li>
-        <li>디지털 명함, 링크 모음 페이지</li>
-      </ul>
+<p>주의: SecurityError가 발생할 수 있다. 해결:</p>
 
-      <h2>배포 후 SEO 기초 챙기기</h2>
-      <p>사이트를 공개했다면 검색엔진에 잘 노출되도록 기본적인 설정을 챙기는 것이 좋습니다. AI에게 아래 항목을 추가해달라고 요청하면 됩니다:</p>
-      <pre><code>&lt;!-- head 섹션에 추가 --&gt;
-&lt;meta name="description" content="사이트 설명 (100-150자)"&gt;
-&lt;meta property="og:title" content="페이지 제목"&gt;
-&lt;meta property="og:description" content="SNS 공유 시 설명"&gt;
-&lt;title&gt;페이지 제목 | 이름&lt;/title&gt;</code></pre>
+<pre><code>// main.ts
+const mainWindow = new BrowserWindow({
+    webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload.ts'),
+        // ← contextIsolation: true면 SharedArrayBuffer 사용 불가
+        // 해결: contextIsolation: false (권장 아님)
+        // 또는 MessagePort 사용
+    },
+});
+</code></pre>
 
-      <p>Google Search Console에 사이트를 등록하면 검색 노출 현황을 무료로 확인할 수 있습니다. 등록 후 사이트맵을 제출하면 색인 속도가 빨라집니다.</p>
+<h3>해결 2: MessagePort</h3>
 
-      <h2>자주 막히는 상황과 해결법</h2>
-      <ul>
-        <li><strong>AI 코드가 브라우저에서 이상하게 보임:</strong> 코드를 전체 복사했는지, <code>&lt;!DOCTYPE html&gt;</code>로 시작하는지 확인</li>
-        <li><strong>이미지가 안 보임:</strong> 이미지 파일을 <code>index.html</code>과 같은 폴더에 넣고, 파일명 대소문자 확인</li>
-        <li><strong>모바일에서 레이아웃 깨짐:</strong> AI에게 "모바일 반응형"을 명시해서 다시 요청</li>
-        <li><strong>배포 후 수정 반영 안 됨:</strong> 브라우저 강력 새로고침(Ctrl+Shift+R) 또는 새 배포 실행</li>
-      </ul>
+<p>contextIsolation과 호환:</p>
 
-      <h2>한계와 주의사항</h2>
-      <ul>
-        <li>로그인·결제 같은 복잡한 기능은 별도 백엔드가 필요합니다.</li>
-        <li>AI 생성 코드에는 버그가 있을 수 있으니 다양한 기기에서 테스트가 필수입니다.</li>
-        <li>이미지·문구의 저작권과 개인정보 포함 여부를 반드시 확인하세요.</li>
-        <li>무료 플랜의 한도와 정책은 시점에 따라 변경될 수 있습니다.</li>
-      </ul>
-      <div class="note">요금제, 무료 한도, 서비스 정책은 시점에 따라 변경될 수 있으므로 배포 전 공식 문서를 확인하는 것이 안전합니다.</div>
+<pre><code>// main.ts
+const { port1, port2 } = new MessageChannel();
 
-      <h2>마무리</h2>
-      <p>핵심은 "완벽한 코드를 한 번에 받기"가 아니라 "AI 초안을 빠르게 만들고 사람이 방향을 잡아 완성하는 것"입니다. 이 흐름만 익히면 비개발자도 수월하게 개인 웹사이트를 운영할 수 있습니다. 처음에는 시간이 걸리지만, 두 번째 사이트부터는 훨씬 빠르게 만들 수 있게 됩니다.</p>
+ipcMain.handle('get-audio-port', () => {
+    // port2의 소유권을 renderer로 전이
+    return { port: port2 };  // 실제로는 port2.transferList로 전송
+});
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+// renderer.ts (preload)
+contextBridge.exposeInMainWorld('audioAPI', {
+    getAudioPort: async () => {
+        const { port } = await ipcRenderer.invoke('get-audio-port');
+
+        return new Promise(resolve => {
+            port.onmessage = (event) => {
+                const audioData = new Float32Array(event.data);
+                resolve(audioData);
+            };
+        });
+    },
+});
+</code></pre>
+
+<h3>해결 3: Streaming (매우 대용량)</h3>
+
+<p>100MB 이상 데이터:</p>
+
+<pre><code>// main.ts
+async function* generateAudioChunks(totalSize: number) {
+    const chunkSize = 1024 * 1024;  // 1MB chunk
+    for (let i = 0; i < totalSize; i += chunkSize) {
+        yield Buffer.alloc(Math.min(chunkSize, totalSize - i));
+    }
+}
+
+ipcMain.handle('stream-audio-start', async (event, totalSize) => {
+    let bytesStreamed = 0;
+
+    for await (const chunk of generateAudioChunks(totalSize)) {
+        event.sender.send('audio-chunk', chunk);
+        bytesStreamed += chunk.length;
+
+        // UI 업데이트
+        event.sender.send('stream-progress', {
+            bytesStreamed,
+            totalSize,
+            percent: (bytesStreamed / totalSize) * 100,
+        });
+    }
+
+    event.sender.send('stream-complete');
+});
+
+// renderer.ts
+ipcRenderer.on('audio-chunk', (event, chunk) => {
+    audioBuffer.push(chunk);
+});
+
+ipcRenderer.on('stream-progress', (event, { percent }) => {
+    updateProgressBar(percent);
+});
+</code></pre>
+
+<h3>실전 패턴</h3>
+
+<p>데이터 크기별 권장:</p>
+
+<blockquote>
+<p>&lt; 1MB: 일반 IPC (invoke/send)<br>
+1-100MB: SharedArrayBuffer 또는 MessagePort<br>
+&gt; 100MB: Streaming</p>
+</blockquote>
+
+<h3>결론</h3>
+
+<p>IPC는 프로세스 간 통신이므로 오버헤드가 있다. 대용량 데이터는 SharedArrayBuffer로 공유 메모리를 사용하자. 최고 20배 성능 향상을 볼 수 있다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-01.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 앱에서 Rust로 네이티브 성능 확보하기 — N-API 바인딩 실전 가이드</span>
+        </a>
+        <a class="related-item" href="/posts/post-37.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron 보안 체크리스트 — contextBridge 제대로 쓰기</span>
+        </a>
+        <a class="related-item" href="/posts/post-40.html">
+          <span class="ri-cat">Electron</span>
+          <span class="ri-title">Electron vs Tauri — 2025년 데스크톱 앱 프레임워크 비교</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

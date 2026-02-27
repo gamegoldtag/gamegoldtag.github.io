@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="API 캐시 전략 설계 실전 가이드. Redis를 이용한 캐시 키 설계, TTL 정책, 무효화 전략, 모니터링 지표까지 코드 예시와 함께 정리했습니다.">
+  <meta name="description" content="Cache-aside, write-through, SWR 패턴, Redis TTL, 무효화 전략, HTTP 헤더 활용">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-09.html">
-  <title>API 캐시 전략: 응답 속도와 데이터 신선도를 함께 잡는 설계 | DevInsight</title>
+  <title>API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
@@ -24,201 +26,432 @@
     pre code { background: none; padding: 0; }
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
-    .warn { background: #fff2ef; border: 1px solid #f1c2b8; border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-10-02",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-09.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>API 캐시 전략: 응답 속도와 데이터 신선도를 함께 잡는 설계</h1>
-      <p class="meta">게시일: 2025년 12월 18일 · 14분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>API 성능 개선 요청이 오면 가장 먼저 떠오르는 해결책이 캐시입니다. 그런데 "Redis 달면 되겠지"라는 생각으로 시작하면 얼마 지나지 않아 더 어려운 문제를 마주합니다. 오래된 데이터가 노출되거나, 데이터를 수정했는데 캐시가 갱신되지 않거나, 캐시가 있는데도 성능이 개선되지 않는 상황들입니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Backend &amp; DB</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <p>캐시는 단순히 "켜는" 기능이 아닙니다. 이 글은 실무에서 정착한 캐시 설계 패턴과, 자주 만나는 문제의 해결책을 정리합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계</h1>
+      <p class="meta">게시일: 2024년 10월 2일 · 15분 읽기</p>
 
-      <h2>캐시 적용 전 먼저 물어야 할 것들</h2>
-      <p>무조건 캐시를 적용하기 전에 다음 질문에 답할 수 있어야 합니다:</p>
+<p>Redis 붙이면 끝이라고 생각했는데, 캐시 무효화가 진짜 지옥이었다.</p>
 
-      <ul>
-        <li><strong>조회 빈도가 얼마나 높은가?</strong> 1초에 1번 이하라면 캐시 효과가 미미합니다.</li>
-        <li><strong>데이터가 얼마나 자주 변경되는가?</strong> 변경이 잦으면 hit ratio가 낮습니다.</li>
-        <li><strong>stale 데이터가 허용되는가?</strong> 금융 데이터, 재고 정보는 캐시가 위험할 수 있습니다.</li>
-        <li><strong>사용자별로 다른 데이터인가?</strong> 개인화 데이터는 캐시 키 설계가 더 복잡합니다.</li>
-      </ul>
+<p>우리 팀이 음성 채팅 앱의 백엔드에서 경험한 캐시 전략 실전기를 공유한다.</p>
 
-      <h2>캐시 키 설계</h2>
-      <p>캐시 키 설계가 잘못되면 데이터 오염이 생깁니다. 사용자 A의 데이터가 사용자 B에게 노출되거나, 이전 버전의 데이터가 지속되는 문제가 발생합니다.</p>
+<h3>문제: 캐시가 구원이라고 생각했다</h3>
 
-      <h3>키 구성 원칙</h3>
-      <pre><code">// 나쁜 키: 너무 일반적
-const key = 'users';
+<p>초기 설계:</p>
 
-// 나쁜 키: 사용자 스코프 없음 (보안 문제 가능)
-const key = `products:${productId}`;
+<blockquote>
+<p>"모든 API 응답을 1시간 캐시하면 DB 부하가 90% 줄어들겠지?"</p>
+</blockquote>
 
-// 좋은 키: 네임스페이스 + 스코프 + 식별자 + 버전
-const key = `v1:products:${productId}`;
-const key = `v1:user:${userId}:cart`;
-const key = `v1:products:list:page=${page}&category=${category}`;
+<p>결과:</p>
 
-// 관련 키를 패턴으로 묶어서 일괄 삭제 가능
-// products:* 패턴으로 상품 관련 캐시 전체 삭제</code></pre>
+<blockquote>
+<p>사용자 A가 설정을 바꿈 → 데이터 업데이트<br>
+사용자 B가 같은 설정을 읽음 → 1시간 전 캐시된 데이터를 받음<br>
+혼돈, 버그 리포트, 야식 디버깅</p>
+</blockquote>
 
-      <h3>캐시 키 네이밍 규칙 예시</h3>
-      <pre><code">// TypeScript로 키 생성 함수 모듈화
-const CacheKeys = {
-  product: (id: string) => `v1:product:${id}`,
-  productList: (page: number, category?: string) =>
-    `v1:products:list:${page}:${category ?? 'all'}`,
-  userProfile: (userId: string) => `v1:user:${userId}:profile`,
-  userCart: (userId: string) => `v1:user:${userId}:cart`,
-} as const;
+<p>캐시는 쌍날 검이었다.</p>
 
-// 사용
-const cacheKey = CacheKeys.product('p-123');
-const listKey = CacheKeys.productList(1, 'electronics');</code></pre>
+<h3>캐시 전략 1: Cache-Aside (Most Common)</h3>
 
-      <h2>TTL 정책: 데이터 특성에 따라 다르게</h2>
-      <p>모든 엔드포인트에 동일한 TTL을 적용하는 것은 잘못된 설계입니다. 데이터 특성에 따라 TTL을 다르게 설정해야 합니다.</p>
+<p>구조:</p>
 
-      <pre><code">// Redis + Node.js 예시
-import Redis from 'ioredis';
-const redis = new Redis();
+<pre><code>클라이언트
+  ↓
+API 서버
+  ├→ Redis (캐시)에 데이터가 있나?
+  │   YES: 반환
+  │   NO: DB에서 읽고, Redis에 저장, 반환
+  ↓
+Redis / Database
+</code></pre>
 
-// TTL 상수 정의
-const TTL = {
-  STATIC: 60 * 60 * 24,  // 24시간 (카테고리, 설정 등 거의 안 변하는 데이터)
-  DYNAMIC: 60 * 5,        // 5분 (상품 목록, 공지사항)
-  REALTIME: 30,           // 30초 (재고, 가격 등 변동이 잦은 데이터)
-  USER: 60 * 10,          // 10분 (사용자 프로필, 권한)
-} as const;
+<p>구현:</p>
 
-// 캐시 유틸 함수
-async function getOrSet<T>(
-  key: string,
-  ttl: number,
-  fetcher: () => Promise<T>
-): Promise<T> {
-  const cached = await redis.get(key);
-  if (cached) {
-    return JSON.parse(cached) as T;
-  }
+<pre><code>async function getUserProfile(userId: string) {
+    // 1. 캐시 확인
+    const cached = await redis.get(`user:${userId}:profile`);
+    if (cached) {
+        return JSON.parse(cached);
+    }
 
-  const data = await fetcher();
-  await redis.setex(key, ttl, JSON.stringify(data));
-  return data;
+    // 2. 캐시 미스: DB에서 읽기
+    const user = await db.users.findOne(userId);
+
+    // 3. 캐시에 저장 (TTL: 1시간)
+    await redis.setex(
+        `user:${userId}:profile`,
+        3600,  // seconds
+        JSON.stringify(user)
+    );
+
+    return user;
+}
+</code></pre>
+
+<p>장점:</p>
+
+<ul>
+<li>구현이 간단</li>
+<li>캐시 미스 시에만 DB 접근</li>
+</ul>
+
+<p>단점:</p>
+
+<ul>
+<li>캐시 무효화가 복잡</li>
+<li>데이터 업데이트 후 오래된 캐시를 읽을 수 있음</li>
+</ul>
+
+<h3>캐시 전략 2: Write-Through (데이터 일관성 중요)</h3>
+
+<p>구조:</p>
+
+<pre><code>쓰기 요청
+  ↓
+Redis에 쓰기
+  ↓
+DB에 쓰기 (순차 또는 병렬)
+  ↓
+응답
+</code></pre>
+
+<p>구현:</p>
+
+<pre><code>async function updateUserProfile(userId: string, data: any) {
+    // 1. 캐시에 업데이트
+    const cacheKey = `user:${userId}:profile`;
+    await redis.setex(cacheKey, 3600, JSON.stringify(data));
+
+    // 2. DB에 업데이트
+    await db.users.update(userId, data);
+
+    return data;
+}
+</code></pre>
+
+<p>장점:</p>
+
+<ul>
+<li>캐시와 DB 항상 일치</li>
+<li>읽기가 항상 최신 데이터</li>
+</ul>
+
+<p>단점:</p>
+
+<ul>
+<li>쓰기가 느림 (캐시 + DB 둘 다)</li>
+<li>캐시 쓰기 실패 시 불일치</li>
+</ul>
+
+<h3>캐시 전략 3: SWR (Stale-While-Revalidate)</h3>
+
+<p>최신 데이터가 반드시 필요하지 않을 때:</p>
+
+<pre><code>async function getMessages(conversationId: string) {
+    const cached = await redis.get(`messages:${conversationId}`);
+
+    if (cached) {
+        // 1. 즉시 반환 (오래된 데이터라도)
+        const data = JSON.parse(cached);
+
+        // 2. 백그라운드에서 업데이트 (사용자 체감 없음)
+        redis.setex(
+            `messages:${conversationId}:updating`,
+            1,
+            '1'  // 업데이트 중 표시
+        ).then(async () => {
+            const fresh = await db.messages.findMany(conversationId);
+            await redis.setex(
+                `messages:${conversationId}`,
+                300,  // 5분 TTL
+                JSON.stringify(fresh)
+            );
+        });
+
+        return data;  // 사용자는 바로 받음
+    }
+
+    // 캐시 미스: 기존 cache-aside
+    const data = await db.messages.findMany(conversationId);
+    await redis.setex(
+        `messages:${conversationId}`,
+        300,
+        JSON.stringify(data)
+    );
+
+    return data;
+}
+</code></pre>
+
+<p>장점:</p>
+
+<ul>
+<li>사용자 응답 시간 최고</li>
+<li>백그라운드 업데이트로 항상 신선함</li>
+</ul>
+
+<p>단점:</p>
+
+<ul>
+<li>복잡도 증가</li>
+<li>오래된 데이터를 먼저 받을 수 있음 (메시지 같은 경우 OK, 금액 같은 경우 NO)</li>
+</ul>
+
+<h3>실전: 캐시 무효화 패턴</h3>
+
+<p>문제: 데이터가 업데이트되면 캐시를 지워야 한다.</p>
+
+<h4>패턴 1: 명시적 무효화</h4>
+
+<pre><code>async function updateUserName(userId: string, newName: string) {
+    // 1. DB 업데이트
+    await db.users.update(userId, { name: newName });
+
+    // 2. 캐시 무효화 (명시적)
+    await redis.del(`user:${userId}:profile`);
+    await redis.del(`user:${userId}:settings`);
+    // ...
+}
+</code></pre>
+
+<p>문제: 연관된 모든 캐시 키를 기억해야 한다.</p>
+
+<p>해결:</p>
+
+<pre><code>// 패턴: 네임스페이스 관리
+async function invalidateUserCache(userId: string) {
+    // 와일드카드로 모든 user 캐시 삭제
+    const keys = await redis.keys(`user:${userId}:*`);
+    if (keys.length) {
+        await redis.del(...keys);
+    }
+}
+</code></pre>
+
+<h4>패턴 2: TTL에 의존</h4>
+
+<pre><code>// ✅ TTL에 따라 자동 무효화
+await redis.setex(
+    `messages:${conversationId}`,
+    300,  // 5분 후 자동 삭제
+    JSON.stringify(messages)
+);
+
+// 실시간 업데이트가 아니어도 괜찮은 데이터에 사용
+</code></pre>
+
+<h4>패턴 3: 버전 기반</h4>
+
+<pre><code>// 캐시 키에 버전 포함
+const version = user.updatedAt.getTime();
+const cacheKey = `user:${userId}:profile:v${version}`;
+
+await redis.setex(cacheKey, 86400, JSON.stringify(user));
+
+// 데이터 업데이트 시 새 버전의 키가 생김
+// 이전 캐시는 자연스럽게 오래됨
+</code></pre>
+
+<h3>HTTP 캐시 헤더</h3>
+
+<p>또 다른 계층의 캐싱: 브라우저</p>
+
+<pre><code>// Express.js 예시
+app.get('/api/user/:id', (req, res) => {
+    const user = getUser(req.params.id);
+
+    res.set('Cache-Control', 'public, max-age=3600');  // 1시간
+    res.set('ETag', `"${user.id}-${user.updatedAt}"`);
+
+    res.json(user);
+});
+</code></pre>
+
+<p>효과:</p>
+
+<ul>
+<li>캐시 헤더가 있으면 브라우저가 캐싱 (서버 요청 X)</li>
+<li>ETag가 있으면 업데이트 확인 (If-None-Match)</li>
+</ul>
+
+<h3>Redis 구성: 성능과 안정성</h3>
+
+<p>우리 구성:</p>
+
+<pre><code>// Redis 클러스터
+- 마스터: 1개 (쓰기)
+- 복제본: 2개 (읽기)
+- 센티널: 3개 (고가용성)
+
+// 메모리 정책
+maxmemory-policy: allkeys-lru
+maxmemory: 16gb  // 가용 메모리의 70%
+
+// 지속성
+save 900 1      // 900초마다 최소 1개 키 변경 시 저장
+appendonly yes  // AOF (Append-Only File) 사용
+</code></pre>
+
+<h3>캐시 워밍업 (Cache Warming)</h3>
+
+<p>앱 시작 시 자주 사용되는 데이터를 미리 캐싱:</p>
+
+<pre><code>// App startup
+async function warmUpCache() {
+    // 1. 인기 있는 대화 미리 로드
+    const popularConversations = await db.conversations
+        .find({ messageCount: { $gt: 100 } })
+        .limit(1000);
+
+    for (const conv of popularConversations) {
+        const messages = await db.messages.findMany(conv.id);
+        await redis.setex(
+            `messages:${conv.id}`,
+            3600,
+            JSON.stringify(messages)
+        );
+    }
+
+    console.log(`Warmed up cache for ${popularConversations.length} conversations`);
 }
 
-// 사용 예시
-const product = await getOrSet(
-  CacheKeys.product(productId),
-  TTL.DYNAMIC,
-  () => db.products.findUnique({ where: { id: productId } })
-);</code></pre>
+// main.ts
+app.listen(3000, async () => {
+    await warmUpCache();
+    console.log('Server started');
+});
+</code></pre>
 
-      <h2>캐시 무효화 전략</h2>
-      <p>TTL만으로는 불충분합니다. 데이터가 변경된 즉시 관련 캐시를 무효화해야 하는 경우가 많습니다. 이를 위한 전략이 필요합니다.</p>
+<h3>모니터링</h3>
 
-      <h3>이벤트 기반 무효화</h3>
-      <pre><code">// 상품 수정 후 관련 캐시 무효화
-async function updateProduct(id: string, data: Partial<Product>) {
-  // DB 업데이트
-  const updated = await db.products.update({
-    where: { id },
-    data,
-  });
+<pre><code>// 캐시 히트율 추적
+let cacheHits = 0;
+let cacheMisses = 0;
 
-  // 관련 캐시 무효화
-  await Promise.all([
-    redis.del(CacheKeys.product(id)),             // 상세 캐시
-    redis.del(CacheKeys.productList(1)),          // 목록 첫 페이지
-    // 패턴으로 관련 목록 캐시 전체 삭제
-    invalidatePattern('v1:products:list:*'),
-  ]);
-
-  return updated;
+async function getWithMetrics(key: string) {
+    const cached = await redis.get(key);
+    if (cached) {
+        cacheHits++;
+        return JSON.parse(cached);
+    }
+    cacheMisses++;
+    // ...
 }
 
-async function invalidatePattern(pattern: string) {
-  const keys = await redis.keys(pattern);
-  if (keys.length > 0) {
-    await redis.del(...keys);
-  }
-}</code></pre>
+// 1분마다 로그
+setInterval(() => {
+    const hitRate = cacheHits / (cacheHits + cacheMisses);
+    console.log(`Cache hit rate: ${(hitRate * 100).toFixed(2)}%`);
+}, 60000);
+</code></pre>
 
-      <div class="note">Redis의 <code>KEYS</code> 명령어는 프로덕션 환경에서 대용량 데이터셋에 사용하면 블록킹이 발생할 수 있습니다. 키 수가 많은 환경에서는 <code>SCAN</code>을 사용하거나, 태그 기반 캐시 라이브러리(cache-manager 등)를 활용하는 것이 안전합니다.</div>
+<h3>결론: 캐시 전략 선택</h3>
 
-      <h3>Cache-Aside vs Write-Through</h3>
-      <pre><code">// Cache-Aside: 읽기 시 캐시 확인, 없으면 DB 조회 후 캐시 저장
-// 쓰기 시 캐시 삭제 (다음 읽기에서 DB에서 최신 데이터 가져옴)
-async function getUser(id: string) {
-  const cached = await redis.get(`user:${id}`);
-  if (cached) return JSON.parse(cached);
+<table>
+<tr><th>전략</th><th>속도</th><th>데이터 일관성</th><th>사용처</th></tr>
+<tr><td>Cache-Aside</td><td>빠름</td><td>느슨함</td><td>읽기 위주 (게시글)</td></tr>
+<tr><td>Write-Through</td><td>느림</td><td>높음</td><td>일관성 중요 (계좌)</td></tr>
+<tr><td>SWR</td><td>매우 빠름</td><td>중간</td><td>실시간 선호 (메시지)</td></tr>
+</table>
 
-  const user = await db.users.findUnique({ where: { id } });
-  await redis.setex(`user:${id}`, TTL.USER, JSON.stringify(user));
-  return user;
-}
+<p>우리 음성 채팅 앱:</p>
 
-async function updateUser(id: string, data: Partial<User>) {
-  await db.users.update({ where: { id }, data });
-  await redis.del(`user:${id}`); // 캐시 삭제 (다음 읽기에 재생성)
-}
+<ul>
+<li>사용자 프로필: Cache-Aside (1시간)</li>
+<li>메시지 리스트: SWR (5분)</li>
+<li>설정: Write-Through (즉시)</li>
+</ul>
 
-// Write-Through: 쓰기 시 DB와 캐시를 동시에 업데이트
-// 항상 캐시가 최신 상태 유지, 쓰기 비용 증가
-async function updateUserWriteThrough(id: string, data: Partial<User>) {
-  const updated = await db.users.update({ where: { id }, data });
-  await redis.setex(`user:${id}`, TTL.USER, JSON.stringify(updated));
-  return updated;
-}</code></pre>
+<p>캐시는 은탄환이 아니다. 전략을 잘 선택하면 성능과 데이터 일관성을 둘 다 얻을 수 있다.</p>
 
-      <h2>운영 지표 모니터링</h2>
-      <p>캐시가 실제로 효과적인지 판단하려면 다음 세 지표를 함께 봐야 합니다:</p>
 
-      <ul>
-        <li><strong>Hit Ratio:</strong> 전체 요청 중 캐시에서 응답한 비율. 70% 이상이면 양호.</li>
-        <li><strong>Stale Read Rate:</strong> TTL이 만료되기 전 변경된 데이터를 캐시에서 반환한 비율. 높으면 사용자 경험이 나빠짐.</li>
-        <li><strong>p95 Latency:</strong> 캐시 hit/miss 각각의 응답 시간. 캐시 miss 시 DB 쿼리 시간도 함께 확인.</li>
-      </ul>
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
 
-      <pre><code">// 캐시 지표 수집 예시 (DataDog/Prometheus 전송 형태)
-async function getOrSetWithMetrics<T>(
-  key: string,
-  ttl: number,
-  fetcher: () => Promise<T>
-): Promise<T> {
-  const start = Date.now();
-  const cached = await redis.get(key);
-
-  if (cached) {
-    metrics.increment('cache.hit', { key_prefix: key.split(':')[1] });
-    return JSON.parse(cached) as T;
-  }
-
-  metrics.increment('cache.miss', { key_prefix: key.split(':')[1] });
-  const data = await fetcher();
-  const dbLatency = Date.now() - start;
-  metrics.histogram('cache.miss.db_latency', dbLatency);
-
-  await redis.setex(key, ttl, JSON.stringify(data));
-  return data;
-}</code></pre>
-
-      <h2>자주 발생하는 문제들</h2>
-      <ul>
-        <li><strong>Cache Stampede:</strong> 캐시 만료 직후 대량 요청이 DB로 몰리는 현상. 뮤텍스 또는 확률적 재생성으로 해결.</li>
-        <li><strong>메모리 과다 사용:</strong> TTL 없는 키 누적, 대형 객체 저장. Redis <code>maxmemory-policy</code> 설정 필수.</li>
-        <li><strong>직렬화 오버헤드:</strong> 대용량 객체를 JSON으로 직렬화하는 비용이 캐시 이점을 상쇄할 수 있음.</li>
-      </ul>
-
-      <h2>마무리</h2>
-      <p>캐시는 성능 기능이 아니라 데이터 계약의 일부입니다. "이 데이터는 최대 5분까지 오래될 수 있다"는 결정을 명시적으로 내리는 것이 캐시 설계의 출발점입니다. TTL과 무효화 전략을 사전에 정의하고, hit ratio와 stale rate를 모니터링해야 캐시가 가치 있게 동작합니다.</p>
-
-      <a class="back" href="/">홈으로 돌아가기</a>
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-61.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">FastAPI vs Express — 2025년 백엔드 프레임워크 선택 기준</span>
+        </a>
+        <a class="related-item" href="/posts/post-64.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">SQLite가 생각보다 강력한 이유 — 개인 프로젝트에서 PostgreSQL 대신</span>
+        </a>
+        <a class="related-item" href="/posts/post-66.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

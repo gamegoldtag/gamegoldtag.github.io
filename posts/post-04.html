@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="C++ 개발자가 Rust로 전환하며 겪은 소유권 시스템의 실체, 흔한 컴파일 에러 패턴, 팀 도입 전략을 코드 예시와 함께 정리했습니다.">
+  <meta name="description" content="Ownership vs RAII, borrow checker 좌절, lifetime annotations, C++ 방식이 불가능한 이유">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-04.html">
-  <title>C++ 개발자가 Rust로 전환하며 배운 것들 | DevInsight</title>
+  <title>C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
@@ -25,173 +27,433 @@
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-07-25",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-04.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>C++ 개발자가 Rust로 전환하며 배운 것들: 소유권 시스템의 실체</h1>
-      <p class="meta">게시일: 2026년 1월 20일 · 15분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>C++를 10년 넘게 쓰다 Rust로 전환했을 때 가장 먼저 든 감정은 답답함이었습니다. 뻔해 보이는 코드를 컴파일러가 거부하고, 오류 메시지는 이해하기 어려운 수명(lifetime) 표기로 가득했습니다. 그러나 6개월이 지난 시점에서 돌아보면, Rust 컴파일러가 거부했던 코드들은 C++ 환경에서 실제로 장애를 일으켰을 패턴들이었습니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Rust</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <p>이 글은 C++ 경험자가 Rust를 배울 때 겪는 구체적인 어려움과, 그것을 넘어서는 과정을 정리합니다. 이론보다 실제 코드 패턴 중심으로 설명합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체</h1>
+      <p class="meta">게시일: 2024년 7월 25일 · 17분 읽기</p>
 
-      <h2>소유권 시스템: C++와 다른 것들</h2>
-      <p>C++에서는 메모리 관리가 개발자 책임입니다. 스마트 포인터(<code>unique_ptr</code>, <code>shared_ptr</code>)로 상당 부분을 자동화할 수 있지만, 컴파일러가 강제하지는 않습니다. Rust는 소유권 규칙을 컴파일러가 강제합니다.</p>
+<p>25년 C++을 쓰다가 Rust 컴파일러에게 매일 혼났다. 처음 6개월은 거의 전쟁이었다. "이게 컴파일되지 않는 건 말이 안 돼"라는 생각을 수백 번했다.</p>
 
-      <p>핵심 규칙은 세 가지입니다:</p>
-      <ul>
-        <li>모든 값은 소유자가 하나입니다</li>
-        <li>소유자가 스코프를 벗어나면 값은 자동 해제됩니다</li>
-        <li>값은 이동(move)하거나 빌림(borrow)할 수 있습니다</li>
-      </ul>
+<p>하지만 1년이 지나니까 깨달았다. C++의 방식이 사실 위험했던 것이다. Rust는 그 위험을 컴파일 타임에 막는 것뿐이다.</p>
 
-      <pre><code>// C++: 이런 코드가 컴파일되고 런타임에 문제 발생 가능
-std::string s = "hello";
-std::string* ptr = &s;
-// s를 다른 곳에 move 후 ptr을 역참조 → use-after-move (UB)
+<h3>C++과 Rust의 근본적인 차이</h3>
 
-// Rust: 같은 패턴이 컴파일 타임에 거부됨
-let s = String::from("hello");
-let r = &s;
-let s2 = s; // s 이동 발생
-println!("{}", r); // 컴파일 에러: r이 참조하는 s가 이동됨
-// error[E0505]: cannot move out of `s` because it is borrowed</code></pre>
+<p>C++에서는 이 코드가 완벽하게 작동한다:</p>
 
-      <h2>전환 초기에 가장 자주 만나는 컴파일 에러</h2>
-
-      <h3>E0382: 이동된 값 사용</h3>
-      <pre><code>let v = vec![1, 2, 3];
-let v2 = v;          // v의 소유권이 v2로 이동
-println!("{:?}", v); // 에러: value used here after move
-
-// 해결 1: clone
-let v2 = v.clone();
-
-// 해결 2: 참조로 전달
-let v2 = &v;
-println!("{:?}", v); // OK: v는 여전히 소유자</code></pre>
-
-      <h3>E0502: 가변 참조와 불변 참조 동시 존재</h3>
-      <pre><code>let mut v = vec![1, 2, 3];
-let r = &v;           // 불변 참조
-v.push(4);            // 에러: v에 가변 참조가 필요한데 불변 참조가 살아있음
-println!("{:?}", r);
-
-// 해결: 불변 참조 사용 후 가변 참조
-let r = &v;
-println!("{:?}", r);  // r 사용 완료
-v.push(4);            // 이제 가능</code></pre>
-
-      <h3>수명(lifetime) 에러</h3>
-      <p>수명 에러는 처음에 가장 난해하게 느껴지는 부분입니다. 핵심은 "반환값이 입력 참조보다 오래 살아남지 않는다"는 것을 컴파일러에 알려주는 것입니다.</p>
-
-      <pre><code>// 에러: 반환 참조의 수명이 불명확
-fn longest(s1: &str, s2: &str) -&gt; &str {
-    if s1.len() &gt; s2.len() { s1 } else { s2 }
-}
-
-// 수정: 수명 파라미터로 명시
-fn longest&lt;'a&gt;(s1: &'a str, s2: &'a str) -&gt; &'a str {
-    if s1.len() &gt; s2.len() { s1 } else { s2 }
-}
-// 'a는 s1과 s2 중 짧은 수명을 따른다는 의미</code></pre>
-
-      <h2>C++ 패턴을 Rust로 옮기기</h2>
-
-      <h3>RAII → Drop trait</h3>
-      <pre><code>// C++ RAII
-class FileGuard {
-    FILE* f;
+<pre><code>class AudioBuffer {
 public:
-    FileGuard(const char* path) { f = fopen(path, "r"); }
-    ~FileGuard() { if (f) fclose(f); }
+    float* data;
+    size_t size;
+
+    AudioBuffer(size_t sz) : size(sz) {
+        data = new float[size];
+    }
+
+    ~AudioBuffer() {
+        delete[] data;
+    }
 };
 
-// Rust: Drop이 자동 구현됨
-use std::fs::File;
-let file = File::open("path.txt")?;
-// file이 스코프를 벗어나면 자동으로 닫힘
-// Drop trait을 명시적으로 구현할 수도 있음</code></pre>
+void processAudio() {
+    AudioBuffer* buffer = new AudioBuffer(1024);
 
-      <h3>nullable 포인터 → Option</h3>
-      <pre><code>// C++: nullptr 체크를 빠뜨리면 런타임 크래시
-std::string* find_user(int id) {
-    // 못 찾으면 nullptr 반환
+    // 사용
+    buffer-&gt;data[0] = 0.5f;
+
+    // 명시적으로 delete
+    delete buffer;  // ← 이걸 빼먹으면? 메모리 누수!
 }
-auto user = find_user(42);
-user-&gt;name; // user가 nullptr면 segfault
+</code></pre>
 
-// Rust: 컴파일러가 None 처리를 강제
-fn find_user(id: u32) -&gt; Option&lt;User&gt; {
-    // 못 찾으면 None 반환
-}
-match find_user(42) {
-    Some(user) =&gt; println!("{}", user.name),
-    None =&gt; println!("User not found"),
-}</code></pre>
+<p>이건 RAII(Resource Acquisition Is Initialization) 패턴이다. C++ 커뮤니티는 이걸 "최선의 실무"라고 부른다. 하지만 실제로는 수백만 줄의 C++ 코드에서 delete를 빼먹는 실수가 발생한다.</p>
 
-      <h3>예외 → Result</h3>
-      <pre><code>// C++: 예외 처리 누락 가능
-void process_file(const std::string& path) {
-    // 예외 던질 수 있음, 호출자가 무시 가능
+<p>Rust는 다르다:</p>
+
+<pre><code>struct AudioBuffer {
+    data: Vec&lt;f32&gt;,
 }
 
-// Rust: 에러 처리를 타입으로 강제
-fn process_file(path: &str) -&gt; Result&lt;(), io::Error&gt; {
-    let content = fs::read_to_string(path)?; // ? 연산자로 에러 전파
-    // 처리 로직
-    Ok(())
+impl AudioBuffer {
+    fn new(size: usize) -&gt; Self {
+        AudioBuffer {
+            data: vec![0.0; size],
+        }
+    }
 }
-// 반환값을 무시하면 컴파일 경고</code></pre>
 
-      <h2>스레드 안전성: C++ vs Rust</h2>
-      <p>C++에서 스레드 간 데이터 공유는 개발자가 뮤텍스를 올바르게 사용하는지 직접 보장해야 합니다. Rust는 <code>Send</code>와 <code>Sync</code> 트레이트로 컴파일 타임에 스레드 안전성을 검증합니다.</p>
+fn process_audio() {
+    let mut buffer = AudioBuffer::new(1024);
+    buffer.data[0] = 0.5;
 
-      <pre><code>// Rust: 스레드 간 안전하지 않은 공유는 컴파일 에러
-use std::thread;
+    // buffer는 함수를 벗어날 때 자동으로 드롭됨
+    // 개발자가 할 수 있는 일이 없음
+}
+</code></pre>
 
-let v = vec![1, 2, 3];
-// v는 Send를 구현하므로 스레드 간 이동 가능
-let handle = thread::spawn(move || {
-    println!("{:?}", v);
+<p>Rust는 delete를 빼먹을 수 없다. 컴파일러가 강제한다.</p>
+
+<h3>개념 1: Ownership — C++의 unique_ptr와는 다르다</h3>
+
+<p>C++에서 unique_ptr를 쓰면:</p>
+
+<pre><code>std::unique_ptr&lt;AudioBuffer&gt; buffer = std::make_unique&lt;AudioBuffer&gt;(1024);
+
+// 다른 곳에 넘기기
+std::unique_ptr&lt;AudioBuffer&gt; buffer2 = std::move(buffer);
+
+// 이제 buffer는 nullptr? 아니다. 정의되지 않은 상태다.
+// buffer에 접근하면... 컴파일러가 경고 안 함. 런타임 에러!
+</code></pre>
+
+<p>Rust에서는:</p>
+
+<pre><code>let buffer = AudioBuffer::new(1024);
+let buffer2 = buffer;  // ownership 이동
+
+// 이제 buffer는 사용 불가
+println!("{}", buffer.data[0]);  // ❌ 컴파일 에러!
+// error[E0382]: borrow of moved value: `buffer`
+</code></pre>
+
+<p>C++에서는 런타임에 터질 수 있는 에러가, Rust에서는 컴파일 타임에 잡힌다.</p>
+
+<h3>개념 2: Borrowing — 참조를 제어한다</h3>
+
+<p>C++에서 참조를 쓰면:</p>
+
+<pre><code>void modifyBuffer(AudioBuffer& buffer) {
+    buffer.data[0] = 1.0;
+}
+
+void processAudio() {
+    AudioBuffer buffer(1024);
+    modifyBuffer(buffer);
+
+    // buffer는 여전히 유효한가? 함수가 참조를 저장했다면?
+    // 컴파일러는 알 수 없다.
+}
+</code></pre>
+
+<p>문제는 함수 서명만으로는 알 수 없다는 것이다. modifyBuffer가 포인터를 저장했나? 아니면 사용만 했나?</p>
+
+<p>Rust는 명시적이다:</p>
+
+<pre><code>fn modify_buffer(buffer: &amp;mut AudioBuffer) {
+    buffer.data[0] = 1.0;
+}
+
+fn process_audio() {
+    let mut buffer = AudioBuffer::new(1024);
+    modify_buffer(&amp;mut buffer);
+
+    // 함수 signature에서 &amp;mut는 "임시 빌림"을 의미한다
+    // 이 함수가 buffer의 ownership을 가져가지 않는다
+    println!("{}", buffer.data[0]);  // ✅ OK, buffer는 여전히 유효
+}
+</code></pre>
+
+<p>또한 Rust는 한 번에 하나의 mutable 참조만 허용한다:</p>
+
+<pre><code>let mut buffer = AudioBuffer::new(1024);
+let ref1 = &amp;mut buffer;
+let ref2 = &amp;mut buffer;  // ❌ 컴파일 에러!
+// error[E0499]: cannot borrow `buffer` as mutable more than once at a time
+
+ref1.data[0] = 1.0;
+ref2.data[0] = 2.0;  // 이건 뭐? 어느 것이 최종값?
+</code></pre>
+
+<p>C++에서는:</p>
+
+<pre><code>AudioBuffer buffer(1024);
+float* ptr1 = buffer.data;
+float* ptr2 = buffer.data;
+
+ptr1[0] = 1.0;
+ptr2[0] = 2.0;
+
+// 혼돈스럽지만 컴파일 됨. 데이터 레이스 가능성 있음.
+</code></pre>
+
+<h3>개념 3: Lifetime — 참조의 유효성 기간</h3>
+
+<p>이것이 Rust의 가장 어려운 개념이다.</p>
+
+<pre><code>// ❌ Rust 컴파일 에러
+fn get_buffer_data() -&gt; &amp;Vec&lt;f32&gt; {
+    let buffer = AudioBuffer::new(1024);
+    &amp;buffer.data  // buffer는 함수 종료 후 드롭됨
+    // 반환되는 참조는 무효해짐
+}
+</code></pre>
+
+<p>C++에서는 컴파일되고, 런타임에 댕글링 포인터가 된다:</p>
+
+<pre><code>// C++ - 위험
+const float* getBufferData() {
+    AudioBuffer buffer(1024);
+    return buffer.data;  // buffer가 드롭되면서 data 포인터는 무효
+}
+
+void processAudio() {
+    const float* data = getBufferData();
+    printf("%f", data[0]);  // 정의되지 않은 동작!
+}
+</code></pre>
+
+<p>Rust는 이 문제를 컴파일 타임에 방지한다.</p>
+
+<h3>개념 4: 왜 C++ 방식이 불가능한가</h3>
+
+<p>C++의 관례:</p>
+
+<pre><code>// C++ 설계 패턴
+class StreamProcessor {
+private:
+    std::vector&lt;AudioBuffer*&gt; buffers;  // 포인터 저장
+
+public:
+    void addBuffer(AudioBuffer* buffer) {
+        buffers.push_back(buffer);  // 포인터만 저장, ownership 불명확
+    }
+
+    void processAll() {
+        for (auto buffer : buffers) {
+            if (buffer) {  // 유효한가? 누가 delete 했나?
+                process(*buffer);
+            }
+        }
+    }
+};
+</code></pre>
+
+<p>누가 buffer를 소유하는가? 누가 delete해야 하는가? 주석에 쓸 수밖에 없다:</p>
+
+<pre><code>// buffer의 lifetime은 caller가 관리
+// StreamProcessor는 buffer를 delete하지 않음
+// ← 이걸 실수하면 메모리 누수 또는 use-after-free
+</code></pre>
+
+<p>Rust는 이것을 불가능하게 한다:</p>
+
+<pre><code>struct StreamProcessor {
+    buffers: Vec&lt;AudioBuffer&gt;,  // ownership을 가짐
+}
+
+impl StreamProcessor {
+    fn add_buffer(&amp;mut self, buffer: AudioBuffer) {
+        self.buffers.push(buffer);  // ownership 이동
+    }
+
+    fn process_all(&amp;self) {
+        for buffer in &amp;self.buffers {
+            self.process(buffer);
+        }
+    }
+}
+</code></pre>
+
+<p>ownership이 명확하다. StreamProcessor가 buffers를 소유하므로 드롭될 때 자동으로 cleanup된다.</p>
+
+<h3>좌절: Borrow Checker와의 싸움</h3>
+
+<p>처음 Rust로 짠 코드:</p>
+
+<pre><code>fn process_frame(
+    buffer: &amp;mut Vec&lt;f32&gt;,
+    filters: &amp;Vec&lt;Filter&gt;,
+) {
+    for i in 0..buffer.len() {
+        let sample = buffer[i];
+
+        for filter in filters {
+            let processed = filter.apply(sample);
+            buffer[i] = processed;  // ❌ 에러!
+        }
+    }
+}
+
+// error[E0502]: cannot borrow `buffer` as mutable because it is also borrowed as immutable
+</code></pre>
+
+<p>내 생각: "어? buffer를 mutable로만 빌렸는데?"</p>
+
+<p>컴파일러의 말: "buffer[i]를 읽을 때 immutable borrow가 됐고, 다시 쓰려고 하니까 mutable borrow가 필요해. 동시에 둘 다 불가능해."</p>
+
+<p>해결책: 인덱스를 쓴다:</p>
+
+<pre><code>fn process_frame(
+    buffer: &amp;mut Vec&lt;f32&gt;,
+    filters: &amp;Vec&lt;Filter&gt;,
+) {
+    for i in 0..buffer.len() {
+        for filter in filters {
+            let processed = filter.apply(buffer[i]);
+            buffer[i] = processed;  // ✅ OK
+        }
+    }
+}
+</code></pre>
+
+<p>처음엔 답답했다. 하지만 이 규칙이 있어서 데이터 레이스가 일어날 수 없다.</p>
+
+<h3>예제: C++ vs Rust 멀티스레드</h3>
+
+<p>C++에서 공유 데이터:</p>
+
+<pre><code>class AudioMixer {
+private:
+    std::vector&lt;float&gt; output;  // 여러 스레드에서 접근
+
+public:
+    void addSample(int index, float value) {
+        output[index] += value;  // 스레드 안전? 아니다!
+        // 여러 스레드가 동시에 접근 → 데이터 레이스
+    }
+};
+</code></pre>
+
+<p>C++ 개발자는 이 버그를 뮤텍스로 막는다:</p>
+
+<pre><code>class AudioMixer {
+private:
+    std::mutex lock;
+    std::vector&lt;float&gt; output;
+
+public:
+    void addSample(int index, float value) {
+        std::lock_guard&lt;std::mutex&gt; guard(lock);
+        output[index] += value;  // 안전
+    }
+};
+</code></pre>
+
+<p>하지만 뮤텍스를 빼먹을 수 있다. 다른 곳에서는 lock 없이 접근할 수 있다.</p>
+
+<p>Rust에서는:</p>
+
+<pre><code>struct AudioMixer {
+    output: Mutex&lt;Vec&lt;f32&gt;&gt;,
+}
+
+impl AudioMixer {
+    fn add_sample(&amp;self, index: usize, value: f32) {
+        let mut output = self.output.lock().unwrap();
+        output[index] += value;
+    }
+}
+
+// 다른 스레드
+let mixer = Arc::new(AudioMixer::new());
+let mixer_clone = Arc::clone(&amp;mixer);
+
+std::thread::spawn(move || {
+    mixer_clone.add_sample(0, 0.5);
 });
+</code></pre>
 
-// Arc&lt;Mutex&lt;T&gt;&gt;: 여러 스레드에서 공유 가능한 가변 데이터
-use std::sync::{Arc, Mutex};
-let shared = Arc::new(Mutex::new(vec![1, 2, 3]));
-let shared_clone = Arc::clone(&shared);
+<p>Rust는 Mutex 없이는 여러 스레드에서 접근 불가능하게 한다. 컴파일러가 강제한다.</p>
 
-thread::spawn(move || {
-    let mut v = shared_clone.lock().unwrap();
-    v.push(4);
-});</code></pre>
+<h3>배운 것들</h3>
 
-      <h2>C++ 개발자가 빠르게 Rust에 익숙해지는 방법</h2>
-      <p>직접 경험한 학습 경로를 정리합니다:</p>
+<blockquote>
+<p>1. C++의 "최선의 실무"는 사실 좋은 관례일 뿐, 컴파일러가 강제할 수 없다<br>
+2. Rust의 ownership은 처음엔 답답하지만, 버그를 근본에서 막는다<br>
+3. 컴파일 타임 안전성은 런타임 성능을 희생하지 않는다 (0-cost abstraction)<br>
+4. 멀티스레드 코드는 Rust가 훨씬 안전하다</p>
+</blockquote>
 
-      <ol>
-        <li><strong>rustlings 완료:</strong> 작은 예제로 소유권, 빌림, 수명을 반복 체험</li>
-        <li><strong>컴파일 에러를 두려워하지 않기:</strong> Rust 컴파일러의 에러 메시지는 C++ 대비 훨씬 친절합니다. 에러 메시지를 끝까지 읽으면 해결 방법이 나옵니다.</li>
-        <li><strong>clippy와 cargo fmt 생활화:</strong> <code>cargo clippy</code>는 더 나은 Rust 코드를 제안합니다</li>
-        <li><strong>처음부터 unsafe를 피하기:</strong> <code>unsafe</code> 없이도 대부분의 시스템 프로그래밍이 가능합니다</li>
-      </ol>
+<h3>결론</h3>
 
-      <h2>실무 전환 전략</h2>
-      <p>팀 전체가 한꺼번에 Rust로 전환하면 러닝 커브로 인한 생산성 저하가 생깁니다. 안전한 전환 전략은 다음과 같습니다:</p>
-      <ul>
-        <li><strong>독립 배치 작업이나 CLI 도구부터:</strong> 비즈니스 로직과 분리된 도구에서 먼저 경험을 쌓습니다</li>
-        <li><strong>성능이 중요한 핫패스:</strong> 기존 C++ 코드의 병목 구간을 Rust FFI로 교체</li>
-        <li><strong>코드 리뷰 기준 문서화:</strong> 소유권 이동, borrow 범위, Result 처리, unwrap 사용 기준을 팀 문서로 정리</li>
-        <li><strong>Rust 숙련자 1명 먼저:</strong> 팀에서 최소 1명이 먼저 깊이 배운 뒤 내부 교육 진행</li>
-      </ul>
+<p>25년 C++을 쓴 나도 이제는 시스템 프로그래밍을 Rust로 한다. 처음 6개월의 고통은 가치가 있다. 뒤돌아보면 C++의 use-after-free 디버깅에 보냈던 시간을 생각나면, Rust의 borrow checker와의 싸움따위는 사소하다.</p>
 
-      <h2>마무리</h2>
-      <p>Rust 전환의 가장 큰 장점은 "이 코드가 런타임에 문제가 생길까?"라는 불안을 없애준다는 점입니다. C++에서 런타임에 잡히던 클래스의 버그들이 빌드 단계에서 차단됩니다. 초기 러닝 커브는 실재하지만, 안정성과 성능을 동시에 요구하는 영역에서는 충분히 투자 가치가 있습니다.</p>
+<p>Rust는 어렵지만, 그 어려움이 버그를 막는다.</p>
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-15.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 에러 처리 패턴 — anyhow vs thiserror, 실전에서 뭘 써야 하나</span>
+        </a>
+        <a class="related-item" href="/posts/post-58.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 크로스 컴파일 — Windows/macOS/Linux 한 번에 빌드하기</span>
+        </a>
+        <a class="related-item" href="/posts/post-77.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 테스트 전략 — 단위/통합/문서 테스트 제대로 쓰기</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

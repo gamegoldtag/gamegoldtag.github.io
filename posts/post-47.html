@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="신입 때 야근이 열정이라고 믿었던 것부터 지금의 깨달음까지. 시간대별 생산성과 야근의 진실">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-47.html">
+  <title>25년 개발자의 야근 회고 — 진짜 생산성 높은 시간은 따로 있다 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "25년 개발자의 야근 회고 — 진짜 생산성 높은 시간은 따로 있다",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-10-08",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-47.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발자 생활</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>25년 개발자의 야근 회고 — 진짜 생산성 높은 시간은 따로 있다</h1>
+      <p class="meta">게시일: 2025년 10월 8일 · 13분 읽기</p>
+<h2>신입 때는 야근이 열정이라고 믿었다. 40 넘고 나니 야근은 실패의 증거다</h2>
+
+<p>21살에 처음 입사했을 때, 밤 10시까지 회사에 있는 게 자랑스러웠다. "봐, 나는 열정 있는 개발자야"라고 생각했다. 코드를 짜면서 라면을 먹고, 자리에서 3시간 자고 다시 코딩을 했다. 25년 후인 지금, 그때를 돌아보면 정말 한심하다.</p>
+
+<p>내가 배운 것: 지금도 야근하는 개발자가 있다면, 그건 개발자의 책임이 아니라 회사의 책임이다.</p>
+
+<h3>신입 시절: 야근의 낭만</h3>
+
+<p>1990년대 후반, 한국의 IT 업계는 야근이 문화였다. 아니, 단순한 문화가 아니라 증명이었다. "나는 회사를 위해 야근한다" = "나는 좋은 개발자다"라는 논리가 지배적이었다.</p>
+
+<p>그 시절 내 하루:</p>
+
+<ul>
+<li>오전 9시: 출근</li>
+<li>오전 10시-오후 6시: 회의와 간단한 작업</li>
+<li>오후 6시-10시: 진짜 코딩 시작</li>
+<li>밤 10시-새벽 2시: 깊은 집중력</li>
+<li>새벽 3시-7시: 의자에서 30분 수면 반복</li>
+<li>아침 7시-9시: 샤워하고 다시 코딩</li>
+</ul>
+
+<p>당시 생산성? 끔찍했다. 하지만 나는 생산성이 높다고 착각했다.</p>
+
+<h3>생산성의 진실: 시간대에 따른 차이</h3>
+
+<p>25년을 거쳐 알아낸 것: 같은 3시간의 코딩도, 시간대에 따라 생산성이 5-10배 차이난다.</p>
+
+<p>내 개인적 생산성 곡선 (매우 개인차 있음):</p>
+
+<ul>
+<li><strong>새벽 6시-8시:</strong> 최고 생산성 (100%)</li>
+<li><strong>오전 10시-12시:</strong> 높은 생산성 (85%)</li>
+<li><strong>오후 2시-4시:</strong> 식곤증 (40%)</li>
+<li><strong>오후 5시-7시:</strong> 회복 (70%)</li>
+<li><strong>밤 9시-11시:</strong> 중간 (55%)</li>
+<li><strong>밤 12시 이후:</strong> 낮음 (20%)</li>
+</ul>
+
+<p>가장 충격적인 발견: 새벽 6시의 1시간 > 밤 11시부터 새벽 2시까지 3시간</p>
+
+<p>왜 그럴까? 과학적 설명:</p>
+
+<ol>
+<li><strong>Circadian Rhythm:</strong> 우리 몸은 아침에 깨어나도록 진화했다</li>
+<li><strong>집중력 곡선:</strong> 오전 8-11시, 오후 1-3시에 피크</li>
+<li><strong>수면 부채(Sleep Debt):</strong> 야근으로 쌓인 피로는 3일이 필요</li>
+<li><strong>호르몬:</strong> 코르티솔은 아침에 높고, 멜라토닌은 밤에 높다</li>
+</ol>
+
+<h3>크런치 타임의 신화</h3>
+
+<p>많은 회사가 믿는 것: "데드라인이 임박하면 야근으로 극복한다"</p>
+
+<p>진실: 야근할수록 버그가 늘어난다.</p>
+
+<p>내가 본 데이터 (대략적):</p>
+
+<ul>
+<li>정상 근무 시간: 버그율 3%</li>
+<li>주당 야근 5시간: 버그율 7%</li>
+<li>주당 야근 20시간: 버그율 15%</li>
+<li>주당 야근 40시간 이상: 버그율 25%</li>
+</ul>
+
+<p>즉, 야근이 많을수록 더 많은 일을 하게 되고, 이는 다시 야근을 늘린다. 악순환의 시작이다.</p>
+
+<h3>야근이 일어나는 진짜 이유</h3>
+
+<p>개발자가 야근을 하게 되는 원인들 (우선순위):</p>
+
+<ol>
+<li><strong>예상 부족:</strong> 일의 양을 반으로 계산한다 (가장 흔한 이유)</li>
+<li><strong>스코프 확장:</strong> 프로젝트 중간에 요구사항이 자꾸 늘어난다</li>
+<li><strong>수평적 문화:</strong> "누군가는 야근해야 데드라인을 맞춘다"</li>
+<li><strong>개인의 완벽주의:</strong> "더 좋은 코드를 짜려면 시간이 필요하다"</li>
+<li><strong>관리자의 무능:</strong> 일정 계획을 제대로 못 했다</li>
+</ol>
+
+<p>역설: 야근이 많은 팀일수록, 관리가 안 된 팀이다.</p>
+
+<h3>내가 바꾼 것들</h3>
+
+<p>30대 중반부터 적용한 정책들:</p>
+
+<p><strong>1. 아침 출근 (오전 7시)</strong></p>
+
+<pre><code">오전 7-9시: 코딩 (야근 대신)
+- 방해 없음
+- 집중력 최고조
+- 1-2시간에 반나절 일 수준의 결과</code></pre>
+
+<p><strong>2. 오후 2시 집중 시간 보호</strong></p>
+
+<ul>
+<li>미팅 없음</li>
+<li>Slack 음소거</li>
+<li>핸드폰 비행기 모드</li>
+</ul>
+
+<p><strong>3. 오후 6시 퇴근 (예외 무)</strong></p>
+
+<ul>
+<li>긴급 상황만 예외</li>
+<li>"긴급" 정의를 엄격히 함</li>
+<li>서버 다운이 아니면 긴급 아님</li>
+</ul>
+
+<p><strong>4. 야근 금지 대신 주간 계획 강화</strong></p>
+
+<ul>
+<li>월요일에 전체 주간 일정 점검</li>
+<li>데드라인 존재하면 수요일에 예비일 확보</li>
+<li>"금요일까지 안 되면 월요일로 미룬다" 원칙</li>
+</ul>
+
+<h3>결과</h3>
+
+<p>35살부터 45살까지 10년간의 데이터:</p>
+
+<ul>
+<li><strong>야근 시간:</strong> 월 20시간 → 월 2시간 (90% 감소)</li>
+<li><strong>버그 발생:</strong> 분기 5건 → 분기 1.5건 (70% 감소)</li>
+<li><strong>생산성:</strong> 주간 200줄 코드 → 주간 350줄 (75% 증가)</li>
+<li><strong>이직 고민:</strong> 자주 → 거의 없음</li>
+<li><strong>일 만족도:</strong> 40% → 85%</li>
+</ul>
+
+<p>가장 중요한 것: 건강이 돌아왔다. 안경으로만 치료되던 눈 피로가 사라졌다.</p>
+
+<h3>지금의 나의 일정</h3>
+
+<p>월요일 - 금요일:</p>
+
+<ul>
+<li>오전 7-9시: 코딩 (집에서)</li>
+<li>오전 10시-12시: 회의 + 코드 리뷰</li>
+<li>오후 12시-1시: 점심</li>
+<li>오후 1시-3시: 코딩</li>
+<li>오후 3시-5시: 미팅 + 메일</li>
+<li>오후 5시: 퇴근</li>
+</ul>
+
+<p>주말: 거의 일 생각 안 함</p>
+
+<h3>같은 팀의 성장</h3>
+
+<p>흥미로운 점: 내가 야근을 강제하지 않으니, 팀의 다른 멤버들도 야근을 줄였다. 그리고 결과는 더 좋아졌다.</p>
+
+<p>아마도 이게 가장 큰 성과일 것 같다. "야근 없이도 된다"는 증명.</p>
+
+<h3>결론</h3>
+
+<p>45살 지금 느끼는 것: 처음 출발점은 왘 이렇게 미련했을까. 20년을 야근으로 낭비했다. 하지만 늦지 않았다.</p>
+
+<p>만약 지금도 야근하고 있다면, 묻고 싶다: "누구를 위한 야근인가? 회사를 위한가, 아니면 자신의 커리어를 위한가?"</p>
+
+<p>내 답: 둘 다 아니다. 야근은 실패한 계획의 증거다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-46.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">우주전자파(미립자파)가 만드는 소프트웨어 버그 — 나만의 헛소리 이론</span>
+        </a>
+        <a class="related-item" href="/posts/post-53.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">시니어 개발자의 생존 기술 — 코딩 말고 필요한 것들</span>
+        </a>
+        <a class="related-item" href="/posts/post-80.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">2025년 회고 — 28년차 개발자가 올해 배운 것들</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

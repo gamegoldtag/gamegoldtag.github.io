@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RDD, 팀 스킬 무시, 마이그레이션 비용 간과, 과다 엔지니어링, 롤백 계획 부재. 실제 사례와 교훈">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-54.html">
+  <title>회사에서 새 기술 도입할 때 실패하는 패턴 5가지 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "회사에서 새 기술 도입할 때 실패하는 패턴 5가지",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-11-25",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-54.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발자 생활</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>회사에서 새 기술 도입할 때 실패하는 패턴 5가지</h1>
+      <p class="meta">게시일: 2025년 11월 25일 · 13분 읽기</p>
+<h2>GraphQL 도입하자고 3개월 싸웠는데, 결국 REST가 맞았다</h2>
+
+<p>5년 전, 우리 팀은 GraphQL을 도입하기로 했다. 나를 포함한 시니어들이 강력하게 주장했다. "GraphQL은 미래의 표준이야", "오버페칭 문제를 해결할 수 있어".</p>
+
+<p>3개월 후, 우리는 GraphQL을 포기했다. 이유는 단순했다: 팀이 관리할 수 없었다.</p>
+
+<p>그 이후로 나는 기술 도입의 실패 패턴을 봐왔다. 이 글은 그 패턴들과 어떻게 피할지에 관한 것이다.</p>
+
+<h3>패턴 1: Resume-Driven Development (RDD)</h3>
+
+<p>이것이 가장 흔한 이유다. "내 이력서에 GraphQL 경험을 넣고 싶어".</p>
+
+<p><strong>특징:</strong></p>
+
+<ul>
+<li>최신 기술에 자꾸 눈이 간다</li>
+<li>"남들은 다 쓰는데 우리만 아직도?"라는 생각</li>
+<li>기술 토크나 컨퍼런스 후 도입 결정</li>
+</ul>
+
+<p><strong>해결책:</strong></p>
+
+<ul>
+<li>기술 도입에 명확한 비즈니스 케이스 필요</li>
+<li>개인의 커리어 개선은 보너스, 메인이 아님</li>
+<li>도입 2주 후, "왜 이거 쓰는지" 설명할 수 있어야 함</li>
+</ul>
+
+<h3>패턴 2: 팀의 스킬 레벨 무시</h3>
+
+<p><strong>상황:</strong> 팀의 평균 경력이 2년인데, "마이크로서비스 아키텍처를 도입하자"</p>
+
+<p>이건 자살 행위다.</p>
+
+<p>그 당시 우리 팀:</p>
+
+<ul>
+<li>REST API는 충분히 이해</li>
+<li>하지만 GraphQL을 모르는 사람이 80%</li>
+<li>쿼리 최적화 경험이 거의 없음</li>
+</ul>
+
+<p><strong>결과:</strong> 3개월 후, GraphQL 쿼리로 인한 N+1 문제 + 캐싱 미흡 = 성능 저하</p>
+
+<p><strong>교훈:</strong> 새 기술 도입 전에 팀 스킬 레벨을 정직하게 평가하자.</p>
+
+<h3>패턴 3: 마이그레이션 비용 간과</h3>
+
+<p><strong>계획:</strong> "GraphQL로 전환하는 데 2주면 충분하겠지"</p>
+
+<p><strong>실제:</strong> 8주가 걸렸다.</p>
+
+<p>왜?</p>
+
+<ul>
+<li>기존 API의 여러 버전 지원해야 함</li>
+<li>클라이언트도 동시 마이그레이션 필요</li>
+<li>모니터링 설정 (응답 시간, 쿼리 복잡도)</li>
+<li>문서 작성</li>
+<li>팀 교육</li>
+</ul>
+
+<p>실제 비용은 계획의 3-4배가 일반적이다.</p>
+
+<p><strong>해결책:</strong> 마이그레이션 비용 * 1.5배 + 여유 비용</p>
+
+<h3>패턴 4: 과다 엔지니어링</h3>
+
+<p><strong>상황:</strong> "우리 서버는 매초 1000개 요청을 처리해야 하니까, 마이크로서비스가 필요해"</p>
+
+<p><strong>현실:</strong> 실제 피크 시간의 요청은 100개</p>
+
+<p>또는:</p>
+
+<p><strong>상황:</strong> "전 세계 사용자를 위해 CDN이 필수야"</p>
+
+<p><strong>현실:</strong> 95% 사용자가 한국</p>
+
+<p><strong>비용:</strong> 개발 비용 5배 + 운영 비용 3배 + 팀 역량 낭비</p>
+
+<p><strong>교훈:</strong> "지금 필요한가?"와 "미래에 필요할까?"를 구분하자.</p>
+
+<h3>패턴 5: 롤백 계획 부재</h3>
+
+<p><strong>가장 위험한 패턴이다.</strong></p>
+
+<p>"우리는 성공할 거니까 롤백은 안 준비해도 괜찮겠지?"</p>
+
+<p>틀렸다. 실패하는 프로젝트가 있다.</p>
+
+<p><strong>우리의 GraphQL 도입:</strong></p>
+
+<pre><code">3개월 후: "이건 안 먹히는데?"
+하지만: 돌아갈 방법이 없었다
+
+이유: REST API를 완전히 제거했기 때문</code></pre>
+
+<p><strong>올바른 접근:</strong></p>
+
+<ol>
+<li>기존 시스템 유지</li>
+<li>새 시스템과 병행 (1-2개월)</li>
+<li>점진적 마이그레이션</li>
+<li>성공 확인 후, 기존 시스템 제거</li>
+</ol>
+
+<h3>내가 도출한 기술 도입 체크리스트</h3>
+
+<p><strong>1. 문제 정의</strong></p>
+
+<pre><code>[ ] 현재 문제가 명확하게 정의되어 있는가?
+[ ] 이 기술이 그 문제를 해결하는가?
+[ ] 다른 해결 방법은 없는가?</code></pre>
+
+<p><strong>2. 팀 평가</strong></p>
+
+<pre><code>[ ] 팀의 경험 레벨을 정직하게 평가했는가?
+[ ] 교육 시간을 계획에 포함했는가?
+[ ] 처음에는 낮은 생산성을 예상했는가?</code></pre>
+
+<p><strong>3. 비용 평가</strong></p>
+
+<pre><code">[ ] 개발 비용을 현실적으로 추정했는가? (3-4배 고려)
+[ ] 운영 비용을 계산했는가?
+[ ] 기회 비용을 생각했는가? (다른 프로젝트 미룸)</code></pre>
+
+<p><strong>4. 수행 계획</strong></p>
+
+<pre><code>[ ] MVP 버전으로 시작하는가?
+[ ] 점진적 마이그레이션인가?
+[ ] 롤백 계획이 있는가?</code></pre>
+
+<p><strong>5. 성공 지표</strong></p>
+
+<pre><code">[ ] 명확한 성공 지표가 있는가?
+[ ] 언제 평가할 것인가? (1개월 후? 3개월 후?)
+[ ] 실패 기준은?</code></pre>
+
+<h3>좋은 기술 도입 사례</h3>
+
+<p><strong>TypeScript 도입:</strong></p>
+
+<ul>
+<li>문제: "자꾸 타입 에러로 버그가 생긴다"</li>
+<li>팀 평가: JavaScript 초급자 많음 (교육 필요)</li>
+<li>계획: "새 코드만 TS로 작성"</li>
+<li>기간: 6개월 (점진적)</li>
+<li>결과: 버그 50% 감소, 성공</li>
+</ul>
+
+<p><strong>Docker 도입:</strong></p>
+
+<ul>
+<li>문제: "개발 환경과 프로덕션 환경이 달라서 버그 발생"</li>
+<li>팀 평가: Linux 경험 있음</li>
+<li>계획: "개발 환경부터 Docker화"</li>
+<li>기간: 2주</li>
+<li>결과: 온보딩 시간 75% 단축, 성공</li>
+</ul>
+
+<h3>결론</h3>
+
+<p>새 기술 도입이 실패하는 이유는 기술이 나빠서가 아니다. 계획과 실행이 현실과 맞지 않아서다.</p>
+
+<p>GraphQL은 훌륭한 기술이다. 하지만 우리 팀이, 우리 상황에는 맞지 않았다. 이를 인정하는 데만 3개월이 걸렸다.</p>
+
+<p>지금의 원칙: "최신이 좋은 게 아니라, 팀이 소화할 수 있는 게 좋다."</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-46.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">우주전자파(미립자파)가 만드는 소프트웨어 버그 — 나만의 헛소리 이론</span>
+        </a>
+        <a class="related-item" href="/posts/post-52.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">사이드 프로젝트가 본업에 미치는 영향 — 28년 경험에서 느낀 것</span>
+        </a>
+        <a class="related-item" href="/posts/post-80.html">
+          <span class="ri-cat">개발자 생활</span>
+          <span class="ri-title">2025년 회고 — 28년차 개발자가 올해 배운 것들</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

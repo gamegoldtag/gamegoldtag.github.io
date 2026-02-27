@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="cross 도구, target triples, GitHub Actions 매트릭스, 조건부 컴파일, 테스트 전략">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-58.html">
+  <title>Rust 크로스 컴파일 — Windows/macOS/Linux 한 번에 빌드하기 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Rust 크로스 컴파일 — Windows/macOS/Linux 한 번에 빌드하기",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2025-12-18",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-58.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Rust</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Rust 크로스 컴파일 — Windows/macOS/Linux 한 번에 빌드하기</h1>
+      <p class="meta">게시일: 2025년 12월 18일 · 14분 읽기</p>
+<h2>Rust의 크로스 컴파일은 C++에 비하면 천국이다. 하지만 함정은 있다</h2>
+
+<p>25년 경력 중 10년을 C++로 했다. 크로스 플랫폼 빌드는 악몽이었다. DLL vs SO, 아키텍처 차이, 컴파일러 호환성... 하루 종일 빌드만 했던 날도 있다.</p>
+
+<p>Rust로 옮기고 나니 정말 쉽다. 같은 명령어로 Windows, macOS, Linux 바이너리가 나온다. 하지만 세부 사항을 모르면 함정에 빠진다.</p>
+
+<h3>기본: Rust 크로스 컴파일</h3>
+
+<p><strong>설치:</strong></p>
+
+<pre><code">cargo install cross</code></pre>
+
+<p><strong>사용:</strong></p>
+
+<pre><code"># Linux에서 Windows용 빌드
+cross build --release --target x86_64-pc-windows-gnu
+
+# macOS에서 Linux용 빌드
+cross build --release --target x86_64-unknown-linux-gnu
+
+# Linux에서 ARM 기기용 빌드 (라즈베리파이)
+cross build --release --target armv7-unknown-linux-gnueabihf</code></pre>
+
+<p>끝이다. 정말로.</p>
+
+<h3>Target Triple 이해하기</h3>
+
+<p>Target triple은 빌드 대상을 정의한다: &lt;cpu&gt;-&lt;vendor&gt;-&lt;os&gt;-&lt;env&gt;</p>
+
+<p><strong>예:</strong></p>
+
+<ul>
+<li>x86_64-pc-windows-msvc: Windows (MSVC 컴파일러)</li>
+<li>x86_64-pc-windows-gnu: Windows (MinGW 컴파일러)</li>
+<li>x86_64-apple-darwin: macOS Intel</li>
+<li>aarch64-apple-darwin: macOS Apple Silicon</li>
+<li>x86_64-unknown-linux-gnu: Linux x86_64</li>
+<li>aarch64-unknown-linux-gnu: Linux ARM64</li>
+</ul>
+
+<p><strong>전체 목록 확인:</strong></p>
+
+<pre><code">rustc --print target-list | grep -i linux
+rustc --print target-list | grep -i windows</code></pre>
+
+<h3>GitHub Actions로 자동 빌드</h3>
+
+<p>모든 플랫폼을 자동으로 빌드하려면 GitHub Actions를 사용한다:</p>
+
+<pre><code">name: Cross-Platform Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Windows
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: myapp.exe
+
+          # macOS Intel
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: myapp
+
+          # macOS Apple Silicon
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: myapp
+
+          # Linux
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: myapp
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: myapp-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}</code></pre>
+
+<h3>조건부 컴파일</h3>
+
+<p>플랫폼별로 다른 코드를 실행해야 할 때:</p>
+
+<pre><code">#[cfg(target_os = "windows")]
+fn get_config_path() -> PathBuf {
+    PathBuf::from(format!("{}\AppData\Local\myapp",
+                          std::env::var("USERPROFILE").unwrap()))
+}
+
+#[cfg(target_os = "unix")]
+fn get_config_path() -> PathBuf {
+    PathBuf::from(format!("{}/.config/myapp",
+                          std::env::var("HOME").unwrap()))
+}
+
+#[cfg(target_arch = "x86_64")]
+fn get_num_threads() -> usize {
+    8
+}
+
+#[cfg(target_arch = "arm")]
+fn get_num_threads() -> usize {
+    4
+}</code></pre>
+
+<h3>의존성의 함정</h3>
+
+<p>모든 라이브러리가 크로스 플랫폼을 지원하는 건 아니다.</p>
+
+<p><strong>문제가 생기는 경우:</strong></p>
+
+<ul>
+<li>네이티브 코드 (C/C++ 바인딩)를 사용하는 라이브러리</li>
+<li> 윈도우 API (winapi)에 의존하는 라이브러리</li>
+<li> 특정 플랫폼만 지원하는 라이브러리</li>
+</ul>
+
+<p><strong>해결책:</strong></p>
+
+<pre><code">[dependencies]
+winapi = { version = "0.3", features = ["winuser"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = "0.37"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"</code></pre>
+
+<h3>테스트 전략</h3>
+
+<p>모든 플랫폼에서 테스트를 해야 한다:</p>
+
+<pre><code"># 로컬에서 특정 플랫폼으로 테스트
+cross test --target x86_64-unknown-linux-gnu
+
+# GitHub Actions에서 모든 플랫폼 테스트
+- name: Test
+  run: cross test --release --target ${{ matrix.target }}
+
+# 커버리지 (선택사항)
+- name: Generate coverage
+  run: |
+    cargo install tarpaulin
+    cargo tarpaulin --out Xml --target ${{ matrix.target }}</code></pre>
+
+<h3>실제 예제: 간단한 CLI 도구</h3>
+
+<pre><code">// main.rs
+use std::env;
+
+#[cfg(target_os = "windows")]
+const SEPARATOR: &str = "\";
+
+#[cfg(target_os = "unix")]
+const SEPARATOR: &str = "/";
+
+fn main() {
+    let args: Vec&lt;String&gt; = env::args().collect();
+
+    println!("OS: {}", std::env::consts::OS);
+    println!("Arch: {}", std::env::consts::ARCH);
+    println!("Path separator: {}", SEPARATOR);
+
+    for arg in &args[1..] {
+        println!("Argument: {}", arg);
+    }
+}</code></pre>
+
+<h3>빌드 시간 최적화</h3>
+
+<p>크로스 컴파일은 느릴 수 있다. 최적화하려면:</p>
+
+<pre><code"># .cargo/config.toml
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+# GitHub Actions 캐시
+- uses: Swatinem/rust-cache@v2
+  with:
+    cache-targets: "true"</code></pre>
+
+<h3>배포 자동화</h3>
+
+<p>빌드된 바이너리를 자동으로 릴리스하려면:</p>
+
+<pre><code"># Cargo.toml
+[package]
+name = "myapp"
+version = "0.1.0"
+
+# GitHub Actions
+- name: Create Release
+  if: startsWith(github.ref, 'refs/tags/')
+  uses: softprops/action-gh-release@v1
+  with:
+    files: |
+      target/*/release/myapp
+      target/*/release/myapp.exe</code></pre>
+
+<h3>실제 경험: 문제 해결</h3>
+
+<p><strong>문제 1: Windows에서 OpenSSL 컴파일 실패</strong></p>
+
+<pre><code">해결:
+1. vcpkg 설치
+2. VCPKG_ROOT 설정
+3. OpenSSL 설치: vcpkg install openssl:x64-windows</code></pre>
+
+<p><strong>문제 2: ARM 아키텍처에서 느린 빌드</strong></p>
+
+<pre><code">해결:
+1. 로컬 ARM 기기에서 빌드 (라즈베리파이)
+2. Docker 사용
+3. cargo-cross 사용 (권장)</code></pre>
+
+<h3>결론</h3>
+
+<p>Rust의 크로스 컴파일은 정말 강력하다. C++과 비교하면 차원이 다르다.</p>
+
+<p>하지만 주의할 점:</p>
+
+<ul>
+<li>모든 의존성이 크로스 플랫폼을 지원하지는 않음</li>
+<li>네이티브 코드가 있으면 복잡해짐</li>
+<li>각 플랫폼에서 실제로 테스트해야 함</li>
+</ul>
+
+<p>25년 경력의 감상: 이렇게 쉬운 크로스 컴파일이 C++에는 없었다. Rust가 정말 잘 설계되었다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-04.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체</span>
+        </a>
+        <a class="related-item" href="/posts/post-17.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust async/await 삽질 정리 — tokio 런타임에서 겪은 문제들</span>
+        </a>
+        <a class="related-item" href="/posts/post-77.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 테스트 전략 — 단위/통합/문서 테스트 제대로 쓰기</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

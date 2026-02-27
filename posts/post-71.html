@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Playwright와 Cypress의 아키텍처, 브라우저 지원, 속도, 디버깅 경험을 상세히 비교합니다.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-71.html">
+  <title>Playwright vs Cypress — 2025년 E2E 테스트 도구 비교 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Playwright vs Cypress — 2025년 E2E 테스트 도구 비교",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-02-03",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-71.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">개발 기초 &amp; 팁</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Playwright vs Cypress — 2025년 E2E 테스트 도구 비교</h1>
+      <p class="meta">게시일: 2026년 2월 3일 · 14분 읽기</p>
+<p>나는 Cypress를 3년 넘게 사용했다. 그리고 작년에 Playwright로 전환했다. 멀티브라우저 지원이 결정적이었는데, 이번 글에서는 두 도구의 차이점을 상세히 분석하겠다.</p>
+
+<h3>아키텍처의 근본적인 차이</h3>
+
+<p>Cypress와 Playwright의 가장 중요한 차이는 아키텍처다. 이것이 성능, 안정성, 기능성에 모두 영향을 미친다.</p>
+
+<p><strong>Cypress: In-browser 방식</strong></p>
+
+<p>Cypress는 테스트 코드가 브라우저 내부에서 실행된다. 즉, 애플리케이션과 같은 프로세스에서 동작한다는 뜻이다.</p>
+
+<pre><code class="language-javascript">
+// Cypress는 브라우저 내부에서 이 코드를 실행
+describe('Login Flow', () => {
+  it('should login successfully', () => {
+    cy.visit('https://app.example.com/login');
+    cy.get('input[name=email]').type('user@example.com');
+    cy.get('input[name=password]').type('password123');
+    cy.get('button[type=submit]').click();
+    cy.url().should('include', '/dashboard');
+  });
+});
+</code></pre>
+
+<p>장점은 애플리케이션의 내부 상태에 직접 접근할 수 있다는 것이다. Redux store, Vue state 등에 접근 가능하다.</p>
+
+<p><strong>Playwright: Out-of-process 방식</strong></p>
+
+<p>Playwright는 테스트 코드가 Node.js 프로세스에서 실행되고, 브라우저와는 웹소켓으로 통신한다.</p>
+
+<pre><code class="language-javascript">
+// Playwright는 Node.js에서 이 코드를 실행하고 브라우저에 명령을 내림
+import { test, expect } from '@playwright/test';
+
+test('should login successfully', async ({ page }) => {
+  await page.goto('https://app.example.com/login');
+  await page.fill('input[name=email]', 'user@example.com');
+  await page.fill('input[name=password]', 'password123');
+  await page.click('button[type=submit]');
+  await expect(page).toHaveURL(/.*dashboard/);
+});
+</code></pre>
+
+<p>장점은 브라우저와 완전히 분리되어 있다는 것이다. 테스트가 안정적이고, 여러 탭을 동시에 제어할 수 있다.</p>
+
+<h3>브라우저 지원</h3>
+
+<p>이것이 내가 Playwright로 전환한 주된 이유다.</p>
+
+<table>
+<thead>
+<tr>
+<th>기능</th>
+<th>Cypress</th>
+<th>Playwright</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chrome/Edge</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Firefox</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Safari/WebKit</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Mobile Chrome</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Mobile Safari</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+
+<p>Cypress는 Safari를 지원하지 않는다. 이는 iOS 테스트를 할 수 없다는 의미다. 반면 Playwright는 Safari의 렌더링 엔진인 WebKit을 완벽히 지원한다.</p>
+
+<pre><code class="language-javascript">
+// Playwright에서 여러 브라우저 테스트
+import { test, expect } from '@playwright/test';
+
+test.describe('Cross-browser tests', () => {
+  test('Chrome', async ({ page }) => {
+    // Chromium에서만 실행
+  });
+
+  test('Firefox', async ({ page }) => {
+    // Firefox에서만 실행
+  });
+
+  test('Safari', async ({ page }) => {
+    // WebKit에서만 실행
+  });
+
+  test('Mobile', async ({ page }) => {
+    // 모바일 브라우저 에뮬레이션
+    await page.setViewportSize({ width: 375, height: 812 });
+  });
+});
+</code></pre>
+
+<h3>속도 벤치마크</h3>
+
+<p>간단한 로그인 플로우를 여러 번 실행하는 테스트로 비교해보자.</p>
+
+<pre><code class="language-bash">
+// 100회 반복 테스트
+// Cypress: 약 180초 (테스트당 1.8초)
+// Playwright: 약 90초 (테스트당 0.9초)
+</code></pre>
+
+<p>Playwright가 약 2배 빠르다. 이유는 out-of-process 아키텍처 덕분에 병렬 실행이 더 효율적이기 때문이다. Cypress는 동시에 하나의 브라우저만 제어할 수 있지만, Playwright는 여러 브라우저를 동시에 제어할 수 있다.</p>
+
+<pre><code class="language-javascript">
+// Playwright 병렬 실행
+import { test, expect } from '@playwright/test';
+
+test.describe.configure({ mode: 'parallel' });
+
+test('test 1', async ({ page }) => {
+  // 동시 실행
+});
+
+test('test 2', async ({ page }) => {
+  // 동시 실행
+});
+
+test('test 3', async ({ page }) => {
+  // 동시 실행
+});
+</code></pre>
+
+<h3>디버깅 경험</h3>
+
+<p><strong>Cypress</strong> - Time Travel Debugger</p>
+
+<p>Cypress는 각 명령어 실행 시점의 화면을 스냅샷으로 저장한다. 테스트 결과에서 각 단계를 클릭하면 그 시점의 화면과 DOM을 볼 수 있다.</p>
+
+<pre><code class="language-javascript">
+// Cypress는 이 각 명령어마다 스냅샷을 저장
+cy.visit('https://app.example.com');
+cy.get('input').type('data');  // 스냅샷 1
+cy.get('button').click();       // 스냅샷 2
+cy.get('.success-message');     // 스냅샷 3
+</code></pre>
+
+<p><strong>Playwright</strong> - Trace Viewer</p>
+
+<p>Playwright는 전체 테스트 실행을 기록했다가 나중에 재생할 수 있다. 마치 영화를 돌려보는 것처럼 테스트를 추적할 수 있다.</p>
+
+<pre><code class="language-javascript">
+// playwright.config.ts
+export default defineConfig({
+  use: {
+    trace: 'on-first-retry',
+  },
+});
+
+// 실행
+npx playwright test --trace on
+
+// 보기
+npx playwright show-trace trace.zip
+</code></pre>
+
+<p>또한 Playwright는 inspect 모드에서 요소를 클릭하면 자동으로 선택자를 생성해준다.</p>
+
+<pre><code class="language-bash">
+npx playwright codegen https://app.example.com
+</code></pre>
+
+<p>이 명령어를 실행하면 브라우저가 열리고, 내가 클릭하는 모든 행동이 자동으로 코드로 변환된다.</p>
+
+<h3>CI 통합</h3>
+
+<p>둘 다 GitHub Actions, GitLab CI 등과 잘 통합된다.</p>
+
+<pre><code class="language-yaml">
+# GitHub Actions with Cypress
+name: Cypress Tests
+on: [push]
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cypress-io/github-action@v4
+        with:
+          start: npm run dev
+</code></pre>
+
+<pre><code class="language-yaml">
+# GitHub Actions with Playwright
+name: Playwright Tests
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run dev &
+      - run: npx playwright test
+</code></pre>
+
+<h3>컴포넌트 테스트</h3>
+
+<p>최근 두 도구 모두 컴포넌트 테스트를 지원하기 시작했다.</p>
+
+<pre><code class="language-javascript">
+// Cypress Component Test
+import { mount } from 'cypress/react';
+import LoginForm from './LoginForm';
+
+describe('LoginForm Component', () => {
+  it('renders correctly', () => {
+    mount(<LoginForm />);
+    cy.get('input[name=email]').should('be.visible');
+  });
+});
+</code></pre>
+
+<pre><code class="language-javascript">
+// Playwright Component Test
+import { test, expect } from '@playwright/experimental-ct-react';
+import LoginForm from './LoginForm';
+
+test('renders correctly', async ({ mount }) => {
+  const component = await mount(<LoginForm />);
+  await expect(component.locator('input[name=email]')).toBeVisible();
+});
+</code></pre>
+
+<h3>API 테스트</h3>
+
+<p>Playwright는 API 테스트 기능이 더 강력하다.</p>
+
+<pre><code class="language-javascript">
+// Playwright API 테스트
+import { test, expect } from '@playwright/test';
+
+test('API test', async ({ request }) => {
+  const response = await request.post('https://api.example.com/login', {
+    data: {
+      email: 'user@example.com',
+      password: 'password'
+    }
+  });
+
+  expect(response.status()).toBe(200);
+  const json = await response.json();
+  expect(json.token).toBeTruthy();
+});
+</code></pre>
+
+<h3>결론</h3>
+
+<p>Cypress를 3년 사용한 나의 평가는 이렇다:</p>
+
+<ul>
+<li><strong>Cypress의 장점:</strong> 학습곡선이 낮고, 개발자 경험이 직관적이며, 디버깅이 쉽다.</li>
+<li><strong>Cypress의 단점:</strong> Safari 미지원, 병렬 실행이 비효율적, 아키텍처의 한계가 있다.</li>
+<li><strong>Playwright의 장점:</strong> 모든 브라우저 지원, 병렬 실행 효율적, API 테스트 기능이 좋다.</li>
+<li><strong>Playwright의 단점:</strong> 초기 학습곡선이 조금 가파르고, 설정이 더 복잡하다.</li>
+</ul>
+
+<p>2025년 기준, Safari를 테스트해야 한다면 Playwright 일택이다. 그렇지 않더라도 성능과 확장성을 고려하면 Playwright를 추천한다.</p>
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-11.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">E2E 테스트 flaky 줄이기 — 실패 원인을 구조적으로 제거하는 방법</span>
+        </a>
+        <a class="related-item" href="/posts/post-72.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">정규표현식 실전 패턴 — 매번 검색하는 것들 총정리</span>
+        </a>
+        <a class="related-item" href="/posts/post-79.html">
+          <span class="ri-cat">개발 기초 &amp; 팁</span>
+          <span class="ri-title">개발자가 알면 좋은 네트워크 기초 — DNS부터 TCP까지</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

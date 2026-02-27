@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WAL 모드, JSON 지원, FTS5, 윈도우 함수. 사이드 프로젝트에 PostgreSQL은 과잉 엔지니어링">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ikakao.kr/posts/post-64.html">
+  <title>SQLite가 생각보다 강력한 이유 — 개인 프로젝트에서 PostgreSQL 대신 | DevInsight</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
+  <style>
+    :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
+    h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    p { margin: 0 0 16px; }
+    ul, ol { margin: 0 0 16px 20px; }
+    li { margin-bottom: 8px; }
+    pre { background: #2d2d3f; color: #e6e6e6; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 16px; }
+    code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    pre code { background: none; padding: 0; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+    .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
+    .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "SQLite가 생각보다 강력한 이유 — 개인 프로젝트에서 PostgreSQL 대신",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2026-01-15",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-64.html" }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Backend &amp; DB</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
+
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>SQLite가 생각보다 강력한 이유 — 개인 프로젝트에서 PostgreSQL 대신</h1>
+      <p class="meta">게시일: 2026년 1월 15일 · 14분 읽기</p>
+<h2>PostgreSQL을 설정하다가 SQLite로 돌아온 이유</h2>
+<p>2024년 초, 나는 사이드 프로젝트를 시작했다. 처음엔 당연히 PostgreSQL을 써야 한다고 생각했다. 28년간의 개발 경험상, "진정한" 데이터베이스는 PostgreSQL이었으니까. 하지만 몇 가지 문제가 생겼다:</p>
+
+<ul>
+<li>AWS RDS t3.micro 인스턴스: 월 $15</li>
+<li>백업 설정: 복잡함</li>
+<li>연결 풀 관리: 또 다른 도구 필요</li>
+<li>마이그레이션 도구: Alembic 설정</li>
+</ul>
+
+<p>그리고 생각해보니 내 프로젝트는:</p>
+
+<ul>
+<li>동시 사용자: 최대 10명</li>
+<li>데이터 크기: 수백 MB</li>
+<li>처리량: 초당 수십 개 요청</li>
+</ul>
+
+<p>"이 정도면 SQLite로도 충분하지 않을까?"</p>
+
+<p>결정을 내렸다. SQLite로 마이그레이션하기로.</p>
+
+<p>6개월이 지난 지금, 나는 그 결정에 완벽히 만족한다. 최신 SQLite는 생각보다 훨씬 강력하다.</p>
+
+<h3>SQLite의 숨겨진 강점 1: WAL 모드</h3>
+<p>SQLite의 최대 문제는 항상 "동시성"이었다. 하나의 쓰기 트랜잭션 중에 다른 쓰기가 불가능했다. 하지만 WAL (Write-Ahead Logging) 모드는 이 문제를 완전히 해결한다.</p>
+
+<pre><code>import sqlite3
+
+conn = sqlite3.connect('app.db')
+conn.execute('PRAGMA journal_mode=WAL')
+
+# WAL 활성화 후의 효과
+# - 여러 읽기 쿼리는 동시에 가능
+# - 쓰기 중에도 읽기 가능
+# - 읽기 성능이 향상됨
+
+# 추가 설정
+conn.execute('PRAGMA synchronous=NORMAL')  # 약간의 위험을 감수하고 속도 증가
+conn.execute('PRAGMA cache_size=-64000')   # 64MB 캐시
+conn.execute('PRAGMA temp_store=MEMORY')   # 임시 테이블을 메모리에
+conn.execute('PRAGMA mmap_size=30000000')  # 메모리 맵 활성화
+
+conn.close()
+</code></pre>
+
+<p>실제 성능 비교 (내 프로젝트 기준):</p>
+
+<ul>
+<li>WAL 모드 전: 동시 쓰기 시 대기</li>
+<li>WAL 모드 후: 여러 요청 동시 처리 가능</li>
+</ul>
+
+<p>동시성 요구사항이 낮다면, WAL 모드 SQLite는 충분히 실무적이다.</p>
+
+<h3>SQLite의 숨겨진 강점 2: JSON 지원</h3>
+<p>SQLite는 3.9.0부터 JSON 함수를 지원한다. 이게 정말 강력하다:</p>
+
+<pre><code>-- 사용자 정보 저장 (JSON 컬럼)
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  metadata JSON
+);
+
+-- 삽입
+INSERT INTO users VALUES (
+  1,
+  'Alice',
+  json('{"age": 28, "city": "Seoul", "tags": ["developer", "python"], "settings": {"theme": "dark"}}')
+);
+
+-- JSON에서 값 추출
+SELECT
+  id,
+  name,
+  json_extract(metadata, '$.age') as age,
+  json_extract(metadata, '$.city') as city,
+  json_extract(metadata, '$.tags[0]') as first_tag
+FROM users;
+-- 결과: 1, Alice, 28, Seoul, developer
+
+-- JSON 배열 반복
+SELECT
+  id,
+  json_each.value as tag
+FROM users, json_each(metadata, '$.tags')
+WHERE id = 1;
+-- 결과: 1, developer
+--       1, python
+
+-- JSON 업데이트
+UPDATE users
+SET metadata = json_set(metadata, '$.settings.theme', json('"light"'))
+WHERE id = 1;
+
+-- JSON 조건 쿼리
+SELECT * FROM users
+WHERE json_extract(metadata, '$.age') &gt; 25;
+</code></pre>
+
+<p>PostgreSQL의 JSONB와 비슷한 기능을 SQLite도 제공한다. 반정형 데이터를 저장하기에 완벽하다.</p>
+
+<h3>SQLite의 숨겨진 강점 3: FTS5 (Full Text Search)</h3>
+<p>블로그 검색 기능이 필요했다. 처음엔 좋은 라이브러리 사용을 생각했지만, SQLite의 FTS5는 매우 강력하다:</p>
+
+<pre><code>-- FTS5 테이블 생성
+CREATE VIRTUAL TABLE articles_fts USING fts5(
+  id,
+  title,
+  content,
+  author
+);
+
+-- 데이터 삽입
+INSERT INTO articles_fts VALUES (
+  1,
+  'Python 자동화 스크립트 실전',
+  '매주 금요일 반복하던 30분짜리 작업을 스크립트 하나로...',
+  'developer'
+);
+
+-- 간단한 검색
+SELECT * FROM articles_fts
+WHERE articles_fts MATCH 'python';
+
+-- 복잡한 검색
+SELECT * FROM articles_fts
+WHERE articles_fts MATCH 'python AND automation'
+ORDER BY rank;
+
+-- 공백 처리
+SELECT * FROM articles_fts
+WHERE articles_fts MATCH '"python automation"'  -- 정확히 이 구문
+ORDER BY rank;
+
+-- 다른 테이블과 조인
+CREATE TABLE article_metadata (
+  id INTEGER,
+  views INTEGER,
+  likes INTEGER
+);
+
+SELECT
+  f.id,
+  f.title,
+  m.views,
+  m.likes
+FROM articles_fts f
+JOIN article_metadata m ON f.id = m.id
+WHERE f MATCH 'python'
+ORDER BY m.views DESC;
+</code></pre>
+
+<p>Elasticsearch 같은 전문 검색 도구를 도입하지 않고도, SQLite FTS5로 충분한 검색 기능을 구현할 수 있다.</p>
+
+<h3>SQLite의 숨겨진 강점 4: Window Functions</h3>
+<p>SQLite 3.25.0부터 window 함수를 지원한다. 복잡한 분석이 훨씬 간단해진다:</p>
+
+<pre><code>-- 매월 누적 매출 계산
+CREATE TABLE sales (
+  id INTEGER PRIMARY KEY,
+  month TEXT,
+  amount REAL
+);
+
+INSERT INTO sales VALUES
+(1, '2025-01', 1000),
+(2, '2025-02', 1500),
+(3, '2025-03', 1200),
+(4, '2025-04', 2000);
+
+-- Window function으로 누적합 계산
+SELECT
+  month,
+  amount,
+  SUM(amount) OVER (ORDER BY month) as cumulative_total,
+  ROW_NUMBER() OVER (ORDER BY amount DESC) as rank,
+  LAG(amount) OVER (ORDER BY month) as previous_month,
+  (amount - LAG(amount) OVER (ORDER BY month)) as month_over_month_change
+FROM sales;
+
+-- 결과:
+-- 2025-01, 1000, 1000, 4, NULL, NULL
+-- 2025-02, 1500, 2500, 2, 1000, 500
+-- 2025-03, 1200, 3700, 3, 1500, -300
+-- 2025-04, 2000, 5700, 1, 1200, 800
+
+-- 사용자별 구매 순서 계산
+CREATE TABLE purchases (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  purchase_date TEXT,
+  amount REAL
+);
+
+SELECT
+  user_id,
+  purchase_date,
+  amount,
+  ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY purchase_date) as purchase_number,
+  SUM(amount) OVER (PARTITION BY user_id ORDER BY purchase_date) as lifetime_value
+FROM purchases
+WHERE user_id = 123;
+</code></pre>
+
+<p>이런 기능들이 모두 SQLite에 내장되어 있다!</p>
+
+<h3>SQLite의 숨겨진 강점 5: 트리거와 뷰</h3>
+<p>데이터 무결성을 유지하는 데 트리거가 도움이 된다:</p>
+
+<pre><code>-- 감시(audit) 테이블
+CREATE TABLE users_audit (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  action TEXT,
+  old_value TEXT,
+  new_value TEXT,
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- UPDATE 트리거
+CREATE TRIGGER users_update_trigger
+AFTER UPDATE ON users
+BEGIN
+  INSERT INTO users_audit (user_id, action, old_value, new_value)
+  VALUES (OLD.id, 'UPDATE', OLD.email, NEW.email);
+END;
+
+-- DELETE 트리거
+CREATE TRIGGER users_delete_trigger
+BEFORE DELETE ON users
+BEGIN
+  INSERT INTO users_audit (user_id, action, old_value, new_value)
+  VALUES (OLD.id, 'DELETE', OLD.email, 'DELETED');
+END;
+
+-- 뷰로 자주 쓰는 쿼리를 저장
+CREATE VIEW active_users AS
+SELECT
+  id,
+  email,
+  name,
+  created_at,
+  (SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) as order_count
+FROM users
+WHERE deleted_at IS NULL
+AND last_login &gt; datetime('now', '-30 days');
+
+-- 간단히 조회
+SELECT * FROM active_users ORDER BY order_count DESC;
+</code></pre>
+
+<h3>SQLite의 제약사항 — 언제는 부족할까?</h3>
+<p>하지만 SQLite에도 한계가 있다:</p>
+
+<ul>
+<li>매우 높은 동시 쓰기: 여전히 PostgreSQL이 나음</li>
+<li>분산 데이터베이스: SQLite는 단일 파일</li>
+<li>대규모 데이터 (>100GB): 성능 저하</li>
+<li>복잡한 권한 관리: 사용자/역할이 없음</li>
+</ul>
+
+<p>내 경험상:</p>
+
+<ul>
+<li>개인 프로젝트: SQLite 추천</li>
+<li>스타트업 (초기): SQLite 추천</li>
+<li>소/중형 SaaS: SQLite 또는 PostgreSQL</li>
+<li>대규모 서비스: PostgreSQL 또는 분산 DB</li>
+</ul>
+
+<h3>마이그레이션 팁</h3>
+<p>PostgreSQL에서 SQLite로 옮길 때 주의할 점:</p>
+
+<pre><code>-- PostgreSQL 의존성 제거
+
+-- 1. 자동 증가 (PostgreSQL: SERIAL)
+-- PostgreSQL: id SERIAL PRIMARY KEY
+-- SQLite: id INTEGER PRIMARY KEY AUTOINCREMENT
+
+-- 2. UUID
+-- PostgreSQL: id UUID DEFAULT gen_random_uuid()
+-- SQLite: id TEXT DEFAULT (hex(randomblob(16)))
+
+-- 3. 현재 시간
+-- PostgreSQL: created_at TIMESTAMP DEFAULT NOW()
+-- SQLite: created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+-- 4. 배열
+-- PostgreSQL: tags TEXT[] DEFAULT '{}'
+-- SQLite: tags JSON DEFAULT '[]'
+
+-- 5. 열거형
+-- PostgreSQL: status status_enum
+-- SQLite: status TEXT CHECK(status IN ('active', 'inactive'))
+</code></pre>
+
+<h3>Python에서 SQLite 사용하기</h3>
+<p>Flask나 FastAPI에서 SQLite를 제대로 쓰는 방법:</p>
+
+<pre><code>from contextlib import contextmanager
+import sqlite3
+
+class Database:
+    def __init__(self, path: str):
+        self.path = path
+        self._init_db()
+
+    def _init_db(self):
+        conn = sqlite3.connect(self.path)
+        conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA synchronous=NORMAL')
+        conn.close()
+
+    @contextmanager
+    def get_connection(self):
+        conn = sqlite3.connect(self.path)
+        conn.row_factory = sqlite3.Row
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+    def query(self, sql: str, params=None):
+        with self.get_connection() as conn:
+            cursor = conn.execute(sql, params or ())
+            return cursor.fetchall()
+
+    def execute(self, sql: str, params=None):
+        with self.get_connection() as conn:
+            conn.execute(sql, params or ())
+
+# 사용
+db = Database('app.db')
+
+# 조회
+rows = db.query('SELECT * FROM users WHERE age > ?', (20,))
+for row in rows:
+    print(dict(row))
+
+# 삽입
+db.execute(
+    'INSERT INTO users (name, email) VALUES (?, ?)',
+    ('Alice', 'alice@example.com')
+)
+</code></pre>
+
+<h3>결론 — SQLite는 진지하다</h3>
+<p>2024년, SQLite는 더 이상 "장난감 데이터베이스"가 아니다. 나는 다음을 확신한다:</p>
+
+<ul>
+<li>개인 프로젝트: SQLite로 시작하세요</li>
+<li>PostgreSQL의 과금에 시달린다면: SQLite로 마이그레이션 검토하세요</li>
+<li>동시 사용자가 적다면: SQLite로 충분합니다</li>
+</ul>
+
+<p>28년간 여러 데이터베이스를 봤지만, 요구사항에 맞는 도구를 선택하는 게 핵심이다. 과도한 엔지니어링은 운영 비용과 복잡성만 증가시킨다.</p>
+
+<p>SQLite: 간단하고, 강력하고, 여전히 충분히 빠르다.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-09.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 캐시 전략 실전 — 응답 속도와 데이터 신선도를 함께 잡는 설계</span>
+        </a>
+        <a class="related-item" href="/posts/post-62.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">Supabase 실전 활용기 — Firebase 대안으로 쓸만한가?</span>
+        </a>
+        <a class="related-item" href="/posts/post-66.html">
+          <span class="ri-cat">Backend &amp; DB</span>
+          <span class="ri-title">API 설계 원칙 — REST vs GraphQL, 실무에서 선택한 기준</span>
+        </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

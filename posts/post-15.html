@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="바이브 코딩으로 10분 내 웹사이트 초안을 만들고 무료로 배포하는 방법을 정리했습니다. 프롬프트 예시, 실전 타임라인, 초안 이후 품질 개선 방법까지 포함합니다.">
+  <meta name="description" content="Result/Option patterns, anyhow for apps, thiserror for libs, error conversion, ? operator chains">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ikakao.kr/posts/post-15.html">
-  <title>바이브 코딩으로 10분만에 무료 웹사이트 만들기 | DevInsight</title>
+  <title>Rust 에러 처리 패턴 — anyhow vs thiserror, 실전에서 뭘 써야 하나 | DevInsight</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2446729462046987"
+    crossorigin="anonymous"></script>
   <style>
     :root { --font: "Pretendard Variable", "Pretendard", sans-serif; --ink: #1a1a2e; --muted: #6b6b7b; --bg: #f8f6f1; --card: #fff; --border: #d4d0c8; --accent: #c0392b; }
     body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+    .wrap { max-width: 800px; margin: 0 auto; padding: 48px 20px 80px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 34px; }
     h1 { margin: 0 0 10px; font-size: 2rem; line-height: 1.35; }
-    h2 { margin: 34px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-    h3 { margin: 24px 0 8px; font-size: 1.05rem; color: var(--accent); }
+    h2 { margin: 36px 0 12px; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    h3 { margin: 20px 0 8px; font-size: 1.05rem; color: var(--accent); }
     p { margin: 0 0 16px; }
     ul, ol { margin: 0 0 16px 20px; }
     li { margin-bottom: 8px; }
@@ -25,130 +27,296 @@
     .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .note { background: #f3efe6; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 0.95rem; }
     .back { display: inline-block; margin-top: 28px; color: var(--accent); text-decoration: none; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f3efe6; }
+    blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 16px; color: var(--muted); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/gowun-batang@5.0.20/700.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Rust 에러 처리 패턴 — anyhow vs thiserror, 실전에서 뭘 써야 하나",
+    "author": { "@type": "Person", "name": "ian.lab" },
+    "publisher": { "@type": "Person", "name": "ian.lab" },
+    "datePublished": "2024-12-19",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://ikakao.kr/posts/post-15.html" }
+  }
+  </script>
 </head>
 <body>
-  <main class="wrap">
-    <article class="card">
-      <h1>바이브 코딩으로 10분만에 무료 웹사이트 만들기</h1>
-      <p class="meta">게시일: 2025년 11월 8일 · 13분 읽기</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Dev<span>Insight</span></a>
+      <nav class="nav-links" aria-label="주요 메뉴">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+      </nav>
+    </div>
+  </header>
 
-      <p>바이브 코딩(Vibe Coding)은 "코드를 직접 작성"하기보다 "원하는 결과를 설명하고 AI와 반복 수정"하는 작업 방식입니다. 짧은 시간에 초안을 만드는 데 특히 강하고, 소개 페이지나 랜딩 페이지 같은 정적 웹사이트 제작에 적합합니다.</p>
+  <div class="container-narrow" style="padding:0 20px;">
+    <nav class="breadcrumb" aria-label="경로">
+      <a href="/">홈</a><span class="sep">/</span>
+      <a href="/archive.html">Rust</a><span class="sep">/</span>
+      <span>현재 글</span>
+    </nav>
+  </div>
 
-      <h2>바이브 코딩이란?</h2>
-      <p>Vibe Coding은 분위기(vibe)와 목적을 설명하면 AI가 HTML/CSS/JS 초안을 생성해 주는 방식입니다. 기존 개발 흐름보다 시작 장벽이 낮지만, 공개 전에는 사용자 검수와 기본 테스트가 필요합니다.</p>
+  <main class="post-wrap">
+    <article class="post-card">
+      <h1>Rust 에러 처리 패턴 — anyhow vs thiserror, 실전에서 뭘 써야 하나</h1>
+      <p class="meta">게시일: 2024년 12월 19일 · 14분 읽기</p>
 
-      <pre><code>기존 방식: 아이디어 → 설계 → 코딩 → 테스트 → 배포
-바이브 코딩: 아이디어 → AI 설명 → 결과 확인 → 수정 → 배포</code></pre>
+<p>unwrap() 남발하다가 프로덕션에서 panic 터졌다. Rust의 에러 처리를 제대로 배웠다.</p>
 
-      <p>코드를 직접 이해하고 작성하는 것과는 다릅니다. 바이브 코딩에서 사람의 역할은 "코드를 쓰는 것"이 아니라 "무엇을 만들지 정확히 전달하고, 결과를 판단하는 것"입니다.</p>
+<h3>anyhow vs thiserror</h3>
 
-      <h2>정말 10분이면 되나요?</h2>
-      <p>초안 기준으로는 가능합니다. 다만 초안은 공개 가능한 최소 버전이며, 이미지 교체·세부 수정·다중 페이지 구성은 추가 시간이 필요합니다.</p>
-      <ul>
-        <li><strong>10분 내 가능:</strong> 소개 페이지, 디지털 명함, 이벤트 안내, 단일 랜딩 페이지</li>
-        <li><strong>30분~1시간:</strong> 실제 이미지 반영, 고급 애니메이션, 복수 페이지 내비게이션</li>
-        <li><strong>하루 이상:</strong> 다국어 지원, 블로그 기능, 관리자 패널</li>
-      </ul>
+<p>두 라이브러리의 목적은 다르다:</p>
 
-      <h2>10분 실전 타임라인</h2>
+<blockquote>
+<p>anyhow: 애플리케이션에서 사용 (빠른 개발)<br>
+thiserror: 라이브러리에서 사용 (명확한 에러 타입)</p>
+</blockquote>
 
-      <h3>0:00 - 목적 정하기</h3>
-      <p>무엇을 위한 사이트인지 한 문장으로 정합니다. 예: "카페 홍보용 단일 페이지 사이트"</p>
+<h3>anyhow: 빠른 에러 처리</h3>
 
-      <h3>1:00 - 프롬프트 작성 및 제출</h3>
-      <p>ChatGPT 또는 Claude를 열고 아래 형식으로 요청합니다. 구체적일수록 수정 횟수가 줄어듭니다:</p>
-      <pre><code>용도: 소개 페이지
-분위기: 미니멀, 깔끔함
-색상: 파란색 포인트 (#2196F3), 흰 배경
-구성: 상단 소개(슬로건 + 설명) - 특징 3가지(아이콘+텍스트) - 연락처
-요구사항:
-  - 모바일 반응형
-  - 한 파일(HTML/CSS/JS 모두 포함)
-  - Pretendard 폰트(CDN)
-  - 언어: 한국어</code></pre>
+<p>애플리케이션이라면 anyhow:</p>
 
-      <h3>2:00~4:00 - 코드 저장 및 첫 확인</h3>
-      <p>생성된 코드를 복사해 <code>index.html</code>로 저장하고 브라우저로 엽니다.</p>
-      <ul>
-        <li>Windows: 메모장 → "파일 형식: 모든 파일" → <code>index.html</code>로 저장</li>
-        <li>macOS: TextEdit → "포맷" → "일반 텍스트 만들기" → 저장</li>
-      </ul>
-      <p>화면이 예상과 다른 부분을 메모합니다.</p>
+<pre><code>use anyhow::Result;
 
-      <h3>5:00~8:00 - 수정 2~3 라운드</h3>
-      <p>짧고 명확한 지시를 반복합니다. 한 번에 여러 가지를 바꾸면 코드가 섞일 수 있으므로 2~3가지씩 묶어서 요청합니다:</p>
-      <pre><code>라운드 1:
-- 상단 배경을 더 어둡게 (#1565C0)
-- 버튼에 hover 시 색상 변화 효과 추가
+async fn process_audio(file_path: &amp;str) -> Result&lt;()&gt; {
+    let content = std::fs::read(file_path)
+        .context("Failed to read audio file")?;
 
-라운드 2:
-- 특징 카드에 shadow 효과 추가
-- 하단 연락처 섹션 패딩 증가
+    let decoded = decode_audio(&amp;content)
+        .context("Failed to decode audio")?;
 
-라운드 3:
-- 전체 폰트 크기 약간 키우기
-- 모바일에서 카드 1열로 표시</code></pre>
+    save_processed(&amp;decoded)
+        .context("Failed to save processed audio")?;
 
-      <h3>9:00~10:00 - 무료 배포</h3>
-      <p>Netlify, GitHub Pages, Cloudflare Pages 중 하나로 배포합니다. 초보자는 Netlify 드래그앤드롭 배포가 가장 쉽습니다.</p>
-      <ol>
-        <li>netlify.com 접속 → 가입</li>
-        <li>"Add new site" → "Deploy manually"</li>
-        <li>폴더 드래그앤드롭 → 배포 완료</li>
-        <li><code>*.netlify.app</code> 주소 발급 확인</li>
-      </ol>
+    Ok(())
+}
 
-      <h2>초안 이후 품질 올리는 방법</h2>
-      <p>10분 초안은 구조만 잡힌 버전입니다. 아래 순서대로 개선하면 실사용 품질로 완성됩니다:</p>
+// main
+#[tokio::main]
+async fn main() {
+    match process_audio("voice.wav").await {
+        Ok(_) => println!("Success"),
+        Err(e) => {
+            eprintln!("Error: {}", e);  // ← 전체 error chain 출력
+            std::process::exit(1);
+        }
+    }
+}
+</code></pre>
 
-      <h3>이미지 교체</h3>
-      <p>AI가 만든 코드에는 unsplash 같은 예시 이미지 URL이 들어가는 경우가 많습니다. 실제 사진이나 라이선스 확인된 이미지로 교체하세요.</p>
-      <ul>
-        <li>Unsplash (unsplash.com): 고화질 무료 이미지, 상업 사용 가능</li>
-        <li>Pexels (pexels.com): 무료 이미지/영상</li>
-        <li>직접 촬영한 사진이 가장 효과적</li>
-      </ul>
+<p>장점:</p>
 
-      <h3>한글 폰트 적용</h3>
-      <p>Pretendard는 한글 웹폰트 중 가독성이 좋고 CDN으로 쉽게 적용할 수 있습니다:</p>
-      <pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.min.css"&gt;
-&lt;style&gt;
-  body { font-family: "Pretendard Variable", "Pretendard", sans-serif; }
-&lt;/style&gt;</code></pre>
+<ul>
+<li>쉽고 빠르다</li>
+<li>에러 체인 자동 생성 (.context())</li>
+<li>에러 타입을 강제하지 않음</li>
+</ul>
 
-      <h3>SEO 기본 설정</h3>
-      <p>사이트가 검색엔진에 노출되려면 head 섹션에 기본 메타 태그가 있어야 합니다:</p>
-      <pre><code>&lt;title&gt;홍길동 | 프리랜서 그래픽 디자이너&lt;/title&gt;
-&lt;meta name="description" content="브랜드 아이덴티티를 만드는 그래픽 디자이너"&gt;
-&lt;meta property="og:title" content="홍길동 포트폴리오"&gt;
-&lt;meta property="og:description" content="로고 디자인, 브랜딩, SNS 콘텐츠"&gt;</code></pre>
+<h3>thiserror: 명확한 에러 타입</h3>
 
-      <h3>커스텀 도메인 연결</h3>
-      <p>브랜드 신뢰도를 높이려면 커스텀 도메인을 연결합니다. 국내에서는 가비아, 후이즈 등에서 연간 1~3만 원대로 도메인을 구입할 수 있습니다.</p>
+<p>라이브러리라면 thiserror (또는 커스텀 enum):</p>
 
-      <h2>바이브 코딩이 막히는 상황과 해결법</h2>
-      <ul>
-        <li><strong>코드가 너무 길어 복사 실패:</strong> "전체 코드가 아니라 수정된 부분만 알려주세요"라고 요청</li>
-        <li><strong>모바일 레이아웃이 계속 깨짐:</strong> "모바일 반응형을 추가해주세요. viewport meta 태그 포함해서"라고 구체적으로 재요청</li>
-        <li><strong>이전 수정이 사라짐:</strong> 매 라운드마다 전체 코드를 저장하는 습관을 만들어두기</li>
-        <li><strong>원하는 디자인이 안 나옴:</strong> 참고 사이트를 설명하거나, 색상 코드(#RRGGBB)와 구체적인 레이아웃 명시</li>
-      </ul>
+<pre><code>use thiserror::Error;
 
-      <h2>주의할 점</h2>
-      <ul>
-        <li>AI 결과물은 사실·법적 검토를 대신하지 않습니다.</li>
-        <li>저작권이 불명확한 이미지·문구는 그대로 사용하지 않는 것이 안전합니다.</li>
-        <li>호스팅 무료 정책과 한도는 시점별로 변경될 수 있습니다.</li>
-        <li>결제·개인정보를 처리하는 기능은 AI 코드만으로 안전하게 구현하기 어렵습니다.</li>
-      </ul>
-      <div class="note">핵심은 "10분 만에 완성품"이 아니라 "10분 만에 공개 가능한 초안"을 만든 뒤, 검수와 개선으로 완성도를 끌어올리는 방식입니다.</div>
+#[derive(Error, Debug)]
+pub enum AudioError {
+    #[error("Failed to read file: {0}")]
+    FileRead(#[from] std::io::Error),
 
-      <h2>마무리</h2>
-      <p>바이브 코딩은 웹사이트 제작의 시작 비용과 진입 장벽을 크게 낮춰줍니다. 코딩 경험이 없어도 결과를 빠르게 확인할 수 있고, 그 결과를 기준으로 개선 방향을 잡을 수 있다는 점이 가장 큰 장점입니다. 처음엔 어색하지만, 2~3번 반복하면 AI와 함께 일하는 리듬이 생깁니다. 그때부터는 아이디어가 생기는 즉시 실제 웹 페이지로 옮기는 것이 자연스러워집니다.</p>
+    #[error("Invalid audio format: {0}")]
+    InvalidFormat(String),
 
-      <a class="back" href="/">홈으로 돌아가기</a>
+    #[error("Decoding failed: {0}")]
+    DecodingError(String),
+
+    #[error("Unsupported sample rate: {0}")]
+    UnsupportedSampleRate(u32),
+}
+
+pub fn decode_audio(data: &amp;[u8]) -> Result&lt;Vec&lt;f32&gt;, AudioError&gt; {
+    if data.len() &lt; 4 {
+        return Err(AudioError::InvalidFormat(
+            "Data too short".to_string()
+        ));
+    }
+
+    // ...
+    Ok(samples)
+}
+
+// 사용처에서 특정 에러를 처리 가능
+match decode_audio(data) {
+    Ok(samples) => { /* ... */ }
+    Err(AudioError::InvalidFormat(msg)) => {
+        println!("Invalid format: {}", msg);
+    }
+    Err(AudioError::UnsupportedSampleRate(rate)) => {
+        println!("Unsupported rate: {}", rate);
+    }
+    Err(e) => {
+        eprintln!("Other error: {}", e);
+    }
+}
+</code></pre>
+
+<p>장점:</p>
+
+<ul>
+<li>호출자가 특정 에러를 처리 가능</li>
+<li>타입 안전</li>
+<li>라이브러리 사용자에게 명확</li>
+</ul>
+
+<h3>실전 패턴</h3>
+
+<h4>패턴 1: ? 연산자</h4>
+
+<pre><code>fn process() -> Result&lt;()&gt; {
+    let file = std::fs::read("data.txt")?;  // ← Err 시 즉시 반환
+    let data = parse(&amp;file)?;
+    save(&amp;data)?;
+    Ok(())
+}
+</code></pre>
+
+<h4>패턴 2: map_err로 에러 변환</h4>
+
+<pre><code>fn parse_number(s: &amp;str) -> Result&lt;i32, AudioError&gt; {
+    s.parse()
+        .map_err(|_| AudioError::InvalidFormat(
+            format!("Cannot parse: {}", s)
+        ))
+}
+</code></pre>
+
+<h4>패턴 3: custom_context (anyhow)</h4>
+
+<pre><code>fn process_file(path: &amp;str) -> anyhow::Result&lt;()&gt; {
+    let content = std::fs::read(path)
+        .with_context(|| format!("Failed to read: {}", path))?;
+
+    Ok(())
+}
+
+// 에러 메시지
+// Error: Failed to read: voice.wav
+//
+// Caused by:
+//     No such file or directory (os error 2)
+</code></pre>
+
+<h3>panic vs Result</h3>
+
+<p>나쁜 패턴:</p>
+
+<pre><code>// ❌ 절대 금지
+let data = std::fs::read("voice.wav").unwrap();  // panic!
+let sample_rate: u32 = data[0..4].iter().sum();  // panic!
+</code></pre>
+
+<p>좋은 패턴:</p>
+
+<pre><code>// ✅ 좋음
+let data = std::fs::read("voice.wav")
+    .context("Failed to read voice file")?;
+
+let sample_rate = u32::from_le_bytes(
+    data[0..4].try_into()
+        .context("Invalid header length")?
+);
+</code></pre>
+
+<h3>에러 복구</h3>
+
+<p>예시: 네트워크 요청 재시도</p>
+
+<pre><code>async fn fetch_with_retry(url: &amp;str) -> anyhow::Result&lt;String&gt; {
+    const MAX_RETRIES: u32 = 3;
+
+    for attempt in 1..=MAX_RETRIES {
+        match fetch(url).await {
+            Ok(data) => return Ok(data),
+            Err(e) if attempt &lt; MAX_RETRIES =&gt; {
+                eprintln!("Attempt {} failed: {}, retrying...", attempt, e);
+                tokio::time::sleep(Duration::from_secs(2_u64.pow(attempt))).await;
+            }
+            Err(e) => return Err(e).context("Failed after all retries"),
+        }
+    }
+
+    unreachable!()
+}
+</code></pre>
+
+<h3>결론</h3>
+
+<p>Rust 에러 처리는 엄격하지만, 그 덕분에 런타임 에러가 줄어든다.</p>
+
+<blockquote>
+<p>애플리케이션: anyhow 사용<br>
+라이브러리: thiserror로 명확한 타입 정의<br>
+복구 가능한 에러: Result&lt;T, E&gt;<br>
+복구 불가능한 에러: panic! (드물게)</p>
+</blockquote>
+
+<p>프로덕션에서 panic이 터지는 건 최악이다. Rust의 Result 타입을 믿고 사용하자.</p>
+
+
+      <div class="author-box">
+        <div class="author-avatar">iL</div>
+        <div class="author-info">
+          <strong>ian.lab</strong>
+          <p>28년 경력의 개발자. 실무에서 겪은 문제와 해결 과정을 기록합니다. 오류 제보는 <a href="/contact.html" style="color:var(--accent)">연락처</a>로 보내주세요.</p>
+        </div>
+      </div>
+
+      <div class="related-posts">
+        <h3>관련 글 더 보기</h3>
+        <div class="related-list">
+        <a class="related-item" href="/posts/post-04.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">C++ 개발자가 Rust로 전환하며 배운 것들 — 소유권 시스템의 실체</span>
+        </a>
+        <a class="related-item" href="/posts/post-58.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 크로스 컴파일 — Windows/macOS/Linux 한 번에 빌드하기</span>
+        </a>
+        <a class="related-item" href="/posts/post-77.html">
+          <span class="ri-cat">Rust</span>
+          <span class="ri-title">Rust 테스트 전략 — 단위/통합/문서 테스트 제대로 쓰기</span>
+        </a>
+        </div>
+      </div>
     </article>
-  </main>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/">홈</a>
+        <a href="/archive.html">전체 글</a>
+        <a href="/about.html">소개</a>
+        <a href="/contact.html">연락처</a>
+        <a href="/editorial-policy.html">운영 원칙</a>
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 DevInsight. All rights reserved.<br>
+        기술 정보는 실제 사용 환경에 맞게 검토 후 적용하세요.
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
