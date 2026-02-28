@@ -136,9 +136,50 @@ async fn process_audio_alt(path: &amp;str) -> Result&lt;()&gt; {
 
 <p>tokio::time::sleep은 non-blocking이다. 다른 작업은 계속 진행된다.</p>
 
+<h3>문제 3: unbounded channel 남용으로 메모리 폭증</h3>
+
+<p>이벤트를 빠르게 밀어 넣는 producer와 느린 consumer를 같이 두면, <code>unbounded_channel</code>은 결국 메모리를 먹고 장애를 만든다.</p>
+
+<p>권장 패턴:</p>
+
+<pre><code>use tokio::sync::mpsc;
+use tokio::time::{timeout, Duration};
+
+let (tx, mut rx) = mpsc::channel::&lt;Job&gt;(256); // bounded channel
+
+// producer
+if let Err(_e) = timeout(Duration::from_millis(200), tx.send(job)).await {
+    // 큐가 가득 찬 상태가 오래 지속되면 drop / retry 정책 선택
+}
+</code></pre>
+
+<p>bounded channel을 쓰면 시스템이 감당 가능한 처리량을 넘길 때 바로 신호가 오고, 백프레셔 정책을 코드로 명시할 수 있다.</p>
+
+<h3>문제 4: timeout 없이 외부 I/O await</h3>
+
+<p>네트워크, DB, 외부 API는 반드시 timeout을 걸어야 한다. timeout이 없으면 특정 요청이 무기한 대기하고, 트래픽이 몰릴 때 워커가 잠식된다.</p>
+
+<pre><code>use tokio::time::{timeout, Duration};
+
+let resp = timeout(Duration::from_secs(3), client.get(url).send()).await
+    .map_err(|_| anyhow!("request timeout"))??;
+</code></pre>
+
+<p>실무에서는 "평균 지연"보다 "최악 지연"이 장애를 만든다. timeout은 성능 최적화가 아니라 안정성 장치다.</p>
+
+<h3>운영 체크리스트</h3>
+
+<ul>
+<li>async 함수 내부에서 <code>std::fs</code>, <code>std::thread::sleep</code> 사용 금지</li>
+<li>CPU-heavy 작업은 <code>spawn_blocking</code> 또는 전용 워커로 분리</li>
+<li>채널은 기본적으로 bounded, 크기는 근거(처리량/지연) 기반으로 설정</li>
+<li>외부 I/O는 timeout + retry + circuit-breaker 정책 같이 설계</li>
+<li>종료 시그널 처리(<code>ctrl_c</code>)와 graceful shutdown 경로 검증</li>
+</ul>
+
 <h3>결론</h3>
 
-<p>async/await는 강력하지만 함정이 있다. 규칙을 따르면 복잡한 동시성 코드도 안전하게 짤 수 있다.</p>
+<p>async/await는 생산성을 크게 올려주지만, "block 금지 / backpressure / timeout" 세 가지를 지키지 않으면 장애를 만든다. 위 규칙을 기본값으로 잡으면 tokio 기반 서비스의 안정성이 눈에 띄게 올라간다.</p>
 
 
       <div class="author-box">

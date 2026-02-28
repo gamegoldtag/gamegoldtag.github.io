@@ -197,9 +197,34 @@ app.use(helmet.contentSecurityPolicy({
 <tr><td>완전 구성</td><td>95/100</td></tr>
 </table>
 
+<h3>실무 적용 순서 (운영 중 서비스 기준)</h3>
+
+<p>운영 서비스에서 가장 많이 실패하는 건 "한 번에 CSP를 강하게 적용"하는 방식이다. 실제로는 아래 순서가 안전하다.</p>
+
+<ol>
+<li><strong>1주차:</strong> HSTS, nosniff, X-Frame-Options, Referrer-Policy 먼저 적용</li>
+<li><strong>2주차:</strong> CSP를 Report-Only로 넣고 위반 로그 수집</li>
+<li><strong>3주차:</strong> 인라인 스크립트 제거, 외부 CDN 도메인 화이트리스트 정리</li>
+<li><strong>4주차:</strong> CSP 강제 모드로 전환하고 배포 체크리스트에 고정</li>
+</ol>
+
+<p>특히 마케팅 스크립트나 분석 스니펫이 있는 사이트는 2주차 로그 분석이 필수다. 이 단계 없이 강제 모드로 가면 화면이 부분적으로 깨지는 장애가 난다.</p>
+
+<h3>배포 후 검증 체크리스트</h3>
+
+<ul>
+<li><code>curl -I https://your-domain.com</code>로 응답 헤더 확인</li>
+<li>모바일/데스크톱 주요 페이지 5개 이상 실제 렌더링 점검</li>
+<li>로그인, 결제, 문의 등 핵심 사용자 플로우 수동 테스트</li>
+<li>브라우저 콘솔의 CSP 위반 로그 수집 및 도메인 정리</li>
+<li>서브도메인 포함 여부 확인 후 HSTS <code>includeSubDomains</code> 유지</li>
+</ul>
+
+<p>이 검증을 CI 파이프라인에 넣어두면 이후 릴리즈에서 헤더 누락이 재발하지 않는다.</p>
+
 <h3>결론</h3>
 
-<p>이 5개 헤더만 설정해도 대부분 보안 감사를 통과한다. 설정하는 데 10분 걸린다.</p>
+<p>이 5개 헤더만 적용해도 보안 상태는 눈에 띄게 개선된다. 다만 핵심은 "설정"이 아니라 "운영 중 검증"이다. 점진 적용과 로그 기반 보완까지 완료하면, 실무 감사에서 반복적으로 지적받던 항목을 대부분 정리할 수 있다.</p>
 
 
       <div class="author-box">
